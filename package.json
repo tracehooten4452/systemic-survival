@@ -1,0 +1,47 @@
+{
+  "name": "systemic-survival",
+  "version": "0.1.0",
+  "description": "Offline Windows package for Systemic Survival.",
+  "author": "Trace",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "pack:win": "set CSC_IDENTITY_AUTO_DISCOVERY=false&& electron-builder --win portable --x64 && node electron/stamp-icons.js"
+  },
+  "build": {
+    "appId": "com.systemicsurvival.game",
+    "productName": "Systemic Survival",
+    "asar": false,
+    "files": [
+      "Systemic Survival v2.dc.html",
+      "support.js",
+      "assets/**/*",
+      "vendor/**/*",
+      "electron/**/*",
+      "CLAUDE(Systemic_Survival).md"
+    ],
+    "win": {
+      "icon": "assets/systemic-survival-icon.ico",
+      "signAndEditExecutable": false,
+      "signDlls": false,
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Systemic-Survival-${version}-portable.${ext}"
+    },
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3",
+    "rcedit": "^5.0.2"
+  }
+}
