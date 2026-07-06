@@ -26,49 +26,7 @@ Every package drop must add an entry here before merge. A REDTEAM pass works eve
 entry plus the standing gates below. When an entry passes, move it to CLEARED AUDIT HISTORY
 with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
 
-### Pending: SCAVENGER AUTOMATION
-
-Surface:
-- Squads on HUNT can crack hero-stocked caches during quiet stretches.
-- Cache claim system prevents dogpiles.
-- Gatherers can take SCAVENGER duty from inspector after comms tower.
-- Scavengers circuit stocked caches, carry up to three finds, deposit at HQ steps, and stage
-  by the gate when the world is picked clean.
-- Save persistence covers new scavenger/claim/cache state.
-
-Required probes:
-- Old-save merge: load a pre-scavenger save and confirm new research/duty/cache keys default
-  safely without wiping colony state.
-- Squad cache contention: multiple HUNT squads target the same hero-stocked cache; exactly one
-  claim wins, no dogpile, no duplicate payout.
-- Quiet-window behavior: squad crack happens only during intended quiet stretches and does not
-  create wall-clock economy bypasses.
-- Gatherer duty gating: SCAVENGER duty is unavailable before comms tower and available after.
-- Full scavenger loop: search -> carry up to three finds -> deposit at HQ steps -> return/retask.
-- Picked-clean behavior: scavenger stages by the gate without thrashing or burning sim time.
-- Save/load persistence: cache claims, carried finds, duty, and deposits survive reload.
-- Perf sanity: scavenger/caching work remains negligible under horde load.
-
-### Pending: M5 POWERS
-
-Surface:
-- Powers wheel and spend paths.
-- New research/save keys.
-- Overclock and magazine interactions.
-- Smoke-curtain behavior.
-
-Required probes:
-- Old-save merge: load a pre-M5 save and confirm new research/power keys default safely.
-- Spend-path race: rapid open/close/click/hotkey around the powers UI cannot double-spend,
-  unlock the wrong power, or desync HUD state.
-- Resource validation: every spend path checks current resources at execution, not stale render
-  state.
-- Overclock x magazine interaction: stacking does not create runaway fire rate, ammo underflow,
-  reload lock, or permanent buff leakage.
-- Smoke-curtain permanence exploit: smoke expires, does not permanently suppress targeting,
-  pathing, threat, breach, or projectile logic.
-- Save/load persistence: unlocked powers, cooldowns, and active/expired effects reload cleanly.
-- Fresh colony: powers UI starts locked/empty as designed and does not throw console errors.
+### No pending entries
 
 ## CLEARED AUDIT HISTORY
 
@@ -76,6 +34,11 @@ Required probes:
   Verdict: closed after v0.2.2 wrapper release and v0.2.3 content-only proof. Follow-up added:
   GitHub asset URLs may originate at `github.com` before redirecting to the asset CDN; Step 4
   now preserves that allowlist probe.
+- 2026-07-05/06: v0.3.0 package pass: SCAVENGER AUTOMATION, M5 POWERS, STAND-TO, President
+  support calls, structure ballistics, and M6.1 audio. Candidate file SHA-256
+  `80AEA91EAA25A216FACA82BF4B3084239ED43AC24D2D628F94B20A6A2CEB9DD5`; payload slice
+  `BCD43CC0B124D693`; verdict green after the public update-feed repo
+  `tracehooten4452/systemic-survival-updates` was created.
 
 ## Step 0 — CONFIRM THE CANDIDATE (stale-artifact guard)
 
@@ -83,8 +46,8 @@ A previous round audited an outdated zip and re-reported fixed findings. Never a
 
 1. Record the candidate's identity: `git rev-parse HEAD` (or SHA-256 of the zip) + `package.json` version.
 2. Fingerprint the tree — ALL must hold or you are holding a stale candidate:
-   - `package.json`: `"updateRepo": "tracehooten4452/systemic-survival"` (hyphen, public)
-   - zero matches for `updateToken` anywhere
+   - `package.json`: `"updateRepo": "tracehooten4452/systemic-survival-updates"` (public update-feed repo)
+   - zero matches for the legacy updater credential hook name (`update` + `Token`) anywhere
    - `electron/main.js` contains `--smoke-staged`
    - `electron/updater.js` verifies signatures at download AND in `resolveGamePayload`
    - `electron/release-pubkey.json` exists; `release-signing-key.json` does NOT exist in git
@@ -181,11 +144,16 @@ After each probe: delete the planted files; confirm the bundled game still boots
 
 ## Step 6 — Publish-shape check (when the release is being cut)
 
-- Release carries `game-payload.html` + `payload-manifest.json` (payload-only) or those plus
-  portable exe + win-unpacked zip (wrapper release).
-- Tag equals `v<package.json version>`; tag points at the merge commit, not before it.
-- Repo remains PUBLIC (installed updaters read anonymously — a visibility flip bricks
-  updates silently).
+- Player-facing repo `tracehooten4452/systemic-survival` release assets show ONLY
+  `Systemic-Survival-<version>-portable.exe`. No zips, payloads, manifests, REDTEAM files,
+  source drops, or backend/build artifacts.
+- Update-feed repo `tracehooten4452/systemic-survival-updates` release assets show ONLY
+  `game-payload.html` + `payload-manifest.json`. This repo must be PUBLIC because installed
+  updaters read anonymously.
+- Tag equals `v<package.json version>` in both repos; tags point at the merge/build commit,
+  not before it.
+- If the update-feed repo is missing, private, or has extra confusing assets, the release is
+  not green.
 
 ---
 *Maintained alongside RELEASING.md. When a NEW class of bug slips past this protocol, add

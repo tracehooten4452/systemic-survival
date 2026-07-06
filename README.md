@@ -17,14 +17,13 @@ launcher's one and only network act is an optional, read-only check of GitHub Re
 
 - Windows may show a SmartScreen warning on first launch (the build is an unsigned
   prototype): click **More info → Run anyway**.
-- If your machine's policy blocks portable/self-extracting exes, download the
-  `...win-unpacked.zip` asset from the same release instead, unzip it anywhere, and run
-  `Systemic Survival.exe` inside.
+- The Releases page intentionally shows only the exe so the right download is obvious.
 
 Your save lives on your own machine and carries across updates (the game only resets saves
 on rare breaking changes, and it does so safely). **The game keeps itself current:** when
-online at launch, it quietly downloads new game content (~0.6 MB) from Releases and plays it
-on your next start — you only re-download the exe when a release says the wrapper changed.
+online at launch, it quietly downloads signed game content (~0.6 MB) from the public update
+feed and plays it on your next start — you only re-download the exe when a release says the
+wrapper changed.
 
 ### Controls (basics)
 

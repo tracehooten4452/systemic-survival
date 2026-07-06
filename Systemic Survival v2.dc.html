@@ -28,7 +28,7 @@
       <div style="width:26px;height:26px;border:1.5px solid #36e0cf;display:flex;align-items:center;justify-content:center;color:#36e0cf;font-weight:700;box-shadow:0 0 12px rgba(54,224,207,.45) inset,0 0 8px rgba(54,224,207,.3);transform:rotate(45deg)"><span style="transform:rotate(-45deg);font-size:13px">S</span></div>
       <div style="line-height:1">
         <div style="font-size:14px;font-weight:700;letter-spacing:2.5px;color:#eafffb">SYSTEMIC&nbsp;SURVIVAL</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:3px;color:#5b6e69;margin-top:2px">OUTPOST&nbsp;//&nbsp;HOLD&nbsp;THE&nbsp;LINE</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:3px;color:#5b6e69;margin-top:2px">OUTPOST&nbsp;//&nbsp;HOLD&nbsp;THE&nbsp;LINE&nbsp;&nbsp;<span style="color:#2f8d84;letter-spacing:1.5px" title="game version — staged payload updates report their release tag here">{{ gameVer }}</span></div>
       </div>
     </div>
 
@@ -134,6 +134,7 @@
         <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:1.5px;color:{{ lockSubColor }}">{{ lockSub }}</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;color:{{ lockColor }};line-height:1.2">{{ lockLabel }}</div>
       </button>
+      <button onClick="{{ cycleVol }}" title="{{ volTip }}" style="padding:0 8px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(54,224,207,.3);background:rgba(54,224,207,.06);color:{{ volColor }};font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;font-weight:600">{{ volLabel }}</button>
       <button onClick="{{ togglePause }}" title="Pause" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(54,224,207,.3);background:rgba(54,224,207,.06);color:#36e0cf;font-size:13px">{{ pauseIcon }}</button>
       <button onClick="{{ cycleSpeed }}" title="Speed" style="width:42px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(54,224,207,.3);background:rgba(54,224,207,.06);color:#36e0cf;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">{{ speedLabel }}</button>
       <button onClick="{{ toggleHud }}" title="Show / hide HUD panels" style="padding:0 9px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(54,224,207,.3);background:rgba(54,224,207,.06);color:#36e0cf;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;font-weight:600">⊟ HUD</button>
@@ -482,6 +483,12 @@
         <div style="display:flex;gap:4px">
           <sc-for list="{{ dashboard.filters }}" as="f" hint-placeholder-count="5">
             <button onClick="{{ f.onClick }}" style="{{ f.style }}">{{ f.label }} {{ f.count }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:3px;align-items:center">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:1px;color:#8b79b8">POWERS</span>
+          <sc-for list="{{ powers }}" as="pw" hint-placeholder-count="6">
+            <button onClick="{{ pw.arm }}" title="{{ pw.tip }}" style="{{ pw.style }}">{{ pw.icon }} {{ pw.tag }}</button>
           </sc-for>
         </div>
         <div style="flex:1;min-width:8px"></div>
@@ -859,10 +866,13 @@ class Component extends DCLogic {
     };
     this._keyUp = (e) => { const k = e.key.toLowerCase(); if (this._keys) this._keys[k] = false; };
     window.__SS = this;   // debug/testing handle (exe smoke tests may probe it)
+    this._audioWake = () => { this.audioInit(); if (this._ac && this._ac.state === 'suspended') { try { this._ac.resume(); } catch (e) {} } };   // autoplay policy: the context wakes on the first gesture
+    window.addEventListener('pointerdown', this._audioWake, true);
+    window.addEventListener('keydown', this._audioWake, true);
     window.addEventListener('keydown', this._key);
     window.addEventListener('keyup', this._keyUp);
   }
-  componentWillUnmount() { this._dead = true; clearInterval(this._timer); clearInterval(this._hud); clearInterval(this._save); if (this.S && !this.S.gameOver) this.save(); if (this._ro) this._ro.disconnect(); window.removeEventListener('keydown', this._key); window.removeEventListener('keyup', this._keyUp); window.removeEventListener('mouseup', this.onUpWin); }
+  componentWillUnmount() { this._dead = true; clearInterval(this._timer); clearInterval(this._hud); clearInterval(this._save); if (this.S && !this.S.gameOver) this.save(); if (this._ro) this._ro.disconnect(); window.removeEventListener('keydown', this._key); window.removeEventListener('keyup', this._keyUp); window.removeEventListener('mouseup', this.onUpWin); if (this._audioWake) { window.removeEventListener('pointerdown', this._audioWake, true); window.removeEventListener('keydown', this._audioWake, true); } if (this._ac) { try { this._ac.close(); } catch (e) {} this._ac = null; } }
   componentDidUpdate(prev) { if (prev && prev.difficulty !== this.props.difficulty) this.init(); }
 
   ensureEls() {
@@ -899,6 +909,7 @@ class Component extends DCLogic {
     const p = this.evtPt(e); if (!p) return; const S = this.S;
     if (e.button === 2) { this._ads = true; return; }
     if (S.gameOver) return;
+    if (S.tool === 'power') { this.execPower(p.x, p.y); return; }
     if (S.tool === 'turret') { this.buildTurret(p.x, p.y); return; }
     if (S.tool === 'barricade') { this.buildBarricade(p.x, p.y); this.forceUpdate(); return; }
     if (S.tool === 'medbay') { this.buildMedbay(p.x, p.y); return; }
@@ -1040,10 +1051,10 @@ class Component extends DCLogic {
       scrap: 30, materials: 20, alloy: 0, kills: 0, totalEarned: 0, threat: 1, spawnT: 0, spawnGap: 2.6, ramp: 0,
       units: [], zombies: [], bullets: [], fx: [], floats: [], turrets: [], barricades: [], medbays: [], warehouses: [], civs: [], civT: 0, civLost: 0, food: 80, homes: [], civJobT: 0, starveT: 0, starved: 0, raw: 0, wool: 0, clothing: 0, milk: 0, meat: 0, dairy: 0, horses: 0, horseT: 0, ammo: 0, blds: [], sites: [], labor: { farm: null, hunt: null, ranch: null, cultivate: null, refine: null, gather: null, repair: null },
       tool: null, sel: null, multiSel: [], groups: {}, dashFilter: 'all', dashOpen: true, lockdown: false, lockAuto: true, panels: { barracks: true, research: true, perimeter: true }, attackSquad: { ids: [], mode: 'idle' }, armory: [], paused: false, speed: 1, gameOver: false,
-      focus: 0, focusT: 0, tick: 0, nextId: 1,
+      focus: 0, focusT: 0, tick: 0, nextId: 1, vol: { m: 0.75 },
       squadUnlocked: false, squadFormed: false, formTier: 0, specUnlocked: false, turretUnlocked: false, turretTier: 0,
       mechUnlocked: false, tankUnlocked: false,
-      research: { squad: false, spec: false, turret: false, mech: false, tank: false, refine: false },
+      research: { squad: false, spec: false, turret: false, mech: false, tank: false, refine: false, powers: false },
       cmd: { income: 0, power: 0, logi: 0, fort: 0, focus: 0 }, cores: 0, sector: 1, sectorKills: 0, threatKills: 0,
       council: [null, null, null, null, null], councilOn: [false, false, false, false, false], councilOpen: false, autoT: 0,
       branches: { army: false, marines: false, airforce: false, navy: false, ng: false }, branchPick: false, a10lvl: 0, a10cd: 0, dayT: 0,
@@ -1123,7 +1134,7 @@ class Component extends DCLogic {
         squadUnlocked: S.squadUnlocked, squadFormed: S.squadFormed, formTier: S.formTier, specUnlocked: S.specUnlocked, turretUnlocked: S.turretUnlocked, turretTier: S.turretTier,
         mechUnlocked: S.mechUnlocked, tankUnlocked: S.tankUnlocked,
         cmd: S.cmd, cores: S.cores, sector: S.sector, sectorKills: S.sectorKills || 0, council: S.council, councilOn: S.councilOn, branches: S.branches, a10lvl: S.a10lvl || 0, rsLevel: S.rsLevel || 0, rsBuffs: S.rsBuffs, vetModel: 2, expand: S.expand || 0, hqLevel: S.hqLevel || 1, gates: S.gates.map(g => ({ pad: g.pad, lvl: g.lvl, hp: g.hp, maxhp: g.maxhp })), hero: { up: S.hero.up, gun: S.hero.gun, att: S.hero.att, gear: S.hero.gear || [], wpn: S.hero.wpn || null }, hqhp: this.hq.hp, nextId: S.nextId,
-        units: S.units.map(u => ({ id: u.id, role: u.role, x: u.x, y: u.y, squad: u.squad, cls: u.cls, up: u.up, hp: u.hp, turretId: u.turretId, gs: u.gs, load: u.load, vet: u.vet || 0, kills: u.kills || 0, chair: u.chair, vehicle: u.vehicle || null, heli: u.heli || null, guard: (u.guard == null ? null : u.guard), vgear: u.vgear || null, wpn: u.wpn || null })),
+        units: S.units.map(u => ({ id: u.id, role: u.role, x: u.x, y: u.y, squad: u.squad, cls: u.cls, up: u.up, hp: u.hp, turretId: u.turretId, gs: u.gs, load: u.load, vet: u.vet || 0, kills: u.kills || 0, chair: u.chair, vehicle: u.vehicle || null, heli: u.heli || null, guard: (u.guard == null ? null : u.guard), vgear: u.vgear || null, wpn: u.wpn || null, duty: u.duty || null, sfinds: (u.sfinds && u.sfinds.length) ? u.sfinds.slice(0, 3) : null })),
         armory: (S.armory || []).slice(0, 30),
         turrets: S.turrets.map(t => ({ id: t.id, x: t.x, y: t.y, r: t.r, hp: t.hp, maxhp: t.maxhp, techId: t.techId, type: t.type || 'gun', lvl: t.lvl || 1, mag: (t.mag == null ? 20 : t.mag), mode: t.mode || 'auto' })),
         barricades: S.barricades.map(b => ({ id: b.id, x: b.x, y: b.y, o: b.o || 'h', hp: b.hp, maxhp: b.maxhp })),
@@ -1132,6 +1143,7 @@ class Component extends DCLogic {
         groups: S.groups || {}, heat: !!S.heat, dashFilter: S.dashFilter || 'all', dashOpen: S.dashOpen !== false, panels: S.panels || { barracks: true, research: true, perimeter: true }, attackSquad: S.attackSquad || { ids: [], mode: 'idle' }, zoom: this.zoom || 0.82, padTiers: S.padTiers || {}, effBest: S.effBest || null, lockdown: !!S.lockdown, lockAuto: S.lockAuto !== false,
         exped: S.exped ? { state: S.exped.state, ids: S.exped.ids, crates: S.exped.crates, tier: S.exped.tier, name: S.exped.name, wagon: S.exped.wagon ? { x: Math.round(S.exped.wagon.x), y: Math.round(S.exped.wagon.y), hp: Math.round(S.exped.wagon.hp) } : null } : null,
         prez: S.prez ? { on: !!S.prez.on, floor: S.prez.floor || 0, bud: S.prez.bud || { defense: 2, economy: 2, hiring: 1 } } : null,
+        vol: S.vol ? { m: +S.vol.m || 0 } : null,
       };
       localStorage.setItem(this.SAVE, JSON.stringify(data));
     } catch (e) {}
@@ -1142,13 +1154,13 @@ class Component extends DCLogic {
       const d = JSON.parse(raw); const S = this.S;
       S.scrap = d.scrap || 0; S.materials = d.materials || 0; S.alloy = d.alloy || 0; S.kills = d.kills || 0; S.totalEarned = d.totalEarned || 0; S.totalMat = d.totalMat || 0;
       S.threat = d.threat || 1; S.ramp = d.ramp || 0; S.spawnGap = d.spawnGap || 2.6; S.dayT = d.dayT || 0;
-      if (d.research) S.research = Object.assign({ squad: false, spec: false, turret: false, mech: false, tank: false, refine: false }, d.research);
+      if (d.research) S.research = Object.assign({ squad: false, spec: false, turret: false, mech: false, tank: false, refine: false, powers: false }, d.research);
       S.squadUnlocked = !!d.squadUnlocked; S.squadFormed = !!d.squadFormed; S.formTier = d.formTier || (d.squadFormed ? 1 : 0); S.specUnlocked = !!d.specUnlocked; S.turretUnlocked = !!d.turretUnlocked; S.turretTier = d.turretTier || 0;
       S.mechUnlocked = !!d.mechUnlocked; S.tankUnlocked = !!d.tankUnlocked;
       if (d.cmd) S.cmd = Object.assign(S.cmd, d.cmd); S.cores = d.cores || 0; S.sector = d.sector || 1; S.sectorKills = d.sectorKills || 0; this.rebuildNodes();
       S.threat = Math.max(this.sectorBaseThreat(S.sector), Math.min(S.threat, this.sectorBaseThreat(S.sector) + 2));
       if (d.nextId) S.nextId = d.nextId;
-      S.units = (d.units || []).map(u => ({ id: u.id, role: u.role, x: u.x, y: u.y, squad: !!u.squad, cls: u.cls || null, up: u.up || { hp: 0, spd: 0, dmg: 0, rof: 0 }, cd: 0, aim: -Math.PI / 2, muzzle: 0, vehicle: u.vehicle || null, heli: u.heli || null, dead: false, reviveT: 0, turretId: u.turretId || null, load: u.load || 0, gs: u.gs || 'toNode', node: null, hp: u.hp, vet: u.vet || 0, kills: u.kills || 0, chair: (u.chair == null ? null : u.chair), guard: (u.guard == null ? null : u.guard), vgear: (u.vgear && typeof u.vgear === 'object') ? u.vgear : null, wpn: (u.wpn && u.wpn.cart && this.CARTS[u.wpn.cart]) ? u.wpn : null }));
+      S.units = (d.units || []).map(u => ({ id: u.id, role: u.role, x: u.x, y: u.y, squad: !!u.squad, cls: u.cls || null, up: u.up || { hp: 0, spd: 0, dmg: 0, rof: 0 }, cd: 0, aim: -Math.PI / 2, muzzle: 0, vehicle: u.vehicle || null, heli: u.heli || null, dead: false, reviveT: 0, turretId: u.turretId || null, load: u.load || 0, gs: u.gs || 'toNode', node: null, hp: u.hp, vet: u.vet || 0, kills: u.kills || 0, chair: (u.chair == null ? null : u.chair), guard: (u.guard == null ? null : u.guard), vgear: (u.vgear && typeof u.vgear === 'object') ? u.vgear : null, wpn: (u.wpn && u.wpn.cart && this.CARTS[u.wpn.cart]) ? u.wpn : null, duty: u.duty === 'scav' ? 'scav' : null, sfinds: Array.isArray(u.sfinds) ? u.sfinds.filter(t => t >= 1 && t <= 3).slice(0, 3) : [] }));
       if (Array.isArray(d.council)) S.council = d.council.slice(0, 5); if (Array.isArray(d.councilOn)) S.councilOn = d.councilOn.slice(0, 5);
       if (d.vetModel !== 2) { for (const u of S.units) u.vet = 0; S.council = [null, null, null, null, null]; S.councilOn = [false, false, false, false, false]; }
       this.sanitizeCouncil();
@@ -1172,11 +1184,12 @@ class Component extends DCLogic {
       S.routes = Array.isArray(d.routes) ? d.routes.slice(0, 3).map(r => (r && this.TRADES.some(t => t.give === r.give && t.get === r.get)) ? { give: r.give, get: r.get, m: [1, 2, 5].includes(r.m) ? r.m : 1 } : null) : [null, null, null];   // caravan itself is transient — it re-forms at the road-head on load
       S.groups = (d.groups && typeof d.groups === 'object') ? d.groups : {}; S.heat = !!d.heat; S.dashFilter = d.dashFilter || 'all'; S.dashOpen = d.dashOpen !== false; S.panels = (d.panels && typeof d.panels === 'object') ? d.panels : { barracks: true, research: true, perimeter: true }; S.attackSquad = (d.attackSquad && Array.isArray(d.attackSquad.ids)) ? { ids: d.attackSquad.ids.slice(), mode: d.attackSquad.mode === 'hunt' ? 'hunt' : 'idle' } : { ids: [], mode: 'idle' }; if (d.zoom) { this.zoom = d.zoom; this.scale = d.zoom; }
       S.lockdown = !!d.lockdown; S.lockAuto = d.lockAuto !== false;
+      S.vol = (d.vol && typeof d.vol === 'object' && isFinite(+d.vol.m)) ? { m: Math.max(0, Math.min(1, +d.vol.m)) } : (S.vol || { m: 0.75 });
       // M3.3: an expedition caught mid-save resumes as a RETURN leg — the map + dig sites re-roll per
       // session, but the crates in hand are kept and the road home is constant (units restore in place).
       S.prez = null;
       if (d.prez && typeof d.prez === 'object') { const bv = (v, f) => [0, 1, 2, 3].includes(v) ? v : f; const db = d.prez.bud || {};
-        S.prez = { on: !!d.prez.on, floor: Math.max(0, Math.min(3000, Math.floor(+d.prez.floor) || 0)), bud: { defense: bv(db.defense, 2), economy: bv(db.economy, 2), hiring: bv(db.hiring, 1) }, orders: 0 };
+        S.prez = { on: !!d.prez.on, floor: Math.max(0, Math.min(3000, Math.floor(+d.prez.floor) || 0)), bud: { defense: bv(db.defense, 2), economy: bv(db.economy, 2), hiring: bv(db.hiring, 1), support: bv(db.support, 2) }, orders: 0 };
         if (S.prez.on && S.hero) S.hero.patrol = true;   // the President always defends when hostiles close in
       }
       S.exped = null;
@@ -1212,7 +1225,7 @@ class Component extends DCLogic {
     if (role === 'gatherer') { u.up = { hp: 0, spd: 0, cap: 0 }; u.load = 0; u.gs = 'toNode'; u.node = null; }
     const st = this.stat(u); u.hp = st.hp; this.S.units.push(u); return u;
   }
-  stat(u) { if (u._stF === this._frame && u._stC) return u._stC; const st = this._statRaw(u); const b = this.S.rsBuffs || {}; st.hp *= (1 + (b.hp || 0) * 0.025); if (st.rof) st.rof *= (1 + (b.rof || 0) * 0.02); if (st.spd) st.spd *= (1 + (b.speed || 0) * 0.02); u._stF = this._frame; u._stC = st; return st; }
+  stat(u) { if (u._stF === this._frame && u._stC) return u._stC; const st = this._statRaw(u); const b = this.S.rsBuffs || {}; st.hp *= (1 + (b.hp || 0) * 0.025); if (st.rof) st.rof *= (1 + (b.rof || 0) * 0.02); if (st.spd) st.spd *= (1 + (b.speed || 0) * 0.02); if ((this._standTo || 0) > 0) st.dr = Math.min(0.8, (st.dr || 0) + 0.25); u._stF = this._frame; u._stC = st; return st; }   // ⛨ STAND-TO: braced positions — the one dr read covers every zombie→unit damage site
   _statRaw(u) {
     if (u.role === 'gatherer') { const lm = this.logiMult(); const v = u.vehicle && this.VEHICLES[u.vehicle] ? this.VEHICLES[u.vehicle] : null; const gp = (s) => (v && u.vgear && u.vgear[s]) ? u.vgear[s].mult : 0; return { hp: (40 + u.up.hp * 14) * (v ? v.hp : 1) * (1 + gp('plating')), spd: (46 + u.up.spd * 0.95) * (v ? v.spd : 1) * (1 + gp('engine')), cap: Math.round((4 + u.up.cap * 2) * lm * (v ? v.carry : 1) * (1 + gp('engine') * 0.5)), dmg: 0, rof: 0, range: 0, dr: Math.min(0.7, (v ? v.dr : 0) + gp('plating') * 0.3), regen: 0, crit: 0, pierce: 0, slow: 0, heal: 0, vgun: 1 + gp('gun') * 2 }; }
     if (u.role === 'runner') { const w = this.wpnFor(u); let hp = 44 + u.up.hp * 14, spd = 54 + u.up.spd * 7, dmg = this.gunDmg(w.cart, w.amm, w.barrel) * (1 + u.up.dmg * 0.45) * 0.8, rof = (1.45 + u.up.rof * 0.17) * w.rofM, range = 140; return { hp, spd, dmg: dmg * this.powerMult(), rof, range, dr: 0, regen: 0, crit: 0, pierce: 0, slow: 0, heal: 0 }; }
@@ -1300,6 +1313,7 @@ class Component extends DCLogic {
     if (this.S.lockdown) return;   // weapons safe — one shot would blow the silence
     const hw = h.wpn && this.CARTS[h.wpn.cart] ? h.wpn : null;   // fitted loot rifle overrides the ladder gun
     this.noiseAdd(h.x, h.y, 6 * (hw && hw.supp ? 0.18 : 1));
+    this.sndShot(h.x, h.y, { cart: hw ? hw.cart : gun.cart, supp: !!(hw && hw.supp) });
     h.muzzle = 0.05;
     const amm = this.AMMOS[(hw ? hw.amm : gun.amm) || 'fmj'] || this.AMMOS.fmj;
     const hs = Math.min(0.6, (hw ? 0.30 + (hw.optic || 0) * 0.05 : gun.hs || 0) + (h.att ? h.att.acc * 0.015 : 0));
@@ -1384,7 +1398,7 @@ class Component extends DCLogic {
         }
         // UNREACHABLE TARGET GUARD: pressed against a wall with no line of sight for >1.2s → drop it, re-scan.
         if (engaging && !kiting) { const noLos = !this.losClear(h.x, h.y, tz.x, tz.y); h._patStk = (!moved && noLos) ? (h._patStk || 0) + dt : 0; if (h._patStk > 1.2) { h._patTz = null; h._patScanT = 0.8; h._patStk = 0; } } else h._patStk = 0;
-        this.zNear(h.x, h.y, 24, (z) => { if (z.down > 0) return; const dx = z.x - h.x, dy = z.y - h.y; if (dx * dx + dy * dy < 400) h.hp -= z.dmg * dt; });
+        this.zNear(h.x, h.y, 24, (z) => { if (z.down > 0) return; const dx = z.x - h.x, dy = z.y - h.y; if (dx * dx + dy * dy < 400) h.hp -= z.dmg * dt * ((this._standTo || 0) > 0 ? 0.75 : 1); });
         h.hp = Math.min(h.maxhp, h.hp + dt * 14);
         if (h.hp <= 0) { h.down = true; h.reviveT = 5; h.patrol = false; this.S.floats.push({ x: h.x, y: h.y - 14, text: 'MAIN OP DOWN', color: '#ff5d6c', life: 1.4, t: 0 }); return; }
         let padj = null, pan = 28 * 28; this.zNear(h.x, h.y, 30, (z) => { const d2 = (z.x - h.x) ** 2 + (z.y - h.y) ** 2; if (d2 < pan) { pan = d2; padj = z; } });
@@ -1407,7 +1421,7 @@ class Component extends DCLogic {
     if (k.w) mvy -= 1; if (k.s) mvy += 1; if (k.a) mvx -= 1; if (k.d) mvx += 1;
     if (mvx || mvy) { const rot = this.rot || 0, co = Math.cos(-rot), si = Math.sin(-rot); const wvx = mvx * co - mvy * si, wvy = mvx * si + mvy * co; const ml = Math.hypot(wvx, wvy); const mspd = Math.max(56, 168 - (h._slowV || 0)); const nx = h.x + wvx / ml * mspd * dt, ny = h.y + wvy / ml * mspd * dt; const cx = Math.max(16, Math.min(this.AW - 16, nx)), cy = Math.max(16, Math.min(this.AH - 16, ny)); if (!this.isBlockedPx(cx, h.y, 7)) h.x = cx; if (!this.isBlockedPx(h.x, cy, 7)) h.y = cy; }   // WASD is screen-relative — W is always screen-up
     // contact damage from nearby zombies
-    this.zNear(h.x, h.y, 24, (z) => { if (z.down > 0) return; const dx = z.x - h.x, dy = z.y - h.y; if (dx * dx + dy * dy < 400) h.hp -= z.dmg * dt; });   // the downed don't bite
+    this.zNear(h.x, h.y, 24, (z) => { if (z.down > 0) return; const dx = z.x - h.x, dy = z.y - h.y; if (dx * dx + dy * dy < 400) h.hp -= z.dmg * dt * ((this._standTo || 0) > 0 ? 0.75 : 1); });   // the downed don't bite; ⛨ STAND-TO braces the MAIN OP too
     h.hp = Math.min(h.maxhp, h.hp + dt * 14); // strong regen — it's the hero
     if (h.hp <= 0) { h.down = true; h.reviveT = 5; this.S.floats.push({ x: h.x, y: h.y - 14, text: 'MAIN OP DOWN', color: '#ff5d6c', life: 1.4, t: 0 }); return; }
     // point-blank melee — strike anything hugging you (you can't shoot a zombie on top of you), else fire
@@ -1529,6 +1543,54 @@ class Component extends DCLogic {
   isWallPx(x, y) { if (x < 0 || y < 0 || x >= this.AW || y >= this.AH) return false; const c = Math.floor(x / this.TS), r = Math.floor(y / this.TS); return this.wall[r] ? !!this.wall[r][c] : false; }
   // radius-aware: an entity body (rad) must not overlap a wall — stops the center-only clipping into wall corners
   isBlockedPx(x, y, rad) { rad = rad || 6; return this.isWallPx(x, y) || this.isWallPx(x + rad, y) || this.isWallPx(x - rad, y) || this.isWallPx(x, y + rad) || this.isWallPx(x, y - rad); }
+  // ---- BALLISTICS vs STRUCTURES: derelict masonry (the maze) carries real HP — rounds chew it, HE breaches it.
+  // The colony's own RING, gates and pads stay exempt (the friendly blast-immunity lock: no griefing your wall).
+  // This is player-driven terrain shaping: open a firing lane, drop the cover a herd masses behind, cut a road.
+  WALL_HP = 320;
+  wallDmgFrac(c, r) { const m = this._wallHp; if (!m || !m.size) return 0; const v = m.get(r * this.cols + c); return v == null ? 0 : 1 - v / this.WALL_HP; }
+  chewWall(b) {   // kinetic round vs masonry — what does it really take off?
+    if (b.shell) return 0;                                  // HE contact-fuses; boom() owns structural damage
+    const d = b.dmg || 0;
+    if (b.api) return d * 0.5;                              // .50 API / 30MM — the wall-chewers
+    if (b.ap) return d * 0.22;                              // penetrator rods drill neat holes — poor demolition
+    return d < 18 ? d * 0.05 : d * 0.12;                    // small arms pock the face; battle rifles nibble
+  }
+  hurtWallTile(c, r, dmg) {
+    if (!(dmg > 1) || !this.wall || c < 0 || r < 0 || c >= this.cols || r >= this.rows) return;
+    if (!this.wall[r][c]) return;
+    if (this.ring && this.ring[r][c]) return;                                    // engineered concrete — ours, immune
+    if (this.gateTile && this.gateTile[r] && this.gateTile[r][c]) return;
+    const m = this._wallHp || (this._wallHp = new Map()); const i = r * this.cols + c;
+    const hp = (m.has(i) ? m.get(i) : this.WALL_HP) - dmg;
+    if (hp > 0) { m.set(i, hp); return; }
+    // BREACH — the masonry comes down: open the tile (baseWall too, so EXPAND keeps the hole), leave rubble
+    m.delete(i); this.wall[r][c] = false; if (this.baseWall && this.baseWall[r]) this.baseWall[r][c] = false;
+    const x = (c + 0.5) * this.TS, y = (r + 0.5) * this.TS, S = this.S;
+    (this.wprops || (this.wprops = [])).push({ k: 'rub', x: x + (Math.random() - .5) * 9, y: y + (Math.random() - .5) * 9, s: 8 + Math.random() * 7, a: Math.random() * 3.14 });
+    S.fx.push({ x, y, r: 5, mr: 32, life: 0.4, t: 0, kind: 'strike' });
+    S.fx.push({ x, y, r: 15, life: 9, t: 0, kind: 'blood', red: false, ash: 1 });   // masonry dust settles grey
+    for (let k = 0; k < 5; k++) S.fx.push({ x: x + (Math.random() - .5) * 26, y: y + (Math.random() - .5) * 26, vx: (Math.random() - .5) * 130, vy: (Math.random() - .5) * 130, life: 0.5, t: 0, kind: 'gib' });
+    this.noiseAdd(x, y, 7);   // a collapse rings the dinner bell
+    if (this.inView(x, y, 80)) this.addShake(1.3);
+    if (this.sndBreach) this.sndBreach(x, y);
+    if ((this._breachFl || 0) <= 0) { this._breachFl = 4; S.floats.push({ x, y: y - 12, text: '◆ COVER BREACHED', color: '#c9a06b', life: 1.4, t: 0 }); }
+    this._wallDirty = true;
+  }
+  wallRebuildTick(dt) {   // a breach opened: pathing + acoustics re-derive, throttled to one hitch (never per-shot)
+    if ((this._breachFl || 0) > 0) this._breachFl -= dt;
+    if (!this._wallDirty) return;
+    this._wallReT = (this._wallReT || 0) - dt; if (this._wallReT > 0) return;
+    this._wallDirty = false; this._wallReT = 1.5;
+    const hqc = this.tileOf(this.hq.x, this.hq.y);
+    this.flowHQ = this.field(hqc);
+    this.flowNode = this.resNodes.map(nd => this.field(this.tileOf(nd.x, nd.y)));
+    this.flowHQe = this.field(hqc, true);
+    this.heroField = null; this._hfTile = null;
+    this.squadField = null; this._sqTile = null; this._sqFT = 0;
+    this.caravanField = null; this._cvTile = null; this.caravanFieldOut = null;
+    this._exField = null; this._exTile = null;
+    this._nsWallRef = null;   // noise conductance re-derives from the new geometry — sound pours through the hole
+  }
   // clear line of sight? sample the segment for any wall in the way (so the hero won't shoot a wall instead of its target)
   losClear(x0, y0, x1, y1) { const dx = x1 - x0, dy = y1 - y0, dist = Math.hypot(dx, dy); const steps = Math.max(2, Math.ceil(dist / (this.TS * 0.5))); for (let i = 1; i < steps; i++) { const t = i / steps; if (this.isWallPx(x0 + dx * t, y0 + dy * t)) return false; } return true; }
   field(goal, enemy) {
@@ -1609,6 +1671,7 @@ class Component extends DCLogic {
     this.flowHQ = this.field(hqc);
     this.flowNode = this.resNodes.map(nd => this.field(this.tileOf(nd.x, nd.y)));
     this.rebuildGates();
+    this._wallHp = new Map(); this._wallDirty = false;   // fresh masonry — breach damage is per-map (the map isn't persisted)
     this._spotSeed = null;   // new map → new plot layout (procedural per map; expand keeps the layout)
     this.genBuildSpots();
     this.genRuins();
@@ -2117,7 +2180,7 @@ class Component extends DCLogic {
   // touch → execute), signs order books at his COMMAND CHAIR (his spending authority), respects the
   // per-system budgets + reserve floor, and drops the clipboard to fight when the wall is breached.
   // He NEVER touches the UI — strategic buys (HQ/EXPAND/ADVANCE) stay the player's.
-  prezP() { const S = this.S; if (!S.prez) S.prez = { on: false, floor: 200, bud: { defense: 2, economy: 2, hiring: 1 }, orders: 0 }; return S.prez; }
+  prezP() { const S = this.S; if (!S.prez) S.prez = { on: false, floor: 200, bud: { defense: 2, economy: 2, hiring: 1, support: 2 }, orders: 0 }; if (S.prez.bud && S.prez.bud.support == null) S.prez.bud.support = 2; return S.prez; }
   prezChair() { return { x: this.hq.x - 30, y: this.hq.y + 42 }; }
   prezCad(lvl) { return lvl === 3 ? 8 : lvl === 2 ? 20 : lvl === 1 ? 45 : Infinity; }   // budget level = spend cadence per system
   togglePrez = () => { const P = this.prezP(), S = this.S; P.on = !P.on; if (P.on) { if (S.hero) S.hero.patrol = true; this.milestone('⌘ THE PRESIDENT TAKES COMMAND'); } else { this._prezErrand = null; if (S.hero) S.hero.seated = false; this.milestone('⌘ EXECUTIVE STANDING DOWN'); } this.forceUpdate(); };
@@ -2151,6 +2214,7 @@ class Component extends DCLogic {
     this.zNear(this.hq.x, this.hq.y, wallR + 240, (z) => { if (!breach && Math.max(Math.abs(z.x - this.hq.x), Math.abs(z.y - this.hq.y)) < wallR + 240) breach = true; });
     if (breach || S.lockdown) { if (h.seated) { h.seated = false; if (breach) S.floats.push({ x: h.x, y: h.y - 16, text: '⌘ TO ARMS', color: '#ffd56b', life: 1.4, t: 0 }); } this._prezErrand = null; return false; }
     if ((this._prezManT || 0) > 0) { this._prezManT -= dt; return false; }
+    if ((this._prezRadioT || 0) > 0) { this._prezRadioT -= dt; h.seated = false; return true; }   // keying the handset — a support call takes a beat
     // pick the nearest signed-off errand (rescan throttled)
     this._prezErrT = (this._prezErrT || 0) - dt;
     if (!this._prezErrand && (P.orders || 0) > 0 && this._prezErrT <= 0) {
@@ -2194,6 +2258,80 @@ class Component extends DCLogic {
     if (!this.isBlockedPx(nx, ny, 6)) { h.x = nx; h.y = ny; }
     else if (!this.isBlockedPx(nx, h.y, 6)) h.x = nx;
     else if (!this.isBlockedPx(h.x, ny, 6)) h.y = ny;
+  }
+  // ---- PRESIDENT SUPPORT CALLS (the queued powers follow-up): WEIGHTED STRATEGIC GATES.
+  // He never calls one in "for shits and giggles" (user verbatim) and never wastes resources: every
+  // power carries a measured value gate — enough blood lost that a colony-wide heal pays, a grid
+  // square packed enough that a 105 pays, a crew genuinely about to be overrun — and a call still has
+  // to clear the SUPPORT budget cadence, the reserve floor, cooldowns and the kill-tier unlocks.
+  // SUPPLY DROP is deliberately excluded: loot crates are the player's ritual, not fire support.
+  prezSupport(dt) {
+    const S = this.S, P = S.prez; if (!P || !P.on || S.lockdown || S.gameOver) return;
+    if (!(S.research && S.research.powers)) return;
+    const h = S.hero; if (!h || h.down) return;
+    if ((this._prezManT || 0) > 0) return;   // the player has the controls — and the strip
+    const lvl = (P.bud && P.bud.support != null) ? P.bud.support : 2; if (!lvl) return;
+    this._pzsT = (this._pzsT || 0) - dt; if (this._pzsT > 0) return; this._pzsT = 1.5;
+    const T = this._prezT || (this._prezT = {}); const now = S.tick || 0;
+    if ((now - (T.support || -1e9)) < this.prezCad(lvl)) return;
+    const kills = S.kills || 0, wallR = (this.ringR || 4) * this.TS;
+    const ok = (p) => p && kills >= p.req && !(((S.pcd || {})[p.key] || 0) > 0) && !(p.needBld && !this.hasBld(p.needBld)) &&
+      (S[p.res] || 0) >= p.cost && (p.res === 'alloy' ? (S.alloy - p.cost) >= p.cost : (S[p.res] - p.cost) >= P.floor);
+    const PW = {}; for (const p of this.POWERS()) PW[p.key] = p;
+    let call = null, cx = 0, cy = 0, note = '';
+    // 1) MEDEVAC — triage math: enough aggregate blood lost that a colony-wide 30% heal isn't waste
+    if (ok(PW.medevac)) {
+      let hurtN = 0, miss = 0;
+      for (const u of S.units) { if (u.dead) continue; const f = u.hp / (u.maxhp || 1); if (f < 0.72) { miss += 1 - f; if (f < 0.6) hurtN++; } }
+      if (h.hp / h.maxhp < 0.6) { hurtN++; miss += 1 - h.hp / h.maxhp; }
+      if (hurtN >= 3 && miss >= 1.6) { call = PW.medevac; cx = this.hq.x; cy = this.hq.y; note = hurtN + ' CASUALTIES'; }
+    }
+    // 2) STAND-TO — a real push closing on the wire: brace the line before it lands
+    if (!call && ok(PW.standto) && (this._standTo || 0) <= 0) {
+      let n = 0; this.zNear(this.hq.x, this.hq.y, wallR + 420, () => { n++; });
+      if (n >= 14) { call = PW.standto; cx = this.hq.x; cy = this.hq.y; note = n + ' AT THE WIRE'; }
+    }
+    // 3) FIRE MISSION — a shell only for a PACKED square (a 105 pays for ~10 standing, nothing less)
+    if (!call && ok(PW.fire) && this._heatCells) {
+      let best = null; for (const hcl of this._heatCells) { if (hcl.n >= 10 && (!best || hcl.n > best.n)) best = hcl; }
+      if (best) {
+        let n = 0, sx = 0, sy = 0; const bx = best.x + 80, by = best.y + 80;
+        this.zNear(bx, by, 150, (z) => { n++; sx += z.x; sy += z.y; });
+        if (n >= 9) {
+          cx = sx / n; cy = sy / n;
+          if (Math.max(Math.abs(cx - this.hq.x), Math.abs(cy - this.hq.y)) <= wallR + 1500) { call = PW.fire; note = n + ' MASSED'; }
+        }
+      }
+    }
+    // 4) OVERCLOCK — the wall is under real pressure and the guns have rounds to surge
+    if (!call && ok(PW.overclock) && (this._oclk || 0) <= 0 && (this._oclkDry || 0) <= 0 && S.turrets.length >= 4) {
+      let n = 0; this.zNear(this.hq.x, this.hq.y, wallR + 380, () => { n++; });
+      if (n >= 18 && (!this.hasBld('ammo') || (S.ammo || 0) > 30)) { call = PW.overclock; cx = this.hq.x; cy = this.hq.y; note = 'SURGE THE GUNS'; }
+    }
+    // 5) SMOKE / BEACON — a field crew about to be overrun: blind the dead off them, or pull the herd deeper afield
+    if (!call && (ok(PW.smoke) || ok(PW.beacon))) {
+      let crew = null, closeN = 0;
+      for (const u of S.units) {
+        if (u.dead || u.hid || u.heli || u.role !== 'gatherer') continue;
+        if (Math.max(Math.abs(u.x - this.hq.x), Math.abs(u.y - this.hq.y)) < wallR + 80) continue;   // inside the wire — the wall's problem
+        let n2 = 0, c2 = 0; this.zNear(u.x, u.y, 320, (z) => { n2++; const dx = z.x - u.x, dy = z.y - u.y; if (dx * dx + dy * dy < 200 * 200) c2++; });
+        if (n2 >= 6) { crew = u; closeN = c2; break; }
+      }
+      if (crew) {
+        if (closeN >= 4 && ok(PW.smoke)) { call = PW.smoke; cx = crew.x; cy = crew.y; note = 'COVER THE CREW'; }
+        else if (ok(PW.beacon)) {
+          const a = Math.atan2(crew.y - this.hq.y, crew.x - this.hq.x);
+          cx = Math.max(60, Math.min(this.AW - 60, crew.x + Math.cos(a) * 500)); cy = Math.max(60, Math.min(this.AH - 60, crew.y + Math.sin(a) * 500));
+          call = PW.beacon; note = 'DIVERSION OUT';
+        }
+      }
+    }
+    if (!call) return;
+    T.support = now;
+    this.castPower(call, cx, cy);
+    this._prezRadioT = 1.1;   // he stops and keys the handset — embodied, not a menu click
+    S.floats.push({ x: h.x, y: h.y - 18, text: '⌘ ' + call.icon + ' ' + call.name + (note ? ' — ' + note : ''), color: '#cdb8ff', life: 1.8, t: 0 });
+    if (this.sndRadio) this.sndRadio('prez');
   }
   toggleLedger = () => { this.S.ledgerOpen = !this.S.ledgerOpen; this.forceUpdate(); };
   stopClick = (e) => e.stopPropagation();
@@ -2467,11 +2605,11 @@ class Component extends DCLogic {
     else S.starveT = 0;
     for (let i = S.civs.length - 1; i >= 0; i--) {
       const c = S.civs[i];
-      if (c.shel) { if (S.lockdown) continue; c.shel = false; }   // hidden indoors — safe, idle, invisible
+      if (c.shel) { if (S.lockdown || (this._standTo || 0) > 0) continue; c.shel = false; }   // hidden indoors — safe, idle, invisible (lockdown or ⛨ STAND-TO)
       let nz = null, nd = 150 * 150; this.zNear(c.x, c.y, 150, (z) => { if (z.down > 0) return; const d2 = (z.x - c.x) ** 2 + (z.y - c.y) ** 2; if (d2 < nd) { nd = d2; nz = z; } });   // a skidding body neither bites nor panics anyone
       if (nz && nd < 16 * 16) { this.spawnRagdoll(c.x, c.y, 9.5, '#c9a06b', { dmg: 24, maxhp: 16, fx: nz.x, fy: nz.y, fc: c._fc, zombie: false }); c._dead = true; S.civs.splice(i, 1); S.civLost = (S.civLost || 0) + 1; S.floats.push({ x: c.x, y: c.y - 8, text: '✖ CIVILIAN', color: '#ff5d6c', life: 1.4, t: 0 }); continue; }
       c.flee = !!nz;
-      if (S.lockdown && !nz) {   // LOCKDOWN: run home and hide (flee still wins while a walker is close)
+      if ((S.lockdown || (this._standTo || 0) > 0) && !nz) {   // LOCKDOWN / ⛨ STAND-TO: run home and hide (flee still wins while a walker is close)
         const hm = this.nearestHome(c.x, c.y); const sxx = hm ? hm.x : c.hx, syy = hm ? hm.y : c.hy;
         if ((c.x - sxx) * (c.x - sxx) + (c.y - syy) * (c.y - syy) < 225) { c.shel = true; continue; }
         const a9 = Math.atan2(syy - c.y, sxx - c.x); const nx9 = c.x + Math.cos(a9) * 82 * dt, ny9 = c.y + Math.sin(a9) * 82 * dt;
@@ -2590,7 +2728,7 @@ class Component extends DCLogic {
     for (const z of S.zombies) { const d = horiz ? Math.abs(z.y - t.y) : Math.abs(z.x - t.x); if (d < 24) { if (dmg >= z.maxhp * 4) z._ash = 1; this.hurtZombie(z, dmg, z.x, z.y); } }
     for (let i = 0; i <= 16; i++) { const f = i / 16; const x = horiz ? f * this.AW : t.x, y = horiz ? t.y : f * this.AH; S.fx.push({ x, y, r: 4, mr: 14, life: 0.5, t: 0, kind: 'strike' }); }
     if (lvl >= 3) { const mk = this.SHELLS.mk82; this.boom(t.x, t.y, mk.W, { n: mk.n, Ef: mk.Ef }); S.floats.push({ x: t.x, y: t.y - 20, text: '◈ MK 82 AWAY', color: '#ffb454', life: 1.4, t: 0 }); }
-    this.noiseAdd(t.x, t.y, 22); this.milestone('A-10 GUN RUN');
+    this.noiseAdd(t.x, t.y, 22); this.sndStrafe(t.x, t.y); this.milestone('A-10 GUN RUN');
   }
   advanceKills() { return 25 + this.S.sector * 15; }
   advanceCost() { return Math.floor(260 * Math.pow(1.6, this.S.sector - 1)); }
@@ -2625,6 +2763,304 @@ class Component extends DCLogic {
   tankAlloy() { return 10 + this.S.units.filter(u => u.role === 'tank').length * 4; }
   deployMech = () => { const S = this.S; if (!S.branches.marines) { this.milestone('NEEDS MARINES BRANCH'); return; } if (S.alloy >= this.mechAlloy() && S.materials >= this.mechCost()) { S.alloy -= this.mechAlloy(); this.spendMat(this.mechCost()); const u = this.spawnUnit('mech'); S.sel = { type: 'unit', id: u.id }; this.forceUpdate(); } };
   deployTank = () => { const S = this.S; if (!S.branches.army) { this.milestone('NEEDS ARMY BRANCH'); return; } if (S.alloy >= this.tankAlloy() && S.materials >= this.tankCost()) { S.alloy -= this.tankAlloy(); this.spendMat(this.tankCost()); const u = this.spawnUnit('tank'); S.sel = { type: 'unit', id: u.id }; this.forceUpdate(); } };
+  // ================================================================ M5 POWERS — commander support calls
+  // C&C-style, economy-priced, HUD-armed → click the map. Research buys the uplink; kill count
+  // (colony veterancy) unlocks the heavier tiers. Every power rides an EXISTING system — noise
+  // field, senses, boom(), the cache world, turret logistics. President wiring = later follow-up
+  // with weighted strategic gates (plan lock).
+  POWERS() {
+    return [
+      { key: 'beacon', icon: '⌖', name: 'SCREAMER BEACON', cost: 40, res: 'materials', cd: 45, req: 0, desc: 'floods the noise field at the point for 12s — drags the horde there' },
+      { key: 'smoke', icon: '▩', name: 'SMOKE CURTAIN', cost: 30, res: 'materials', cd: 40, req: 0, desc: 'blinds the dead inside for 15s — they fall back to sound alone' },
+      { key: 'medevac', icon: '✚', name: 'MEDEVAC PULSE', cost: 30, res: 'materials', cd: 60, req: 0, desc: 'field dressings colony-wide — every unit + the MAIN OP heal 30%' },
+      { key: 'standto', icon: '⛨', name: 'STAND-TO', cost: 20, res: 'materials', cd: 75, req: 0, desc: 'BRACE 15s: civilians shelter, every unit +25% DR — weapons stay live' },
+      { key: 'fire', icon: '◈', name: 'FIRE MISSION', cost: 60, res: 'materials', cd: 30, req: 150, desc: '105MM HE at the point — percussion + shrapnel' },
+      { key: 'drop', icon: '⬍', name: 'SUPPLY DROP', cost: 80, res: 'scrap', cd: 90, req: 150, needBld: 'hangar', desc: 'airdrop a stocked tier-3 cache at the point' },
+      { key: 'overclock', icon: '⚡', name: 'OVERCLOCK', cost: 25, res: 'alloy', cd: 90, req: 400, desc: 'every turret +50% fire rate for 20s — then 10s of dry bolts' },
+    ];
+  }
+  powerList() {
+    const S = this.S;
+    return this.POWERS().map(p => {
+      const locked = !(S.research && S.research.powers) ? 'RESEARCH: COMMAND UPLINK' : (S.kills || 0) < p.req ? ('UNLOCKS AT ' + p.req + ' KILLS') : (p.needBld && !this.hasBld(p.needBld)) ? 'NEEDS A HANGAR' : null;
+      const cd = Math.max(0, (S.pcd && S.pcd[p.key]) || 0);
+      const afford = (S[p.res] || 0) >= p.cost;
+      const armed = S.tool === 'power' && this._powerKey === p.key;
+      const tag = locked ? '🔒' : cd > 0 ? Math.ceil(cd) + 's' : p.cost + (p.res === 'materials' ? 'M' : p.res === 'alloy' ? 'A' : 'S');
+      const col = locked ? '#5b6e69' : armed ? '#ffd56b' : cd > 0 ? '#7c8a86' : afford ? '#cdb8ff' : '#8a8366';
+      return { key: p.key, icon: p.icon, tag, tip: p.name + ' — ' + p.desc + (locked ? ' · ' + locked : '') + ' · ' + p.cost + ' ' + String(this.resName(p.res) || p.res).toUpperCase() + ' · ' + p.cd + 's CD', arm: (() => { const k = p.key; return () => this.armPower(k); })(), style: `padding:3px 6px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.5px;border:1px solid ${armed ? '#ffd56b' : locked || cd > 0 ? 'rgba(120,135,130,.2)' : 'rgba(183,156,255,.4)'};background:${armed ? 'rgba(255,213,107,.14)' : 'rgba(183,156,255,.05)'};color:${col};cursor:pointer;white-space:nowrap` };
+    });
+  }
+  armPower = (key) => {
+    const S = this.S;
+    const p = this.POWERS().find(x => x.key === key); if (!p) return;
+    const locked = !(S.research && S.research.powers) ? 'RESEARCH: COMMAND UPLINK' : (S.kills || 0) < p.req ? ('UNLOCKS AT ' + p.req + ' KILLS') : (p.needBld && !this.hasBld(p.needBld)) ? 'NEEDS A HANGAR' : null;
+    if (locked) { this.milestone(locked); return; }
+    if (((S.pcd && S.pcd[key]) || 0) > 0) return;
+    if ((S[p.res] || 0) < p.cost) { this.milestone('NEEDS ' + p.cost + ' ' + String(this.resName(p.res) || p.res).toUpperCase()); return; }
+    if (S.tool === 'power' && this._powerKey === key) { S.tool = null; this._powerKey = null; }
+    else { S.tool = 'power'; this._powerKey = key; S.sel = null; }
+    this.forceUpdate();
+  };
+  execPower(x, y) {
+    const S = this.S, key = this._powerKey, p = this.POWERS().find(q => q.key === key);
+    S.tool = null; this._powerKey = null;
+    if (!p) { this.forceUpdate(); return; }
+    if (S.lockdown) { this.milestone('◼ WEAPONS HOLD — LIFT LOCKDOWN FIRST'); this.forceUpdate(); return; }
+    if (((S.pcd && S.pcd[key]) || 0) > 0 || (S[p.res] || 0) < p.cost) { this.forceUpdate(); return; }
+    this.castPower(p, x, y);
+    if (this.sndRadio) this.sndRadio('power');
+    this.forceUpdate();
+  }
+  // shared executor — the HUD strip and the PRESIDENT's field radio both land here (cost + cooldown + effect)
+  castPower(p, x, y) {
+    const S = this.S, key = p.key;
+    S[p.res] -= p.cost; S.pcd = S.pcd || {}; S.pcd[key] = p.cd;
+    if (key === 'fire') { this.strike(x, y); }
+    else if (key === 'beacon') { (this._beacons = this._beacons || []).push({ x, y, t: 12 }); this.noiseAdd(x, y, 10); this.milestone('⌖ SCREAMER LIVE — THE HORDE TURNS'); }
+    else if (key === 'smoke') { (this._smokes = this._smokes || []).push({ x, y, r: 170, t: 15 }); S.fx.push({ x, y, r: 10, mr: 170, life: 0.5, t: 0, kind: 'strike' }); }
+    else if (key === 'medevac') { for (const u of S.units) if (!u.dead) u.hp = Math.min(u.maxhp, u.hp + u.maxhp * 0.3); const h = S.hero; if (h && !h.down) h.hp = Math.min(h.maxhp, h.hp + h.maxhp * 0.3); S.floats.push({ x: this.hq.x, y: this.hq.y - 30, text: '✚ MEDEVAC PULSE', color: '#7ef0a6', life: 1.5, t: 0 }); }
+    else if (key === 'standto') { this._standTo = 15; this.milestone('⛨ STAND-TO — CIVILIANS BELOW, RIFLES UP'); S.floats.push({ x: this.hq.x, y: this.hq.y - 30, text: '⛨ STAND-TO · 15s', color: '#9be0d8', life: 1.5, t: 0 }); }
+    else if (key === 'drop') { const c = { id: 90000 + ((Math.random() * 9999) | 0), kind: 'cache', x, y, tier: 3, state: 1, prog: 0, awayD: 0 }; (this.caches = this.caches || []).push(c); S.fx.push({ x, y, r: 8, mr: 60, life: 0.5, t: 0, kind: 'strike' }); this.noiseAdd(x, y, 8); S.floats.push({ x, y: y - 14, text: '⬍ SUPPLY DROP — STOCKED', color: '#ffd56b', life: 1.6, t: 0 }); }
+    else if (key === 'overclock') { this._oclk = 20; this._oclkDry = 0; S.floats.push({ x: this.hq.x, y: this.hq.y - 30, text: '⚡ OVERCLOCK — ALL TURRETS', color: '#cdb8ff', life: 1.5, t: 0 }); }
+  }
+  updatePowers(dt) {
+    const S = this.S;
+    if (S.pcd) for (const k in S.pcd) { if (S.pcd[k] > 0) S.pcd[k] -= dt; }
+    if (this._beacons) for (let i = this._beacons.length - 1; i >= 0; i--) { const b = this._beacons[i]; b.t -= dt; this.noiseAdd(b.x, b.y, 4.5 * dt); if (b.t <= 0) this._beacons.splice(i, 1); }
+    if (this._smokes) for (let i = this._smokes.length - 1; i >= 0; i--) { const s = this._smokes[i]; s.t -= dt; if (s.t <= 0) this._smokes.splice(i, 1); }
+    if (this._oclk > 0) { this._oclk -= dt; if (this._oclk <= 0) this._oclkDry = 10; }
+    else if (this._oclkDry > 0) this._oclkDry -= dt;
+    if ((this._standTo || 0) > 0) this._standTo -= dt;   // ⛨ STAND-TO brace window
+  }
+  inSmoke(x, y) { if (!this._smokes || !this._smokes.length) return false; for (const s of this._smokes) { const dx = x - s.x, dy = y - s.y; if (dx * dx + dy * dy < s.r * s.r) return true; } return false; }
+  // ================================================================ M6.1 FEEL & SOUND — procedural post-apocalyptic audio
+  // ZERO assets (exe-safe: no files, no network): every sound is synthesized in WebAudio at call time.
+  // Doctrine: THE QUIET IS THE ATMOSPHERE (Alien Dawn) — a thin wind bed and night insects at the floor,
+  // distant moans that swell with the mass actually near you, gunfire with a real report and an echo
+  // tail (bright up close, all tail far away), HE that ducks the whole world for a beat, radio crackle
+  // under announcements. Volume: S.vol.m (0 OFF · .35 LOW · .75 FULL, persisted); the context wakes on
+  // the first gesture (autoplay policy) and hard-mutes while the tab is hidden (the sim keeps running).
+  audioReady() { const S = this.S; return !!(this._ac && this._ac.state === 'running' && S && S.vol && S.vol.m > 0 && !document.hidden); }
+  audioInit() {
+    if (this._ac || this._acDead) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) { this._acDead = true; return; }
+      const ac = this._ac = new AC();
+      const mk = (g, dst) => { const n = ac.createGain(); n.gain.value = g; n.connect(dst); return n; };
+      const comp = ac.createDynamicsCompressor(); comp.threshold.value = -18; comp.knee.value = 22; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.22; comp.connect(ac.destination);
+      this._axM = mk((this.S && this.S.vol) ? this.S.vol.m : 0.75, comp);   // master — S.vol drives it each tick
+      this._axAmb = mk(0.6, this._axM);    // ambience bed (wind · insects · drone)
+      this._axSfx = mk(1, this._axM);      // positional one-shots
+      this._axUi = mk(0.7, this._axM);     // radio / chrome (non-positional)
+      // shared noise buffer + procedural echo-tail impulse (exp-decay noise — a dead town's reflections)
+      const sr = ac.sampleRate, nb = ac.createBuffer(1, (sr * 1.7) | 0, sr), nd = nb.getChannelData(0);
+      for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+      this._axNoise = nb;
+      const ir = ac.createBuffer(2, (sr * 1.9) | 0, sr);
+      for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < d.length; i++) { const t = i / sr; d[i] = (Math.random() * 2 - 1) * Math.exp(-t * 3.1) * (t < 0.012 ? 0 : 0.5); } }
+      const cv = ac.createConvolver(); cv.buffer = ir;
+      const vlp = ac.createBiquadFilter(); vlp.type = 'lowpass'; vlp.frequency.value = 2600;   // echoes come back darker
+      const wet = mk(0.5, this._axM); cv.connect(vlp); vlp.connect(wet); this._axVerb = cv;
+      // wind bed: looped noise → bandpass; gain breathed by updateAudio
+      const wsrc = ac.createBufferSource(); wsrc.buffer = nb; wsrc.loop = true;
+      const wbp = ac.createBiquadFilter(); wbp.type = 'bandpass'; wbp.frequency.value = 320; wbp.Q.value = 0.45;
+      const wg = mk(0.0, this._axAmb); wsrc.connect(wbp); wbp.connect(wg); wsrc.start();
+      this._axWind = { g: wg, f: wbp };
+      // tension drone (idles silent): two detuned saws → low lowpass → gain 0; sieges/expeditions swell it
+      const d1 = ac.createOscillator(), d2 = ac.createOscillator(); d1.type = 'sawtooth'; d2.type = 'sawtooth'; d1.frequency.value = 54; d2.frequency.value = 54.7;
+      const dlp = ac.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 190; dlp.Q.value = 2;
+      const dg = mk(0.0, this._axAmb); d1.connect(dlp); d2.connect(dlp); dlp.connect(dg); d1.start(); d2.start();
+      this._axDrone = dg;
+      this._axV = 0; this._axDuck = 1;
+    } catch (e) { this._ac = null; this._acDead = true; }
+  }
+  audioPos(x, y) {   // listener = the camera look-at; null = culled (too far to matter)
+    const cam = this.cam || this.hq; const dx = x - cam.x, dy = y - cam.y; const d = Math.hypot(dx, dy);
+    if (d > 2600) return null;
+    const rot = this.rot || 0, co = Math.cos(rot), si = Math.sin(rot);
+    return { d, pan: Math.max(-0.85, Math.min(0.85, (dx * co - dy * si) / 700)), att: 1 / (1 + d / 520), lp: 14000 / (1 + d / 420) };
+  }
+  axGate(k, minMs) { const now = performance.now(); const T = this._axT || (this._axT = {}); if (now - (T[k] || 0) < minMs) return false; T[k] = now; return true; }
+  axOut(P, bus) {   // per-shot chain: input → distance lowpass → pan → bus; returns the input node
+    const ac = this._ac; const i = ac.createGain(); i.gain.value = 1;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = P ? Math.max(300, P.lp) : 14000;
+    i.connect(lp); let tail = lp;
+    if (ac.createStereoPanner) { const pn = ac.createStereoPanner(); pn.pan.value = P ? P.pan : 0; tail.connect(pn); tail = pn; }
+    tail.connect(bus || this._axSfx);
+    return i;
+  }
+  axSpend(src, t0, dur, root) {   // voice budget + graph hygiene (disconnect the shot's subtree when it ends)
+    this._axV = (this._axV || 0) + 1;
+    src.onended = () => { this._axV--; if (root) { try { root.disconnect(); } catch (e) {} } };
+    src.start(t0); src.stop(t0 + dur);
+  }
+  sndShot(x, y, o) {
+    if (!this.audioReady()) return; o = o || {};
+    const P = this.audioPos(x, y); if (!P) return;
+    const supp = !!o.supp; if (supp && P.d > 820) return;
+    if (!this.axGate('shot', 26) || (this._axV || 0) > 15) return;
+    const ac = this._ac, t0 = ac.currentTime;
+    const cart = o.cart && this.CARTS[o.cart] ? this.CARTS[o.cart] : null;
+    const E = o.shell ? 5200 : cart ? (cart.mg * cart.v * cart.v) / 2000 : 1500;   // muzzle energy sets the report
+    const big = E > 5200, mid = E > 2200;
+    const lvl = (supp ? 0.05 : big ? 0.44 : mid ? 0.26 : 0.17) * P.att * (0.75 + Math.random() * 0.3);
+    const i = this.axOut(P);
+    const n = ac.createBufferSource(); n.buffer = this._axNoise; n.playbackRate.value = 1.4 + Math.random() * 0.5;   // crack
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = supp ? 950 : big ? 900 : 1700 + Math.random() * 500; bp.Q.value = 0.7;
+    const g1 = ac.createGain(); g1.gain.setValueAtTime(lvl, t0); g1.gain.exponentialRampToValueAtTime(0.0001, t0 + (big ? 0.34 : 0.15));
+    n.connect(bp); bp.connect(g1); g1.connect(i);
+    if (!supp) {   // chest note — the round's body
+      const os = ac.createOscillator(); os.frequency.setValueAtTime(big ? 150 : 220, t0); os.frequency.exponentialRampToValueAtTime(big ? 46 : 70, t0 + 0.09);
+      const g2 = ac.createGain(); g2.gain.setValueAtTime(lvl * (big ? 1.1 : 0.6), t0); g2.gain.exponentialRampToValueAtTime(0.0001, t0 + (big ? 0.3 : 0.12));
+      os.connect(g2); g2.connect(i); this.axSpend(os, t0, 0.35);
+      const sg = ac.createGain(); sg.gain.value = Math.min(0.5, (big ? 0.34 : 0.16) * (0.35 + P.d / 1300)); i.connect(sg); sg.connect(this._axVerb);   // far gunfire is all tail
+    }
+    this.axSpend(n, t0, 0.4, i);
+  }
+  sndBoom(x, y, W) {
+    if (!this.audioReady()) return;
+    const P = this.audioPos(x, y) || { d: 2600, pan: 0, att: 0.055, lp: 700 };   // HE carries beyond the cull
+    if (!this.axGate('boom', 90)) return;
+    const ac = this._ac, t0 = ac.currentTime, W3 = Math.cbrt(Math.max(0.05, W));
+    const lvl = Math.min(0.85, 0.3 + W3 * 0.16) * Math.min(1, P.att * 2.4);
+    const i = this.axOut(P);
+    const os = ac.createOscillator(); os.frequency.setValueAtTime(64, t0); os.frequency.exponentialRampToValueAtTime(21, t0 + 0.5);   // concussion
+    const g = ac.createGain(); g.gain.setValueAtTime(lvl, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.8 + W3 * 0.2);
+    os.connect(g); g.connect(i); this.axSpend(os, t0, 1.2 + W3 * 0.2);
+    const n = ac.createBufferSource(); n.buffer = this._axNoise; n.loop = true;   // rumble
+    const lp2 = ac.createBiquadFilter(); lp2.type = 'lowpass'; lp2.frequency.value = 240;
+    const g2 = ac.createGain(); g2.gain.setValueAtTime(lvl * 0.8, t0 + 0.01); g2.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.1 + W3 * 0.35);
+    n.connect(lp2); lp2.connect(g2); g2.connect(i); this.axSpend(n, t0, 1.5 + W3 * 0.35, i);
+    const sg = ac.createGain(); sg.gain.value = 0.42; i.connect(sg); sg.connect(this._axVerb);
+    this._axDuck = 0.15;   // the world holds its breath, then the wind comes back
+  }
+  sndImpact(x, y, hard) {   // a round meets masonry — dry chip + dust
+    if (!this.audioReady()) return; const P = this.audioPos(x, y); if (!P || P.d > 1500) return;
+    if (!this.axGate('imp', 60) || (this._axV || 0) > 15) return;
+    const ac = this._ac, t0 = ac.currentTime, i = this.axOut(P);
+    const n = ac.createBufferSource(); n.buffer = this._axNoise; n.playbackRate.value = 0.9 + Math.random() * 0.7;
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = hard ? 2600 : 750; bp.Q.value = hard ? 2.2 : 0.9;
+    const g = ac.createGain(); g.gain.setValueAtTime(0.13 * P.att, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.08);
+    n.connect(bp); bp.connect(g); g.connect(i); this.axSpend(n, t0, 0.1, i);
+  }
+  sndBreach(x, y) {   // a wall section lets go: rumble under staggered debris clatter
+    if (!this.audioReady()) return; const P = this.audioPos(x, y); if (!P) return;
+    const ac = this._ac, t0 = ac.currentTime, i = this.axOut(P);
+    const n = ac.createBufferSource(); n.buffer = this._axNoise; n.loop = true;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 300;
+    const g = ac.createGain(); g.gain.setValueAtTime(0.36 * P.att, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.9);
+    n.connect(lp); lp.connect(g); g.connect(i); this.axSpend(n, t0, 1, i);
+    for (let k = 0; k < 4; k++) {
+      const tt = t0 + 0.08 + Math.random() * 0.5;
+      const s2 = ac.createBufferSource(); s2.buffer = this._axNoise; s2.playbackRate.value = 0.8 + Math.random();
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900 + Math.random() * 1600; bp.Q.value = 3;
+      const g2 = ac.createGain(); g2.gain.setValueAtTime(0.11 * P.att, tt); g2.gain.exponentialRampToValueAtTime(0.0001, tt + 0.09);
+      s2.connect(bp); bp.connect(g2); g2.connect(i); this.axSpend(s2, tt, 0.12);
+    }
+    const sg = ac.createGain(); sg.gain.value = 0.3; i.connect(sg); sg.connect(this._axVerb);
+  }
+  sndSquelch(x, y) {   // severing — gore is ON by default (toggle lands with M7 settings)
+    if (!this.audioReady()) return; const P = this.audioPos(x, y); if (!P || P.d > 700) return;
+    if (!this.axGate('sq', 120) || (this._axV || 0) > 15) return;
+    const ac = this._ac, t0 = ac.currentTime, i = this.axOut(P);
+    const os = ac.createOscillator(); os.frequency.setValueAtTime(260, t0); os.frequency.exponentialRampToValueAtTime(60, t0 + 0.12);
+    const g = ac.createGain(); g.gain.setValueAtTime(0.15 * P.att, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.13);
+    os.connect(g); g.connect(i); this.axSpend(os, t0, 0.15);
+    const n = ac.createBufferSource(); n.buffer = this._axNoise; n.playbackRate.value = 0.55;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+    const g2 = ac.createGain(); g2.gain.setValueAtTime(0.11 * P.att, t0); g2.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.18);
+    n.connect(lp); lp.connect(g2); g2.connect(i); this.axSpend(n, t0, 0.2, i);
+  }
+  sndMoan(x, y, agit) {   // one corpse finds its voice — the swell comes from HOW OFTEN this fires
+    if (!this.audioReady()) return; const P = this.audioPos(x, y); if (!P) return;
+    if ((this._axV || 0) > 13) return;
+    const ac = this._ac, t0 = ac.currentTime, i = this.axOut(P);
+    const dur = 1.4 + Math.random() * 1.3;
+    const f0 = (agit ? 110 : 84) * (0.85 + Math.random() * 0.35);
+    const o1 = ac.createOscillator(); o1.type = 'sawtooth'; const o2 = ac.createOscillator(); o2.type = 'sawtooth';
+    o1.frequency.setValueAtTime(f0, t0); o1.frequency.exponentialRampToValueAtTime(f0 * (agit ? 1.3 : 0.72), t0 + dur * 0.85);
+    o2.frequency.setValueAtTime(f0 * 1.011, t0); o2.frequency.exponentialRampToValueAtTime(f0 * (agit ? 1.32 : 0.73), t0 + dur * 0.9);
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.setValueAtTime(300, t0); bp.frequency.exponentialRampToValueAtTime(agit ? 700 : 210, t0 + dur); bp.Q.value = 1.6;
+    const g = ac.createGain(); const pk = (agit ? 0.11 : 0.07) * P.att * (this.isNight() ? 1.35 : 1);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(Math.max(0.001, pk), t0 + dur * 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o1.connect(bp); o2.connect(bp); bp.connect(g); g.connect(i);
+    const sg = ac.createGain(); sg.gain.value = 0.18; i.connect(sg); sg.connect(this._axVerb);
+    this.axSpend(o1, t0, dur + 0.05); this.axSpend(o2, t0, dur + 0.05, i);
+  }
+  sndCricket() {   // night insects — they go quiet when walkers are close (the oldest alarm there is)
+    if (!this.audioReady()) return; const ac = this._ac, t0 = ac.currentTime;
+    const i = this.axOut({ d: 0, pan: (Math.random() * 2 - 1) * 0.7, att: 1, lp: 12000 }, this._axAmb);
+    const os = ac.createOscillator(); os.frequency.value = 4300 + Math.random() * 900;
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t0);
+    const nb2 = 3 + ((Math.random() * 4) | 0);
+    for (let b = 0; b < nb2; b++) { const bt = t0 + b * 0.058; g.gain.setValueAtTime(0.011, bt); g.gain.setValueAtTime(0.0001, bt + 0.03); }
+    os.connect(g); g.connect(i); this.axSpend(os, t0, nb2 * 0.06 + 0.05, i);
+  }
+  sndStrafe(x, y) {   // GAU-8 — the burr arrives as one dreadful note
+    if (!this.audioReady()) return; const P = this.audioPos(x, y) || { d: 2400, pan: 0, att: 0.08, lp: 1200 };
+    const ac = this._ac, t0 = ac.currentTime, i = this.axOut(P);
+    const os = ac.createOscillator(); os.type = 'sawtooth'; os.frequency.setValueAtTime(65, t0);
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.32 * Math.min(1, P.att * 2), t0 + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.85);
+    os.connect(lp); lp.connect(g); g.connect(i); this.axSpend(os, t0, 0.9, i);
+    const sg = ac.createGain(); sg.gain.value = 0.35; i.connect(sg); sg.connect(this._axVerb);
+  }
+  sndRadio(kind) {   // command-net squelch under announcements; 'prez' = his double-beep call sign
+    if (!this.audioReady()) return;
+    if (!this.axGate('radio_' + kind, kind === 'toast' ? 4000 : 300)) return;
+    const ac = this._ac, t0 = ac.currentTime, i = this.axOut(null, this._axUi);
+    const n = ac.createBufferSource(); n.buffer = this._axNoise;
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 1.4;
+    const g = ac.createGain(); g.gain.setValueAtTime(0.045, t0); g.gain.setValueAtTime(0.015, t0 + 0.045); g.gain.setValueAtTime(0.045, t0 + 0.09); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
+    n.connect(bp); bp.connect(g); g.connect(i);
+    const os = ac.createOscillator(); os.type = 'square'; os.frequency.value = kind === 'prez' ? 1180 : kind === 'alert' ? 760 : 960;
+    const g2 = ac.createGain(); const beeps = kind === 'prez' ? 2 : 1;
+    g2.gain.setValueAtTime(0.0001, t0);
+    for (let b = 0; b < beeps; b++) { const bt = t0 + 0.05 + b * 0.11; g2.gain.setValueAtTime(0.02, bt); g2.gain.setValueAtTime(0.0001, bt + 0.06); }
+    os.connect(g2); g2.connect(i); this.axSpend(os, t0, 0.4); this.axSpend(n, t0, 0.18, i);
+  }
+  cycleVol = () => {
+    const S = this.S; const v = S.vol || (S.vol = { m: 0.75 });
+    v.m = v.m > 0.5 ? 0.35 : v.m > 0 ? 0 : 0.75;
+    this.audioInit(); if (this._ac && this._ac.state === 'suspended') { try { this._ac.resume(); } catch (e) {} }
+    if (v.m > 0) this.sndRadio('ui');
+    this.forceUpdate();
+  };
+  updateAudio(dt) {   // ambience conductor — real-time dt (unscaled), runs even paused (the wind doesn't pause)
+    const S = this.S; if (!S || !this._ac || !this._axM) return;
+    const t = this._ac.currentTime, vol = S.vol || (S.vol = { m: 0.75 });
+    this._axM.gain.setTargetAtTime((document.hidden ? 0 : 1) * (vol.m || 0) * (S.paused ? 0.35 : 1), t, 0.08);
+    if (vol.m <= 0 || this._ac.state !== 'running') return;
+    this._axDuck = Math.min(1, (this._axDuck == null ? 1 : this._axDuck) + dt * 0.5);
+    const night = this.isNight(), lock = S.lockdown;
+    // wind: day breathes, night thins, lockdown hushes further (lights out, breath held)
+    this._axWT = (this._axWT || 0) - dt;
+    if (this._axWT <= 0) { this._axWT = 0.8 + Math.random() * 1.4; this._axWTgt = (night ? 0.05 : 0.1) * (lock ? 0.45 : 1) * (0.55 + Math.random() * 0.8); this._axWind.f.frequency.setTargetAtTime(240 + Math.random() * 260, t, 1.4); }
+    this._axWind.g.gain.setTargetAtTime((this._axWTgt || 0.06) * this._axDuck, t, 1.1);
+    // census near the camera (1s): drives insects, moans, tension
+    this._axCenT = (this._axCenT || 0) - dt;
+    if (this._axCenT <= 0) {
+      this._axCenT = 1;
+      let n = 0, ag = 0, px = 0, py = 0; const cam = this.cam || this.hq;
+      for (const z of S.zombies) { if (z.hp <= 0) continue; const dx = z.x - cam.x, dy = z.y - cam.y; if (dx > 1700 || dx < -1700 || dy > 1700 || dy < -1700) continue; n++; if ((z.st | 0) === 2) ag++; if (Math.random() * n < 1) { px = z.x; py = z.y; } }
+      this._axNearZ = n; this._axAgit = ag; if (px) { this._axZx = px; this._axZy = py; }
+      let wp = 0; const wallR = (this.ringR || 4) * this.TS;
+      this.zNear(this.hq.x, this.hq.y, wallR + 520, () => { wp++; }); this._axPress = wp;
+    }
+    this._axCkT = (this._axCkT || 0) - dt;
+    if (night && !lock && (this._axNearZ || 0) < 6 && this._axCkT <= 0) { this._axCkT = 0.4 + Math.random() * 2.2; this.sndCricket(); }
+    // distant moans: cadence + volume swell with the mass actually near you
+    this._axMoanT = (this._axMoanT || 0) - dt;
+    if ((this._axNearZ || 0) > 0 && this._axMoanT <= 0) {
+      const n = this._axNearZ; this._axMoanT = Math.max(0.9, 6.5 - Math.log2(1 + n) * 1.5) * (0.7 + Math.random() * 0.6);
+      const agit = (this._axAgit || 0) > Math.max(2, n * 0.25);
+      this.sndMoan(this._axZx || this.hq.x, this._axZy || this.hq.y, agit);
+    }
+    // tension drone: real pressure at the wall, or a convoy out in the far field — sparse, slow, low
+    const droneOn = (this._axPress || 0) >= 12 || (S.exped && S.exped.state !== 'return' && S.exped.wagon);
+    this._axDrone.gain.setTargetAtTime(droneOn ? 0.05 * this._axDuck : 0.0001, t, droneOn ? 2.8 : 1.6);
+  }
   toggleBarricadeTool = () => { this.S.tool = this.S.tool === 'barricade' ? null : 'barricade'; this.S.sel = null; this.forceUpdate(); };
   barricadeCost() { return 10; }
   barricadeCap() { return 8 + (this.S.expand || 0) * 4 + ((this.S.hqLevel || 1) - 1) * 4 + (this.S.branches && this.S.branches.ng ? 6 : 0); }   // NAT. GUARD: barricade corps
@@ -2809,6 +3245,7 @@ class Component extends DCLogic {
       { key: 'vehicles', name: 'MOTOR POOL', cost: 1400, desc: 'Outfit gatherers with class vehicles — HAULER (carry/speed), APC (armor), GUN RIG (self-defense). Costs ALLOY.', reqMet: () => !!S.research.refine, reqText: 'BUILD REFINERY 1ST' },
       { key: 'mech', name: 'MECH BAY', cost: 1600, desc: 'Deploy MECHS — heavy walkers that taunt the horde and stomp with splash. Needs ALLOY.', reqMet: () => !!S.research.refine, reqText: 'BUILD REFINERY 1ST' },
       { key: 'tank', name: 'ARMOR DIVISION', cost: 4200, desc: 'Deploy TANKS — long-range artillery firing heavy splash shells. Deletes clusters from afar.', reqMet: () => S.mechUnlocked && S.threat >= 8, reqText: 'MECH BAY + THREAT 8' },
+      { key: 'powers', name: 'COMMAND UPLINK', cost: 900, desc: 'Unlocks COMMAND POWERS on the Field Command bar — priced support calls (screamer beacons, smoke, fire missions…). Heavier tiers unlock as the colony racks kills.', reqMet: () => true, reqText: '' },
       { key: 'a10', name: 'A-10 WARTHOG', cost: 1800, desc: 'Airforce field upgrade (flies from your HANGAR): an A-10 strafes the OUTER perimeter every 20s, gunning the STRONGEST enemy. Repeat to speed it up; high tiers drop BOMBS.', reqMet: () => S.branches.airforce, reqText: 'NEEDS AIRFORCE BRANCH', repeat: true },
     ];
   }
@@ -2825,10 +3262,20 @@ class Component extends DCLogic {
     else if (key === 'vehicles') { S.research.vehicles = true; this.milestone('MOTOR POOL ONLINE'); }
     else if (key === 'mech') { S.mechUnlocked = true; S.research.mech = true; this.milestone('MECH BAY ONLINE'); }
     else if (key === 'tank') { S.tankUnlocked = true; S.research.tank = true; this.milestone('ARMOR DIVISION'); }
+    else if (key === 'powers') { S.research.powers = true; this.milestone('◈ COMMAND UPLINK ONLINE — POWERS ON FIELD COMMAND'); }
     else if (key === 'a10') { S.a10lvl = (S.a10lvl || 0) + 1; this.milestone('A-10 TIER ' + S.a10lvl + (this.hasBld('hangar') ? '' : ' · BUILD A HANGAR TO FLY')); }
     this.forceUpdate();
   };
-  milestone(t) { this.S.toast = t; this.S.toastT = 3.2; }
+  // ---- game version: baked payload tag; a STAGED auto-update payload (payload-vX.Y.Z.html) reports its
+  // release tag instead, so the top-left always tells the truth about what's actually running.
+  GAME_VER = '0.3.0';
+  gameVer() {
+    if (this._gv) return this._gv;
+    let v = this.GAME_VER;
+    try { const m = /payload-v(\d+\.\d+\.\d+[0-9A-Za-z.-]*)\.html/i.exec(decodeURIComponent(location.pathname || '')); if (m) v = m[1]; } catch (e) {}
+    return (this._gv = 'v' + v);
+  }
+  milestone(t) { this.S.toast = t; this.S.toastT = 3.2; this.sndRadio('toast'); }
   resetGame(confirmFirst) {
     if (confirmFirst && typeof window !== 'undefined' && window.confirm && !window.confirm('Restart the game? All progress will be lost.')) return;
     // drop the persisted save FIRST so nothing can resurrect the old run
@@ -3134,20 +3581,95 @@ class Component extends DCLogic {
     let best = null, bd = 1e9;
     for (const c of this.caches) { if (c.state !== 1) continue; const d = Math.max(Math.abs(c.x - h.x), Math.abs(c.y - h.y)); if (d < bd) { bd = d; best = c; } }
     if (best && bd <= 20 && !moved && hm) {
-      const need = 3 + best.tier;                                                   // 4/5/6s by richness
-      best.prog += dt; this._scavC = best;
-      this.noiseAdd(h.x, h.y, 1.3 * dt);                                            // rummaging is audible — the horde hears
-      if (best.prog >= need) { best.state = 2; best.prog = 0; this._scavC = null; this.scavLoot(best); }
+      this._scavC = best;
+      if (this.searchStep(best, dt, 1, h.x, h.y)) { this._scavC = null; this.scavLoot(best); }
     } else this._scavC = null;
   }
-  scavLoot(c) {
-    const S = this.S, r = Math.random();
-    const ri = Math.min(3, (c.tier === 3 ? 2 : c.tier === 2 ? 1 : 0) + (Math.random() < 0.3 ? 1 : 0));   // rarity floor by distance band
-    if (r < 0.72) this.rollWeapon(this.RARITY[ri], ri, c.x, c.y);                    // mostly gear — per lock
-    else if (r < 0.86) { const s = Math.round((25 + Math.random() * 35) * c.tier); S.scrap += s; S.totalEarned += s; S.floats.push({ x: c.x, y: c.y - 10, text: '+' + s + ' SCRAP · CACHE', color: '#ffd56b', life: 1.5, t: 0 }); }
-    else { const a = Math.round(8 + Math.random() * 10); S.ammo = Math.min(this.resCap('ammo'), (S.ammo || 0) + a); S.floats.push({ x: c.x, y: c.y - 10, text: '+' + a + ' AMMO · CACHE', color: '#e8e3d8', life: 1.5, t: 0 }); }
-    this.noiseAdd(c.x, c.y, 4);   // the lid comes off with a bang
+  // shared search step — hero (rate 1) and units (rate ~0.67) rummage the same way; caller applies the loot
+  searchStep(c, dt, rate, x, y) {
+    c.prog += dt * (rate || 1);
+    this.noiseAdd(x, y, 1.3 * dt);                                                  // rummaging is audible — the horde hears
+    if (c.prog >= 3 + c.tier) { c.state = 2; c.prog = 0; c._claim = null; return true; }
+    return false;
   }
+  scavLoot(c) { return this.scavLootAt(c.tier, c.x, c.y); }
+  scavLootAt(tier, x, y) {
+    const S = this.S, r = Math.random();
+    const ri = Math.min(3, (tier === 3 ? 2 : tier === 2 ? 1 : 0) + (Math.random() < 0.3 ? 1 : 0));   // rarity floor by distance band
+    if (r < 0.72) this.rollWeapon(this.RARITY[ri], ri, x, y);                        // mostly gear — per lock
+    else if (r < 0.86) { const s = Math.round((25 + Math.random() * 35) * tier); S.scrap += s; S.totalEarned += s; S.floats.push({ x, y: y - 10, text: '+' + s + ' SCRAP · CACHE', color: '#ffd56b', life: 1.5, t: 0 }); }
+    else { const a = Math.round(8 + Math.random() * 10); S.ammo = Math.min(this.resCap('ammo'), (S.ammo || 0) + a); S.floats.push({ x, y: y - 10, text: '+' + a + ' AMMO · CACHE', color: '#e8e3d8', life: 1.5, t: 0 }); }
+    this.noiseAdd(x, y, 4);   // the lid comes off with a bang
+  }
+  // SQUAD MOP-UP: no contact on the hunt → crack the containers the hero's exploration stocked
+  squadScav(u, dt, st) {
+    if (!this.caches || u.heli) return false;
+    const S = this.S;
+    let best = null, bd = 300 * 300;
+    for (const c of this.caches) {
+      if (c.state !== 1) continue;
+      if (c._claim && c._claim !== u.id && S.dayT - (c._claimT || 0) < 8) continue;   // someone's already on it
+      const d2 = (c.x - u.x) ** 2 + (c.y - u.y) ** 2;
+      if (d2 < bd) { bd = d2; best = c; }
+    }
+    if (!best) return false;
+    best._claim = u.id; best._claimT = S.dayT;
+    if (bd > 16 * 16) { this.moveAvoid(u, best.x, best.y, st.spd, dt); return true; }
+    if (this.searchStep(best, dt, 0.667, u.x, u.y)) { this.scavLoot(best); u.vet = (u.vet || 0) + 2; }
+    return true;
+  }
+  // SCAVENGER DUTY (gatherer): circuit the hero-stocked caches, carry ≤3 finds, deposit at HQ —
+  // physical hauling doctrine; the hero stays the fastest looter (rate 1 vs 0.67, stocks the world)
+  updateScavenger(u, dt, st) {
+    const S = this.S, air = u.vehicle === 'huey';
+    const finds = u.sfinds || (u.sfinds = []);
+    let c = null;
+    if (u._sgo !== 'home') {
+      c = u._sct != null ? (this.caches || []).find(x => x.id === u._sct && x.state === 1) : null;
+      if (!c) {
+        let bd = 1e18; u._sct = null;
+        for (const cc of this.caches || []) {
+          if (cc.state !== 1) continue;
+          if (cc._skip && S.dayT - cc._skip < 60) continue;                          // recently unreachable — retry later
+          if (cc._claim && cc._claim !== u.id && S.dayT - (cc._claimT || 0) < 8) continue;
+          const d2 = (cc.x - u.x) ** 2 + (cc.y - u.y) ** 2;
+          if (d2 < bd) { bd = d2; c = cc; }
+        }
+        if (c) { u._sct = c.id; u._spt = 0; u._spx = u.x; u._spy = u.y; }
+      }
+    }
+    if (finds.length >= 3 || (finds.length && !c)) u._sgo = 'home';
+    if (u._sgo === 'home') {
+      if (Math.hypot(this.hq.x - u.x, this.hq.y - u.y) < this.hq.r + 20) {
+        for (const t of finds) this.scavLootAt(t, this.hq.x + (Math.random() - .5) * 26, this.hq.y - 22);
+        if (finds.length) S.floats.push({ x: this.hq.x, y: this.hq.y - 36, text: '⌖ SCAV HAUL · ' + finds.length + ' FINDS', color: '#ffd56b', life: 1.6, t: 0 });
+        u.sfinds = []; u._sgo = null; u._sct = null;
+      } else if (air) { const a = Math.atan2(this.hq.y - u.y, this.hq.x - u.x); u.x += Math.cos(a) * st.spd * 0.8 * dt; u.y += Math.sin(a) * st.spd * 0.8 * dt; }
+      else this.fieldMove(u, this.flowHQ, st.spd * 0.8, dt, true, this.hq.x, this.hq.y);
+      return;
+    }
+    if (!c) {   // nothing stocked — stage by the HQ and wait for the hero to wake the world
+      if (Math.hypot(u.x - this.hq.x, u.y - this.hq.y) > 150) {
+        if (air) { const a = Math.atan2(this.hq.y - u.y, this.hq.x - u.x); u.x += Math.cos(a) * st.spd * dt; u.y += Math.sin(a) * st.spd * dt; }
+        else this.fieldMove(u, this.flowHQ, st.spd, dt, true, this.hq.x, this.hq.y);
+      }
+      return;
+    }
+    c._claim = u.id; c._claimT = S.dayT;
+    const d = Math.hypot(c.x - u.x, c.y - u.y);
+    if (d > 16) {
+      if (air) { const a = Math.atan2(c.y - u.y, c.x - u.x); u.x += Math.cos(a) * st.spd * dt; u.y += Math.sin(a) * st.spd * dt; }
+      else this.moveAvoid(u, c.x, c.y, st.spd, dt);
+      u._spt = (u._spt || 0) + dt;
+      if (u._spt > 4) {   // wedge guard: no net headway → mark the site unreachable, pick another
+        if (Math.hypot(u.x - u._spx, u.y - u._spy) < 26) { c._skip = S.dayT; c._claim = null; u._sct = null; }
+        u._spt = 0; u._spx = u.x; u._spy = u.y;
+      }
+      return;
+    }
+    if (this.searchStep(c, dt, 0.667, u.x, u.y)) { finds.push(c.tier); u._sct = null; }
+  }
+  toggleScavDuty = () => { const u = this.selUnit(); if (!u || u.role !== 'gatherer' || u.dead) return; if (u.duty !== 'scav' && !this.hasBld('comms')) { this.milestone('NEEDS A COMMS TOWER — CONTAINER INTEL'); return; } u.duty = u.duty === 'scav' ? null : 'scav'; if (u.duty !== 'scav') { u.sfinds = []; u._sgo = null; u._sct = null; } else { u.gs = 'toNode'; u.load = 0; u.waitFull = false; } this.milestone(u.duty === 'scav' ? '⌖ GA-' + String(u.id).padStart(2, '0') + ' ON SCAVENGER DUTY' : '▣ BACK TO GATHERING'); this.forceUpdate(); };
   // ================================================================ M3.3 EXPEDITIONS (medium stakes)
   // Far ruins become one-shot DIG SITES. The attack squad escorts a supply wagon out, cracks the
   // crates, and drives the haul home — no timers anywhere: the WALK is the mission. Cracking wakes
@@ -3375,6 +3897,7 @@ class Component extends DCLogic {
     S.lockdown = !!on; this._ldAuto = on ? !!auto : false; this._clearT = 0;
     if (!on) { for (const u of S.units) u.hid = false; for (const c of S.civs) c.shel = false; if (this._hordeNear && !auto) this._ldSnooze = true; }
     this.milestone(on ? (auto ? '◬ BROADCAST ALERT — LOCKDOWN: GO DARK, GO QUIET' : '◼ LOCKDOWN — GO DARK, GO QUIET') : (auto ? '◬ ALL CLEAR — LOCKDOWN LIFTED' : '◻ LOCKDOWN LIFTED'));
+    this.sndRadio('alert');
     this.forceUpdate();
   }
   toggleLockdown = () => { this.setLockdown(!this.S.lockdown, false); };
@@ -3402,7 +3925,7 @@ class Component extends DCLogic {
   nearestHome(x, y) { let best = null, bd = 1e18; for (const h of this.S.homes || []) { const d2 = (h.x - x) * (h.x - x) + (h.y - y) * (h.y - y); if (d2 < bd) { bd = d2; best = h; } } return best; }
   // ---- senses: sight (short, LOS-checked) beats hearing; excitement ripples corpse-to-corpse
   zSense(z) {
-    const S = this.S, sR = this.zSight(), sR2 = sR * sR;
+    const S = this.S, sR = this.inSmoke(z.x, z.y) ? 0 : this.zSight(), sR2 = sR * sR;   // SMOKE CURTAIN: inside it, the dead are blind — sound alone
     let best = null, bk = 0, bd2 = sR2;
     const h = S.hero;
     if (h && !h.down) { const d2 = (h.x - z.x) * (h.x - z.x) + (h.y - z.y) * (h.y - z.y); if (d2 < bd2) { bd2 = d2; best = h; bk = 1; } }
@@ -3883,6 +4406,8 @@ class Component extends DCLogic {
       if (air) { const a = Math.atan2(cen.y - u.y, cen.x - u.x); u.x += Math.cos(a) * st.spd * dt; u.y += Math.sin(a) * st.spd * dt; } else this.moveAvoid(u, cen.x, cen.y, st.spd, dt);
     } else if (tz && td < st.range * 2.2) {
       this.moveAvoid(u, tz.x, tz.y, st.spd, dt);   // close on a sighted zombie
+    } else if (!tz && this.squadScav(u, dt, st)) {
+      // quiet stretch of the hunt — mop up a hero-stocked container on the way
     } else if (tgt) {
       if (air) { const a = Math.atan2(tgt.y - u.y, tgt.x - u.x); u.x += Math.cos(a) * st.spd * dt; u.y += Math.sin(a) * st.spd * dt; }
       else if (this.squadField) this.fieldMove(u, this.squadField, st.spd, dt, false, tgt.x, tgt.y);
@@ -3899,7 +4424,7 @@ class Component extends DCLogic {
     if (sq.mode === 'hunt' && !sq.ids.some(id => { const u = by.get(id); return u && !u.dead; })) { sq.mode = 'idle'; this.squadField = null; this.squadTarget = null; if (sq.ids.length) this.milestone('ATTACK SQUAD WIPED — SURVIVORS RECALLED'); }
   }
   toggleSquadHunt = () => { const S = this.S; if (!S.attackSquad) return; if (S.attackSquad.mode === 'exped') { this.expRetreat(); return; } const live = S.attackSquad.ids.filter(id => S.units.some(u => u.id === id && !u.dead)); if (!live.length) { this.milestone('ADD UNITS TO THE SQUAD FIRST'); return; } S.attackSquad.ids = live; S.attackSquad.mode = S.attackSquad.mode === 'hunt' ? 'idle' : 'hunt'; if (S.attackSquad.mode === 'hunt') this.updateSquadField(); this.milestone(S.attackSquad.mode === 'hunt' ? '▸ ATTACK SQUAD HUNTING' : '■ ATTACK SQUAD RECALLED'); this.forceUpdate(); };
-  unitStatus(u) { if (u.dead) return 'DOWN'; if (this.S.exped && this.S.exped.ids.indexOf(u.id) >= 0) return 'EXPED'; if (u.healing) return 'HEAL'; if (u._pat) return 'PATROL'; if (u.role === 'gatherer') return u.fleeing ? 'FLEE' : (u.gs === 'toHQ' ? 'HAUL' : 'GATHER'); if (u.role === 'runner') { const rng = this.stat(u).range || 120; if (this.zAnyNear(u.x, u.y, rng)) return 'FIGHT'; return 'ESCORT'; } if (u.tower != null) return 'TOWER'; const rng = this.stat(u).range || 120; if (this.zAnyNear(u.x, u.y, rng * 0.9)) return 'FIGHT'; return 'GUARD'; }
+  unitStatus(u) { if (u.dead) return 'DOWN'; if (this.S.exped && this.S.exped.ids.indexOf(u.id) >= 0) return 'EXPED'; if (u.healing) return 'HEAL'; if (u._pat) return 'PATROL'; if (u.role === 'gatherer') return u.duty === 'scav' ? ((u.sfinds && u.sfinds.length) ? '⌖HAUL' : 'SCAV') : (u.fleeing ? 'FLEE' : (u.gs === 'toHQ' ? 'HAUL' : 'GATHER')); if (u.role === 'runner') { const rng = this.stat(u).range || 120; if (this.zAnyNear(u.x, u.y, rng)) return 'FIGHT'; return 'ESCORT'; } if (u.tower != null) return 'TOWER'; const rng = this.stat(u).range || 120; if (this.zAnyNear(u.x, u.y, rng * 0.9)) return 'FIGHT'; return 'GUARD'; }
   unitIcon(u) { return u.role === 'gatherer' ? '▣' : u.role === 'mech' ? '⬡' : u.role === 'tank' ? '▬' : u.role === 'runner' ? '⚑' : u.heli ? '✈' : u.squad ? '◆' : '✚'; }
   unitColor(u) { return u.role === 'gatherer' ? '#aecadb' : u.role === 'mech' ? '#36e0cf' : u.role === 'tank' ? '#ffb454' : u.role === 'runner' ? '#9ad0ff' : u.heli ? '#cdb8ff' : u.squad ? '#36e0cf' : '#7ef0a6'; }
   // ---- M3.1 LIGHTING: viewport-culled light sources for the night lightmap.
@@ -4051,6 +4576,9 @@ class Component extends DCLogic {
     this.buildZGrid();   // re-bucket AFTER the zombies moved — bullet hit-tests query true positions, not last-move ones (red-team: the actual stale-grid fix)
     this.physPass(dt);   // REAL PHYSICS — ram outcomes at every zoom; fidelity (jostle/shake) view-gated
     this.updateScav(dt);   // SCAVENGING — hero-mode loot stocking, committed searches, anti-camp recycle
+    this.updatePowers(dt);   // M5 POWERS — cooldowns, screamer pumps, smoke decay, overclock + stand-to windows
+    this.prezSupport(dt);   // PRESIDENT SUPPORT CALLS — weighted strategic gates over the powers roster
+    this.wallRebuildTick(dt);   // BALLISTICS vs STRUCTURES — post-breach pathing/acoustics rebuild (throttled)
     // bullets
     for (const b of S.bullets) this.updateBullet(b, dt);
     S.bullets = S.bullets.filter(b => b.life > 0);
@@ -4199,6 +4727,7 @@ class Component extends DCLogic {
     const S = this.S;
     const air = u.vehicle === 'huey';
     if (u.vehicle === 'rig' || air) { u.rcd = (u.rcd || 0) - dt; if (u.rcd <= 0) { let nz = null, nd = 130 * 130; for (const z of S.zombies) { const d2 = (z.x - u.x) ** 2 + (z.y - u.y) ** 2; if (d2 < nd) { nd = d2; nz = z; } } if (nz) { u.rcd = 0.7; const a = Math.atan2(nz.y - u.y, nz.x - u.x); S.bullets.push({ x: u.x, y: u.y, a, spd: 520, life: 0.5, dmg: 8 * this.powerMult() * (this.stat(u).vgun || 1), pierce: 0, slow: 0, crit: false, splashR: 0, chain: 0, ap: 0, overWall: false, hit: new Set() }); } } }
+    if (u.duty === 'scav' && !(u.gs === 'toHQ' && u.load > 0)) { this.updateScavenger(u, dt, st); return; }   // finish an in-flight raw haul first
     if (u.gs !== 'toHQ') {
       if (u.nodeIdx == null || u.nodeIdx >= this.resNodes.length) { let bi = 0, bd = 1e9; this.resNodes.forEach((nd, i) => { const d = Math.hypot(nd.x - u.x, nd.y - u.y); if (d < bd) { bd = d; bi = i; } }); u.nodeIdx = bi; }
       const nd = this.resNodes[u.nodeIdx];
@@ -4284,6 +4813,7 @@ class Component extends DCLogic {
     const b = { own: u.id, x: u.x + Math.cos(u.aim) * 12, y: u.y + Math.sin(u.aim) * 12, a: u.aim, spd: heavy ? 380 : 520, life: heavy ? 1.1 : 0.6, dmg, rt: heavy ? 0 : amm.rt, hs: heavy ? 0 : hs, api: amm.api ? 1 : 0, slow: st.slow || 0, crit, splashR: 0, big: heavy, overWall, hit: new Set() };
     if (heavy) b.shell = { W: st.shellW, n: this.SHELLS.he105.n, Ef: this.SHELLS.he105.Ef };   // tank 105MM HE-FRAG
     if (twT >= 5) b.rt = Math.max(b.rt, 0.45);   // citadel platform: stable rest = cleaner pass-throughs
+    this.sndShot(u.x, u.y, { cart: heavy ? null : w.cart, supp: !!w.supp, shell: heavy });
     this.S.bullets.push(b);
   }
   turretDef(type) {
@@ -4308,6 +4838,7 @@ class Component extends DCLogic {
     // AMMO LOGISTICS (active once an AMMO DEPOT exists): stocked magazine = +20% fire rate, dry = scavenged rounds at 55%
     let ammoMul = 1;
     if (this.hasBld('ammo')) { const mag = (t.mag == null ? 20 : t.mag); ammoMul = mag > 0 ? 1.2 : 0.55; }
+    if (this._oclk > 0) ammoMul *= 1.5; else if (this._oclkDry > 0) ammoMul *= 0.45;   // ⚡ OVERCLOCK — surge, then dry bolts
     return { dmg: base * m * tech * this.powerMult(), rof: d.rof * (1 + (lv - 1) * 0.12) * ammoMul, range: d.range * (1 + (lv - 1) * 0.05), slow: d.slow || 0, splash: d.splash ? d.splash * (1 + (lv - 1) * 0.2) : 0, shell: d.shell || null, chain: d.chain || 0, ap: d.ap || 0, cart, amm, color: d.color };
   }
   turretUpgradeCost(t) { const l = (t.lvl || 1) - 1; return Math.floor(this.turretDef(t.type).cost * 120 * (1 + 0.35 * l * l)); }   // polynomial — Lv10 reachable (was 1.55^9 = 52×)
@@ -4321,6 +4852,7 @@ class Component extends DCLogic {
     const amm = st.amm ? this.AMMOS[st.amm] : null;
     const b = { x: t.x + Math.cos(t.aim) * 12, y: t.y + Math.sin(t.aim) * 12, a: t.aim, spd: st.shell ? 380 : 560, life: 0.9, dmg: st.dmg, rt: amm ? amm.rt : 0, hs: t.type === 'sniper' ? 0.30 : t.type === 'gun' ? 0.04 : 0, api: amm && amm.api ? 1 : 0, slow: st.slow, crit: false, splashR: 0, big: !!st.shell, chain: st.chain, ap: st.ap, overWall: true, hit: new Set() };
     if (st.shell) { const sh = this.SHELLS[st.shell]; b.shell = { W: sh.W * (1 + ((t.lvl || 1) - 1) * 0.08), n: sh.n, Ef: sh.Ef }; }   // heavier charges as the crew levels
+    this.sndShot(t.x, t.y, { cart: st.cart, shell: !!st.shell });
     this.S.bullets.push(b);
   }
   updateTurret(t, dt) {
@@ -4355,7 +4887,11 @@ class Component extends DCLogic {
     if (b.x < -20 || b.x > this.AW + 20 || b.y < -20 || b.y > this.AH + 20) { b.life = 0; return; }
     if (!b.overWall && this.isWallPx(b.x, b.y)) {
       if (b.shell) { this.boom(b.x, b.y, b.shell.W, { n: b.shell.n, Ef: b.shell.Ef, own: b.own }); }   // contact fuse on hard cover
-      else this.S.fx.push({ x: b.x, y: b.y, r: 1, mr: 5, life: 0.12, t: 0, kind: 'strike' });
+      else {
+        this.hurtWallTile(Math.floor(b.x / this.TS), Math.floor(b.y / this.TS), this.chewWall(b));   // rounds chew the masonry
+        this.S.fx.push({ x: b.x, y: b.y, r: 1, mr: 5, life: 0.12, t: 0, kind: 'strike' });
+        if (this.sndImpact) this.sndImpact(b.x, b.y, true);
+      }
       b.life = 0; return;
     }
     if (b.shell && b.life <= 0) { this.boom(b.x, b.y, b.shell.W, { n: b.shell.n, Ef: b.shell.Ef, own: b.own }); return; }   // airburst at max range
@@ -4429,12 +4965,27 @@ class Component extends DCLogic {
         else if (d < Rs) z._stagT = Math.max(z._stagT || 0, 0.5);
       }
     });
+    // OVERPRESSURE vs STRUCTURES: blast loading chews the derelict masonry (Hopkinson-Cranz again).
+    // Breaching wants a REAL charge — W ≥ 1kg levels tiles inside ~Rk; mortar-class HE only spalls the face.
+    if (this.wall) {
+      const TS2 = this.TS, sc = W >= 1 ? 520 : 90, RR = Rd * 1.25;
+      const c0 = Math.max(0, Math.floor((x - RR) / TS2)), c1 = Math.min(this.cols - 1, Math.floor((x + RR) / TS2));
+      const r0 = Math.max(0, Math.floor((y - RR) / TS2)), r1 = Math.min(this.rows - 1, Math.floor((y + RR) / TS2));
+      for (let rr = r0; rr <= r1; rr++) for (let cc = c0; cc <= c1; cc++) {
+        if (!this.wall[rr][cc]) continue;
+        const dw = Math.max(10, Math.hypot((cc + 0.5) * TS2 - x, (rr + 0.5) * TS2 - y));
+        if (dw > RR) continue;
+        const sd = Math.min(2200, sc * (Rk / dw) * (Rk / dw));
+        if (sd >= 5) this.hurtWallTile(cc, rr, sd);
+      }
+    }
     const S = this.S;
     S.fx.push({ x, y, r: Math.max(8, Rk * 0.7), mr: Rd, life: 0.34, t: 0, kind: 'strike' });
     S.fx.push({ x, y, r: 4, mr: Rk + 8, life: 0.5, t: 0, kind: 'strike' });
     S.fx.push({ x, y, r: Rk * 0.9, life: 9, t: 0, kind: 'blood', red: false, ash: 1 });   // scorch ring
     for (let i = 0; i < Math.min(10, 3 + W3 * 2); i++) S.fx.push({ x: x + (Math.random() - .5) * Rk * 1.6, y: y + (Math.random() - .5) * Rk * 1.6, vx: (Math.random() - .5) * 160, vy: (Math.random() - .5) * 160, life: 0.5, t: 0, kind: 'gib' });
     if (!o.quiet) this.noiseAdd(x, y, Math.min(40, 10 + W3 * 9));
+    if (!o.quiet) this.sndBoom(x, y, W);
     if (this.inView(x, y, Rd + 80)) this.addShake(Math.min(4.5, 0.8 + W3 * 1.1));
   }
   // ================================================================ REAL PHYSICS (plan locked)
@@ -4698,6 +5249,7 @@ class Component extends DCLogic {
       const S = this.S;
       if (S && !S.paused && !S.gameOver) this.update(dt * S.speed);
       this.updateCamera(dt);
+      this.updateAudio(dt);   // M6.1 — ambience conductor runs on real time (even paused; hidden tabs hard-mute)
       if (!document.hidden) this.draw();   // sim advances while hidden; painting a hidden tab is pure waste
     } catch (e) { /* never let one bad frame freeze the game */ }
   }
@@ -5301,7 +5853,7 @@ class Component extends DCLogic {
     }
     // gatherer lanes + runner tethers
     ctx.strokeStyle = 'rgba(143,179,201,.13)'; ctx.lineWidth = 1.4 / this.scale; ctx.setLineDash([4 / this.scale, 7 / this.scale]);
-    for (const u of S.units) { if (u.role === 'gatherer' && !u.dead) { const t = u.gs === 'toNode' ? ((u.nodeIdx != null && this.resNodes[u.nodeIdx]) || this.hq) : this.hq; ctx.beginPath(); ctx.moveTo(u.x, u.y); ctx.lineTo(t.x, t.y); ctx.stroke(); } }
+    for (const u of S.units) { if (u.role === 'gatherer' && !u.dead && u.duty !== 'scav') { const t = u.gs === 'toNode' ? ((u.nodeIdx != null && this.resNodes[u.nodeIdx]) || this.hq) : this.hq; ctx.beginPath(); ctx.moveTo(u.x, u.y); ctx.lineTo(t.x, t.y); ctx.stroke(); } }
     ctx.setLineDash([]); ctx.strokeStyle = 'rgba(154,208,255,.3)'; ctx.lineWidth = 1 / this.scale;
     for (const u of S.units) { if (u.role !== 'runner' || u.dead) continue; const g = S.units.find(x => x.id === u.guard && x.role === 'gatherer' && !x.dead); if (!g) continue; ctx.beginPath(); ctx.moveTo(u.x, u.y); ctx.lineTo(g.x, g.y); ctx.stroke(); }
 
@@ -5362,6 +5914,8 @@ class Component extends DCLogic {
       else if (f.kind === 'gib') { ctx.fillStyle = `rgba(143,207,90,${0.7 * (1 - f.t / f.life)})`; ctx.fillRect(f.x - 2, f.y - 2, 3, 3); }
       else if (f.kind === 'blood') { const ba = 0.45 * (1 - f.t / f.life); ctx.fillStyle = f.ash ? `rgba(56,54,48,${ba})` : f.red ? `rgba(255,93,108,${ba})` : `rgba(110,150,66,${ba})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r || 6, 0, 6.283); ctx.fill(); }
     }
+    if (this._smokes) for (const s of this._smokes) { const a = Math.min(0.5, s.t / 15 * 0.55); ctx.fillStyle = `rgba(158,168,170,${a.toFixed(2)})`; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * (0.92 + 0.08 * Math.sin(s.t * 2)), 0, 6.283); ctx.fill(); }
+    if (this._beacons) for (const b of this._beacons) { const pu = (b.t * 2.2) % 1; ctx.strokeStyle = `rgba(255,213,107,${(0.75 * (1 - pu)).toFixed(2)})`; ctx.lineWidth = 2.2 / this.scale; ctx.beginPath(); ctx.arc(b.x, b.y, 18 + pu * 130, 0, 6.283); ctx.stroke(); ctx.fillStyle = 'rgba(255,213,107,.9)'; ctx.fillRect(b.x - 2, b.y - 2, 4, 4); }
     if (this._box) { const b = this._box; const x = Math.min(b.x0, b.x1), y = Math.min(b.y0, b.y1), w = Math.abs(b.x1 - b.x0), h = Math.abs(b.y1 - b.y0); ctx.strokeStyle = 'rgba(126,240,166,.9)'; ctx.fillStyle = 'rgba(126,240,166,.1)'; ctx.lineWidth = 1.2 / this.scale; ctx.setLineDash([4 / this.scale, 3 / this.scale]); ctx.fillRect(x, y, w, h); ctx.strokeRect(x, y, w, h); ctx.setLineDash([]); }
     if (S.multiSel && S.multiSel.length > 1) { ctx.strokeStyle = 'rgba(126,240,166,.85)'; ctx.lineWidth = 1.4 / this.scale; for (const id of S.multiSel) { const u = S.units.find(x => x.id === id); if (!u || u.dead) continue; ctx.beginPath(); ctx.arc(u.x, u.y, 13, 0, 6.283); ctx.stroke(); } }
     this.drawHeroGround(ctx, C);
@@ -5383,10 +5937,11 @@ class Component extends DCLogic {
         for (let c = wc0; c <= wc1; c++) {
           if (!this.wall[r][c]) continue;
           const ring = !!(this.ring && this.ring[r][c]);
+          const dfrac = ring ? 0 : this.wallDmgFrac(c, r);   // chewed masonry reads: lower, darker, rust-edged
           let len = 1;
-          while (len < 3 && c + len <= wc1 && this.wall[r][c + len] && !!(this.ring && this.ring[r][c + len]) === ring) len++;
+          while (len < 3 && c + len <= wc1 && this.wall[r][c + len] && !!(this.ring && this.ring[r][c + len]) === ring && !dfrac && !(ring ? 0 : this.wallDmgFrac(c + len, r))) len++;
           const x = c * TS, y = r * TS, x2 = (c + len) * TS, lp = 12 * len;
-          P((x + x2) / 2, y + TS / 2, () => { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); if (ring) this.exTR(ctx, x, y, x2, y + TS, 0, 30, 'tex_concrete', { tint: 'rgba(20,70,66,.16)', roofTint: 'rgba(6,22,24,.4)', edge: 'rgba(54,224,207,.45)', lw: elw, grime: 0, lodPx: lp, lodSide: '#0f1d23', lodRoof: '#1d3640' }); else this.exTR(ctx, x, y, x2, y + TS, 0, 24, 'tex_rock', { roofTint: 'rgba(0,0,0,.3)', edge: 'rgba(140,160,150,.16)', lw: elw, grime: 0, lodPx: lp, lodSide: '#0c1519', lodRoof: '#16252a' }); });
+          P((x + x2) / 2, y + TS / 2, () => { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); if (ring) this.exTR(ctx, x, y, x2, y + TS, 0, 30, 'tex_concrete', { tint: 'rgba(20,70,66,.16)', roofTint: 'rgba(6,22,24,.4)', edge: 'rgba(54,224,207,.45)', lw: elw, grime: 0, lodPx: lp, lodSide: '#0f1d23', lodRoof: '#1d3640' }); else this.exTR(ctx, x, y, x2, y + TS, 0, 24 - dfrac * 8, 'tex_rock', { roofTint: 'rgba(0,0,0,' + (0.3 + dfrac * 0.42).toFixed(2) + ')', edge: dfrac > 0 ? 'rgba(201,160,107,.34)' : 'rgba(140,160,150,.16)', lw: elw, grime: 0, lodPx: lp, lodSide: '#0c1519', lodRoof: '#16252a' }); });
           c += len - 1;
         }
       }
@@ -5470,7 +6025,7 @@ class Component extends DCLogic {
             ctx.fillStyle = 'rgba(255,213,107,' + (0.35 + 0.5 * pu).toFixed(2) + ')';
             ctx.beginPath(); ctx.moveTo(cc.x, cc.y - 13 - pu * 2); ctx.lineTo(cc.x + 2.4, cc.y - 9.6 - pu * 2); ctx.lineTo(cc.x, cc.y - 6.2 - pu * 2); ctx.lineTo(cc.x - 2.4, cc.y - 9.6 - pu * 2); ctx.closePath(); ctx.fill();
           }
-          if (this._scavC === cc) {
+          if (cc.state === 1 && cc.prog > 0.04) {
             const need = 3 + cc.tier, w2 = 26;
             ctx.fillStyle = 'rgba(4,8,10,.72)'; ctx.fillRect(cc.x - w2 / 2 - 1, cc.y - 20, w2 + 2, 5.6);
             ctx.fillStyle = '#ffd56b'; ctx.fillRect(cc.x - w2 / 2, cc.y - 19.2, w2 * Math.min(1, cc.prog / need), 4);
@@ -5565,6 +6120,7 @@ class Component extends DCLogic {
   }
   // build-tool ghost previews (flat on the ground)
   drawGhosts(ctx, C, S) {
+    if (S.tool === 'power' && this._mouse && this._powerKey) { const m = this._mouse; ctx.strokeStyle = 'rgba(255,213,107,.85)'; ctx.lineWidth = 1.5 / this.scale; ctx.setLineDash([5 / this.scale, 5 / this.scale]); ctx.beginPath(); ctx.arc(m.x, m.y, this._powerKey === 'fire' ? 63 : this._powerKey === 'smoke' ? 170 : this._powerKey === 'beacon' ? 160 : this._powerKey === 'standto' ? 90 : 40, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); }
     if (S.tool === 'turret' && this._mouse) { const sp = this.nearestFreeSpot('turret', this._mouse.x, this._mouse.y, 40); const gx = sp ? sp.x : this._mouse.x, gy = sp ? sp.y : this._mouse.y; ctx.strokeStyle = sp ? 'rgba(54,224,207,.85)' : 'rgba(255,93,108,.6)'; ctx.lineWidth = 1.5 / this.scale; ctx.beginPath(); ctx.arc(gx, gy, 18, 0, 6.283); ctx.stroke(); }
     if (S.tool === 'barricade' && this._mouse) { const o = this._barOrient || 'h', SQ = 22; const blocked = S.barricades.length >= this.barricadeCap() || Math.hypot(this._mouse.x - this.hq.x, this._mouse.y - this.hq.y) < 46 || this.barrierFootprintBlocked(this._mouse.x, this._mouse.y, o); ctx.strokeStyle = blocked ? 'rgba(255,93,108,.75)' : 'rgba(126,240,166,.75)'; ctx.fillStyle = blocked ? 'rgba(255,93,108,.14)' : 'rgba(126,240,166,.14)'; ctx.lineWidth = 1.5 / this.scale; for (let i = -1; i <= 1; i++) { const cx = this._mouse.x + (o === 'h' ? i * SQ : 0), cy = this._mouse.y + (o === 'v' ? i * SQ : 0); ctx.fillRect(cx - SQ / 2, cy - SQ / 2, SQ, SQ); ctx.strokeRect(cx - SQ / 2, cy - SQ / 2, SQ, SQ); } }
     if (S.tool === 'warehouse' && this._mouse) { const R = 16; const sp = this.nearestFreeSpot('storage', this._mouse.x, this._mouse.y, 40); const gx = sp ? sp.x : this._mouse.x, gy = sp ? sp.y : this._mouse.y; const blocked = !sp || S.warehouses.length >= this.WCAP(); ctx.strokeStyle = blocked ? 'rgba(255,93,108,.8)' : 'rgba(143,179,201,.85)'; ctx.fillStyle = blocked ? 'rgba(255,93,108,.14)' : 'rgba(143,179,201,.14)'; ctx.lineWidth = 1.5 / this.scale; ctx.fillRect(gx - R, gy - R, 2 * R, 2 * R); ctx.strokeRect(gx - R, gy - R, 2 * R, 2 * R); }
@@ -5654,6 +6210,7 @@ class Component extends DCLogic {
       for (const pi of part.pts) { const p = pts[pi]; const j2 = 1.4 + Math.random(); p.px = p.x - Math.cos(sa) * spd * k * j2; p.py = p.y - (Math.sin(sa) * spd * 0.3 - 70 - Math.random() * 90) * k * j2; }
       this.S.fx.push({ x: wx + (Math.random() - 0.5) * 12, y: wy + (Math.random() - 0.5) * 12, r: 3 + Math.random() * 4, life: 7 + Math.random() * 4, t: 0, kind: 'blood', red: !o.zombie });
     }
+    if (severed > 0) this.sndSquelch(wx, wy);   // gore-gated by doctrine (gore is ON by default until M7 settings)
     this.S.fx.push({ x: wx, y: wy, r: 4 + overkill * 3.5, life: 9, t: 0, kind: 'blood', red: !o.zombie });   // ground stain, fades in the warped ground pass
     rags.push({ x: wx, y: wy, H, color, pts, links, t: 0, life: 5 + Math.random() * 1.5 });
   }
@@ -6177,6 +6734,7 @@ class Component extends DCLogic {
         { label: '⛨ DEFENSE · ' + budName[P2.bud.defense || 0], desc: 'turret · gate · platform upgrades', color: '#36e0cf', onClick: () => this.prezBudCycle('defense'), style: pbtn((P2.bud.defense || 0) > 0) },
         { label: '▦ ECONOMY · ' + budName[P2.bud.economy || 0], desc: 'warehouse · home upgrades', color: '#9ad06b', onClick: () => this.prezBudCycle('economy'), style: pbtn((P2.bud.economy || 0) > 0) },
         { label: '✚ HIRING · ' + budName[P2.bud.hiring || 0], desc: 'staff the field + drill programs', color: '#7ef0a6', onClick: () => this.prezBudCycle('hiring'), style: pbtn((P2.bud.hiring || 0) > 0) },
+        { label: '◈ SUPPORT · ' + budName[P2.bud.support == null ? 2 : P2.bud.support], desc: 'radio fire support — triage, shells, stand-to (weighted gates)', color: '#cdb8ff', onClick: () => this.prezBudCycle('support'), style: pbtn((P2.bud.support == null ? 2 : P2.bud.support) > 0) },
         { label: '⛁ RESERVE FLOOR ' + (P2.floor || 0) + ' · +100', desc: 'he never spends below this', color: '#c9a06b', onClick: () => this.prezFloor(100), style: pbtn(true) },
         { label: '⛁ FLOOR −100', desc: 'loosen the reserve', color: '#c9a06b', onClick: () => this.prezFloor(-100), style: pbtn(false) },
       ];
@@ -6211,6 +6769,10 @@ class Component extends DCLogic {
       const vehParts = vehList.map(k => { const v = this.VEHICLES[k]; const on = su.vehicle === k; const af = S.alloy >= this.vehicleCost(k) || on; return { label: v.name + (on ? ' ✓' : ''), desc: v.desc + ' · ' + this.vehicleCost(k) + ' ALY', color: v.color, onClick: () => this.assignVehicle(k), style: `flex:1;min-width:64px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border:1px solid ${on ? v.color : af ? 'rgba(183,156,255,.3)' : 'rgba(120,135,130,.18)'};background:${on ? 'rgba(183,156,255,.12)' : af ? 'rgba(183,156,255,.04)' : 'rgba(120,135,130,.03)'}` }; });
       const heliList = (su.role === 'operator' && S.branches.airforce) ? Object.keys(this.HELIS).filter(k => k !== 'apache' || this.hasBld('avionics')).map(k => { const v = this.HELIS[k]; const on = su.heli === k; const af = S.alloy >= this.heliCost(k) || on; return { label: v.name + (on ? ' ✓' : ''), desc: v.desc + ' · ' + this.heliCost(k) + ' ALY', color: v.color, onClick: () => this.assignHeli(k), style: `flex:1;min-width:72px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border:1px solid ${on ? v.color : af ? 'rgba(54,224,207,.3)' : 'rgba(120,135,130,.18)'};background:${on ? 'rgba(54,224,207,.12)' : af ? 'rgba(54,224,207,.04)' : 'rgba(120,135,130,.03)'}` }; }) : [];
       const parts = vehParts.length ? vehParts : heliList;
+      if (isGath) {   // SCAVENGER DUTY toggle — commander-mode's harvest of hero-stocked caches
+        const dOn = su.duty === 'scav', comms = this.hasBld('comms');
+        parts.unshift({ label: '⌖ SCAVENGER' + (dOn ? ' ✓' : ''), desc: dOn ? 'circling stocked caches · hauls finds home' : comms ? 'hunt the caches the MAIN OP has stocked' : 'NEEDS COMMS TOWER — container intel', color: '#ffd56b', onClick: this.toggleScavDuty, style: `flex:1;min-width:64px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border:1px solid ${dOn ? '#ffd56b' : comms ? 'rgba(255,213,107,.35)' : 'rgba(120,135,130,.18)'};background:${dOn ? 'rgba(255,213,107,.12)' : comms ? 'rgba(255,213,107,.05)' : 'rgba(120,135,130,.03)'}` });
+      }
       // Runner escort — bought from the gatherer's own inspector (one per gatherer)
       let rnShow = false, rnAction = null, rnLabel = '', rnStyle = '';
       if (isGath) {
@@ -6415,6 +6977,11 @@ class Component extends DCLogic {
     return {
       scrap: fmt(S.scrap), materials: fmt(S.materials), alloy: fmt(S.alloy || 0), refineOn: !!S.research.refine, kills: S.kills, roster: S.units.length, threat: S.threat,
       dayLabel: this.isNight() ? '☾ NIGHT' : '☀ DAY', dayColor: this.isNight() ? '#b79cff' : '#ffd56b',
+      gameVer: this.gameVer(),
+      volLabel: (S.vol && S.vol.m > 0.5) ? '♪ SND' : (S.vol && S.vol.m > 0) ? '♪ LOW' : '♪ OFF',
+      volColor: (S.vol && S.vol.m > 0) ? '#36e0cf' : '#5b6e69',
+      volTip: 'FIELD AUDIO — wind · the horde · gunfire with real report · the command net. All synthesized live. Click: FULL → LOW → OFF',
+      cycleVol: this.cycleVol,
       civPop: S.civs.length + '/' + this.popCap(),
       laborRows: (() => {
         const L = S.labor || {}; const jc = {};
@@ -6501,6 +7068,8 @@ class Component extends DCLogic {
       // ---- UPGRADE BOARD (entity-specific doctrine: jump-only) ----
       upOpen: !!S.upOpen, toggleUp: this.toggleUpBoard,
       // ---- GEAR LOCKER (M5.2) ----
+      // ---- M5 POWERS strip ----
+      powers: this.powerList(),
       gearOpen: !!S.gearOpen, toggleGear: this.toggleGear, gearEquipNone: this.gearUnequip,
       // ---- HERO / COMMANDER mode chip ----
       ...(() => { const hm = this.heroMode(); const stocked = (this.caches || []).reduce((a, c) => a + (c.state === 1 ? 1 : 0), 0); return { modeLabel: hm ? '⚔ HERO' + (stocked ? ' · ' + stocked + ' LOOT' : '') : '▦ COMMAND', modeColor: hm ? '#ffd56b' : '#9be0d8', modeBorder: hm ? 'rgba(255,213,107,.45)' : 'rgba(54,224,207,.25)' }; })(),
@@ -6711,7 +7280,7 @@ class Component extends DCLogic {
       barracksOpen: (S.panels ? S.panels.barracks : true) !== false, barracksChev: ((S.panels ? S.panels.barracks : true) !== false) ? '▾' : '▸', toggleBarracks: () => this.togglePanel('barracks'),
       researchOpen: (S.panels ? S.panels.research : true) !== false, researchChev: ((S.panels ? S.panels.research : true) !== false) ? '▾' : '▸', toggleResearch: () => this.togglePanel('research'),
       perimeterOpen: (S.panels ? S.panels.perimeter : true) !== false, perimeterChev: ((S.panels ? S.panels.perimeter : true) !== false) ? '▾' : '▸', togglePerimeter: () => this.togglePanel('perimeter'),
-      tip: S.tool === 'bld' ? 'Click a ⚒ INDUSTRY PLOT to stake the site — civilians haul the materiel to raise it · ESC to cancel' : S.tool === 'turret' ? 'Click a ◎ TURRET PAD (interior plot or wall slot) to stake the turret · ESC to cancel' : S.tool === 'barricade' ? 'Click to drop a 3-tile barricade · R rotates · ESC to cancel' : S.tool === 'warehouse' ? 'Click a ▦ STORAGE PLOT to stake the warehouse · then pick its resource + cap · ESC to cancel' : S.tool === 'medbay' ? 'Click a ✚ SUPPORT PAD to stake the Med Bay · ESC to cancel' : (S.sel ? 'Tap empty ground to deselect · WASD move the Main Operator' : 'WASD move · HOLD LEFT-CLICK to fire the Main Operator at your cursor'),
+      tip: S.tool === 'power' ? 'COMMAND POWER ARMED — click the map to call it in · click the button again to cancel' : S.tool === 'bld' ? 'Click a ⚒ INDUSTRY PLOT to stake the site — civilians haul the materiel to raise it · ESC to cancel' : S.tool === 'turret' ? 'Click a ◎ TURRET PAD (interior plot or wall slot) to stake the turret · ESC to cancel' : S.tool === 'barricade' ? 'Click to drop a 3-tile barricade · R rotates · ESC to cancel' : S.tool === 'warehouse' ? 'Click a ▦ STORAGE PLOT to stake the warehouse · then pick its resource + cap · ESC to cancel' : S.tool === 'medbay' ? 'Click a ✚ SUPPORT PAD to stake the Med Bay · ESC to cancel' : (S.sel ? 'Tap empty ground to deselect · WASD move the Main Operator' : 'WASD move · HOLD LEFT-CLICK to fire the Main Operator at your cursor'),
       toastShow: !!S.toast, toast: S.toast,
       gameOver: S.gameOver, paused: S.paused, restart: () => this.resetGame(false),
       restartGame: () => this.resetGame(true),

@@ -1,7 +1,14 @@
 # Releasing Systemic Survival via GitHub Releases
 
-The repo is the **hub**: source lives on the default branch, playable builds are attached to
-**Releases**. Players (your son) only ever touch the Releases page.
+There are two repos:
+
+- `tracehooten4452/systemic-survival` is the player-facing/source repo. Its Releases page
+  shows **one asset only**: `Systemic-Survival-X.Y.Z-portable.exe`.
+- `tracehooten4452/systemic-survival-updates` is the public update-feed repo. Its Releases
+  carry only `game-payload.html` + `payload-manifest.json`, which installed exes fetch and
+  verify anonymously.
+
+Players (your son) only ever touch the `systemic-survival` Releases page.
 
 Version numbers below (`0.2.0`) are **examples** — every command derives the real version
 from `package.json`, so nothing here needs editing per release.
@@ -43,11 +50,11 @@ git status --short
 
 ## One-time setup
 
-1. Create the repo on GitHub (suggested name: `systemic-survival`).
-   - **The release repo must be PUBLIC** for auto-updates to work: shipped apps carry NO
-     tokens (by design — a secret inside an exe is not a secret), so installed copies fetch
-     release assets anonymously. Want the CODE private? Use a second, public, releases-only
-     repo and point `"updateRepo"` in package.json at it.
+1. Create both GitHub repos:
+   - `tracehooten4452/systemic-survival` for source + the single player download exe.
+   - `tracehooten4452/systemic-survival-updates` for signed updater payloads.
+   The update-feed repo must be PUBLIC. Shipped apps carry NO tokens (by design — a secret
+   inside an exe is not a secret), so installed copies fetch update assets anonymously.
 2. **Generate the release signing key** — one time, on this build machine:
 
    ```powershell
@@ -98,8 +105,8 @@ npm run pack:win
 ```
 
 This produces `dist\Systemic-Survival-$version-portable.exe` **and** the raw
-`dist\win-unpacked\` app folder. It does NOT produce the zip — that's step 5, after
-verification.
+`dist\win-unpacked\` app folder. The unpacked folder is tested locally but not published
+as a public release asset.
 
 **4. Smoke-test BOTH artifacts** (both ship, so both get verified — expected receipt is
 `"ok": true` with `"blockedRequests": []`):
@@ -129,13 +136,7 @@ The 4c receipt must show `"ok": true` AND a `gameFile` inside `updates\rt-…` w
 
 If any receipt is not `ok: true`, stop here — fix, rebuild, re-verify.
 
-**5. Zip the verified unpacked build** (this creates the second release asset):
-
-```powershell
-Compress-Archive -Path .\dist\win-unpacked -DestinationPath ".\dist\Systemic-Survival-$version-win-unpacked.zip" -Force
-```
-
-**5b. Build the auto-update assets** (installed exes read these from the release instead of
+**5. Build the auto-update assets** (installed exes read these from the update-feed repo instead of
 re-downloading the whole game):
 
 ```powershell
@@ -143,7 +144,7 @@ npm run release:assets
 ```
 
 Writes `dist\game-payload.html` + `dist\payload-manifest.json` (SHA-256, version tag, minimum
-wrapper). Attach BOTH to every release.
+wrapper). Attach both to the matching release in `tracehooten4452/systemic-survival-updates`.
 
 **6. Commit and push the version bump FIRST** — the release tag must point at this commit:
 
@@ -153,21 +154,23 @@ git commit -m "v$version"
 git push
 ```
 
-**7. Publish the release** (tag is created on the commit you just pushed):
+**7. Publish the releases** (tags are created on the commit you just pushed):
 
 ```powershell
-gh release create "v$version" `
-  ".\dist\Systemic-Survival-$version-portable.exe" `
-  ".\dist\Systemic-Survival-$version-win-unpacked.zip" `
-  ".\dist\game-payload.html" `
-  ".\dist\payload-manifest.json" `
+gh release create "v$version" ".\dist\Systemic-Survival-$version-portable.exe" `
+  --repo tracehooten4452/systemic-survival `
   --title "Systemic Survival v$version" `
   --notes "What changed in this build, in one or two lines."
+
+gh release create "v$version" ".\dist\game-payload.html" ".\dist\payload-manifest.json" `
+  --repo tracehooten4452/systemic-survival-updates `
+  --title "Systemic Survival payload v$version" `
+  --notes "Signed payload for Systemic Survival v$version."
 ```
 
-No GitHub CLI? Web UI works the same: *Releases → Draft a new release → tag `v<version>`
-(target: main) → attach the listed `dist\` files → Publish.* Just make sure step 6 happened
-first.
+No GitHub CLI? Web UI works the same. In the player repo, attach only the portable exe. In
+the update-feed repo, attach only the two signed payload assets. Just make sure step 6
+happened first.
 
 ## Content-only releases (the usual case, once players have the exe)
 
@@ -177,21 +180,22 @@ installed exes update THEMSELVES — you publish just the payload, no exe rebuil
 1. `node electron/sync-game.js <path-to-new-game.html>`
 2. Bump `"version"` in package.json (leave `"wrapperMin"` alone)
 3. `npm run release:assets`
-4. Commit + push, then:
+4. Commit + push, then publish ONLY to the update-feed repo:
 
    ```powershell
    $version = (Get-Content .\package.json -Raw | ConvertFrom-Json).version
-   gh release create "v$version" ".\dist\game-payload.html" ".\dist\payload-manifest.json" --title "Systemic Survival v$version" --notes "..."
+   gh release create "v$version" ".\dist\game-payload.html" ".\dist\payload-manifest.json" --repo tracehooten4452/systemic-survival-updates --title "Systemic Survival payload v$version" --notes "..."
    ```
 
-   (Attaching the exe/zip too never hurts — brand-new players still need them.)
+   Do not create a player-facing release for content-only updates. Players skip instructions;
+   the public download page stays dummy-proof by showing only the exe when an exe is needed.
 
 When the WRAPPER changed (anything in `electron/`, Electron version, build config): run the
 FULL flow above, set `"wrapperMin"` in package.json to the new version, and say "grab the new
 exe" in the notes — installed copies show that message instead of auto-updating.
 
-**How the updater behaves:** at launch (online) the exe checks the repo named by
-`"updateRepo"` in package.json, downloads a newer `game-payload.html` (~0.6 MB), verifies the
+**How the updater behaves:** at launch (online) the exe checks
+`tracehooten4452/systemic-survival-updates`, downloads a newer `game-payload.html` (~0.6 MB), verifies the
 manifest SIGNATURE against its baked-in public key, then SHA-256 + game invariants, and stages
 it WITH its runtime siblings (support.js/vendor/assets copied beside it) so it boots exactly
 like the bundled file — on the NEXT start (in-game toast announces it). Offline = silent skip.
@@ -201,11 +205,11 @@ pinned, read-only GitHub fetches. **Releases must be public; the app ships no se
 
 ## The player's flow (send him this once)
 
-1. Open the repo → **Releases** → the top entry.
+1. Open the `systemic-survival` repo → **Releases** → the top entry.
 2. Download `Systemic-Survival-X.Y.Z-portable.exe`.
 3. Run it. SmartScreen warning → **More info → Run anyway** (unsigned prototype).
-4. Blocked by policy? Use the `...win-unpacked.zip` asset → unzip → run
-   `win-unpacked\Systemic Survival.exe`.
+4. Blocked by strict local policy? Ask for a direct unpacked build. It is not published as
+   a public release asset because the Releases page intentionally shows one obvious download.
 
 Saves persist on his machine between versions — replacing the exe never touches them
 (breaking save-schema changes are handled inside the game by versioned save keys).
