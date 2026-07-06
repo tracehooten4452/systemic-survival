@@ -19,13 +19,15 @@ current routing map before making changes.
   Windows icon.
 - Windows wrapper: `electron/main.js`
 - Game-update transplant: `electron/sync-game.js` (payload-only sync + offline scrub; see PACKAGING.md)
-- Sendable build: `dist/Systemic-Survival-0.3.6-portable.exe`
+- Sendable build: `dist/Systemic-Survival-0.3.7-portable.exe`
 - Fallback build: `dist/win-unpacked/`
 - Save key: `ss_outpost_v6`
 - Current audited payload: GAME_VER `0.3.6`, SHA-256
   `7DF06A4A1D2177DD1D96CE3F0C2370EFAE71D3269C10F1311B859266AB285552`.
-- Signed update assets: `dist/game-payload.html` + `dist/payload-manifest.json`,
-  tag `v0.3.6`, wrapperMin `0.3.6`.
+- Player wrapper metadata: package `0.3.7`, wrapperMin `0.3.7`.
+- Live update feed: compatibility `v0.3.6` payload manifest, wrapperMin `0.3.5`, so
+  already-shipped 0.3.5/0.3.6 wrappers can stage current game content. Install the 0.3.7
+  player exe once to get durable gate logging and repaired full-wrapper swaps.
 - Current architecture: one exported Design Component HTML file plus generated DC runtime,
   with an Electron shell for offline/no-server play.
 
@@ -41,7 +43,8 @@ current routing map before making changes.
 - Defense/combat: Main Operator, operators, gatherers, runners, technicians, squads,
   specialists, mechs, tanks, branches, vehicles, helicopters, A-10 runs, turrets, gates,
   towers, barricades, med bays, and Command Council automation.
-- Latest packages through `0.3.6`: launch gate wrapper, renamed stable payload
+- Latest packages through `0.3.7`: launch gate readability/logging repair, updater
+  full-wrapper swap fixes, renamed stable payload
   `Systemic Survival.dc.html`, M7.3 field saves/export/import, threat-scaled 500-zombie siege
   cap, balance harness, and vendored offline brand fonts.
 - Earlier milestone packages remain live: tower platforms T1-T5, airfield, Navy/NG branches,
@@ -87,6 +90,35 @@ current routing map before making changes.
   unlocks, and vehicle parts all have later `DONE` sections.
 - Still-current rough edges: horizon-camera polish, occlusion/readability, and deeper
   MATERIEL -> ALLOY -> factory/bay logistics.
+
+### Codex REDTEAM - 2026-07-06 v0.3.7 / launch gate repair
+
+Status: green for the fixed wrapper build. This pass does not change GAME_VER; the audited
+game payload remains `0.3.6` / `7DF06A4A...`.
+
+What shipped in this pass:
+- Replaced `electron/launch-gate/launch.html` from the drop kit (SHA-256
+  `EA59379E25841FB35F0454E84408501BEF92D87F445831421A44ABCEEAA43FE6`): persistent on-screen
+  event log, click-anywhere hold, PLAY release, and visible 3-2-1 up-to-date countdown.
+- Added durable `updates/gate.log` JSONL entries for feed checks, versions seen, verdicts,
+  download progress, verification/staging, boot target, game visible, and close reason.
+- Gate window now closes only after the game window is visible plus 800ms. Held or
+  `--gate-verbose` sessions stay open until PLAY.
+- Fixed full-wrapper update mechanics for future wrappers: the 5-second cap now applies only
+  while still checking, not during real downloads, and portable downloads target the original
+  portable exe directory via Electron Builder's portable env vars.
+
+Adversarial notes for Claude:
+- Live proof found the v0.3.5 -> v0.3.6 full-wrapper path failed. Root causes were old wrapper
+  code: the 5-second race cancelled large exe downloads, and wrapper downloads targeted the
+  temporary extracted inner exe folder (`process.execPath`) instead of the double-clicked portable.
+- Because those bugs live inside already-shipped 0.3.5/0.3.6 exes, they cannot receive the
+  wrapper repair automatically. The live v0.3.6 update-feed manifest was re-signed as a
+  compatibility payload (`wrapperMin 0.3.5`, manifest SHA-256 `767A9F8C...`) so old launchers
+  do auto-stage the current 0.3.6 game content. Players need one manual 0.3.7 exe download for
+  the fixed launch gate and future wrapper swaps.
+- Verification receipts: old 0.3.5 portable staged the live v0.3.6 payload into isolated
+  userData; old public key signature, SHA, wrapperMin, and payload invariants all passed.
 
 ### Codex REDTEAM - 2026-07-06 v0.3.6 / M7.3
 

@@ -41,16 +41,46 @@ const tag = "v" + pkg.version;
 const file = "game-payload.html";
 const wrapperMin = pkg.wrapperMin || "0.1.0";
 const sha = crypto.createHash("sha256").update(buf).digest("hex");
-const sig = crypto.createSign("SHA256").update(tag + "\n" + file + "\n" + sha + "\n" + wrapperMin).sign(privateKey, "base64");
+const signAsset = (assetFile, assetSha) => crypto
+  .createSign("SHA256")
+  .update(tag + "\n" + assetFile + "\n" + assetSha.toLowerCase() + "\n" + wrapperMin)
+  .sign(privateKey, "base64");
+const sig = signAsset(file, sha);
 
-fs.writeFileSync(path.join(dist, file), buf);
-fs.writeFileSync(path.join(dist, "payload-manifest.json"), JSON.stringify({
+const manifest = {
   tag,
   file,
   sha256: sha,
   sig,
   wrapperMin,
-  note: "signed payload-only update asset — installed exes verify sig + sha256 + wrapperMin before booting it",
-}, null, 2));
+  note: "signed payload update asset — installed exes verify sig + sha256 + wrapperMin before booting it",
+};
+
+if (String(wrapperMin) === String(pkg.version)) {
+  const wrapperRepo = pkg.wrapperRepo || (pkg.updateRepo && /-updates$/i.test(pkg.updateRepo) ? pkg.updateRepo.replace(/-updates$/i, "") : null);
+  const wrapperFile = `Systemic-Survival-${pkg.version}-portable.exe`;
+  const wrapperPath = path.join(dist, wrapperFile);
+  if (!wrapperRepo) {
+    console.error("wrapperMin matches this version, but no wrapperRepo can be derived from package.json.");
+    process.exit(1);
+  }
+  if (!fs.existsSync(wrapperPath)) {
+    console.error(`wrapperMin matches this version, but ${wrapperPath} is missing. Run npm run pack:win before release:assets.`);
+    process.exit(1);
+  }
+  const wrapperBuf = fs.readFileSync(wrapperPath);
+  const wrapperSha = crypto.createHash("sha256").update(wrapperBuf).digest("hex");
+  manifest.wrapper = {
+    repo: wrapperRepo,
+    file: wrapperFile,
+    sha256: wrapperSha,
+    sig: signAsset(wrapperFile, wrapperSha),
+  };
+  manifest.note += "; wrapper releases also carry signed portable-exe metadata";
+}
+
+fs.writeFileSync(path.join(dist, file), buf);
+fs.writeFileSync(path.join(dist, "payload-manifest.json"), JSON.stringify(manifest, null, 2));
 console.log("release assets written → dist/game-payload.html + dist/payload-manifest.json");
 console.log("  tag", tag, "· wrapperMin", wrapperMin, "· sha256", sha.slice(0, 16) + "… · signed ✔");
+if (manifest.wrapper) console.log("  wrapper", manifest.wrapper.file, "· sha256", manifest.wrapper.sha256.slice(0, 16) + "… · signed ✔");

@@ -18,6 +18,9 @@ launcher's one and only network act is an optional, read-only check of GitHub Re
 - Windows may show a SmartScreen warning on first launch (the build is an unsigned
   prototype): click **More info → Run anyway**.
 - The Releases page intentionally shows only the exe so the right download is obvious.
+- If you have the 0.3.5 or 0.3.6 portable, download the newest exe once. Those builds can
+  receive current game content, but the clearer launch gate and durable update log start with
+  the 0.3.7 wrapper.
 
 Your save lives on your own machine and carries across updates (the game only resets saves
 on rare breaking changes, and it does so safely). **The game keeps itself current:** when

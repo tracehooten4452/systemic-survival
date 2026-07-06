@@ -194,6 +194,13 @@ When the WRAPPER changed (anything in `electron/`, Electron version, build confi
 FULL flow above, set `"wrapperMin"` in package.json to the new version, and say "grab the new
 exe" in the notes — installed copies show that message instead of auto-updating.
 
+**Legacy updater caveat:** v0.3.5/v0.3.6 wrappers cannot reliably auto-swap to a new portable:
+their launch gate applied the 5s cap to the whole exe download, and wrote the replacement next
+to the temporary extracted inner exe. The v0.3.7 wrapper fixes this, but old exes need one manual
+download. Until the installed floor is known to be v0.3.7+, keep the public update-feed latest on
+a compatibility payload manifest (`v0.3.6`, `wrapperMin 0.3.5`) and publish wrapper fixes as the
+player-facing exe only.
+
 **How the updater behaves:** at launch (online) the exe checks
 `tracehooten4452/systemic-survival-updates`, downloads a newer `game-payload.html` (~0.6 MB), verifies the
 manifest SIGNATURE against its baked-in public key, then SHA-256 + game invariants, and stages

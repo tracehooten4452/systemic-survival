@@ -48,6 +48,17 @@ function updDir() {
   return d;
 }
 function manifestPath() { return path.join(updDir(), "manifest.json"); }
+function gateLogPath() { return path.join(updDir(), "gate.log"); }
+function appendGateLog(event, data) {
+  try {
+    const line = JSON.stringify({
+      ts: new Date().toISOString(),
+      event,
+      ...(data || {}),
+    }) + "\n";
+    fs.appendFileSync(gateLogPath(), line, "utf8");
+  } catch {}
+}
 function sha256(buf) { return crypto.createHash("sha256").update(buf).digest("hex"); }
 function readManifest() {
   try { return JSON.parse(fs.readFileSync(manifestPath(), "utf8")); } catch { return null; }
@@ -126,6 +137,11 @@ function wrapperSpecFromManifest(man) {
   if (!validRepoName(repo)) throw new Error("wrapper repo missing or invalid");
   return { file, sha256: shaHex, repo };
 }
+function wrapperDownloadDir() {
+  if (process.env.PORTABLE_EXECUTABLE_FILE) return path.dirname(process.env.PORTABLE_EXECUTABLE_FILE);
+  if (process.env.PORTABLE_EXECUTABLE_DIR) return process.env.PORTABLE_EXECUTABLE_DIR;
+  return path.dirname(process.execPath);
+}
 function currentPayloadTag(bundledFile) {
   resolveGamePayload(bundledFile);
   const staged = readManifest();
@@ -169,6 +185,7 @@ function stagePayload(buf, tag, shaHex, sigFile, sig, wrapperMin) {
     if (old && old.file && old.file !== rel) {
       try { fs.rmSync(path.join(updDir(), old.file), { force: true }); } catch {}
     }
+    appendGateLog("payload.staged", { tag, sha256: shaHex, file: rel, wrapperMin: wrapperMin || "0.1.0" });
     return rel;
   });
 }
@@ -178,8 +195,14 @@ function resolveGamePayload(bundledFile, opts) {
   const allowUnsigned = !!(opts && opts.allowUnsigned);   // set ONLY by the --smoke-staged process flag — never by file content
   try {
     const m = readManifest();
-    if (!m || !m.tag || !m.file) return bundledFile;
-    if (!semverNewer(m.tag, BUILT_TAG)) return bundledFile;       // a fresh exe outruns old downloads
+    if (!m || !m.tag || !m.file) {
+      appendGateLog("boot.resolve", { verdict: "bundled", reason: "no-staged-manifest", target: bundledFile });
+      return bundledFile;
+    }
+    if (!semverNewer(m.tag, BUILT_TAG)) {
+      appendGateLog("boot.resolve", { verdict: "bundled", reason: "staged-not-newer", stagedTag: m.tag, builtTag: BUILT_TAG, target: bundledFile });
+      return bundledFile;       // a fresh exe outruns old downloads
+    }
     const f = path.join(updDir(), m.file);
     const buf = fs.readFileSync(f);
     if (sha256(buf) !== String(m.sha256 || "").toLowerCase()) throw new Error("sha mismatch");
@@ -189,9 +212,12 @@ function resolveGamePayload(bundledFile, opts) {
     ensureRuntime();                                              // self-heal missing siblings
     if (!fs.existsSync(path.join(path.dirname(f), "support.js"))) throw new Error("runtime siblings missing");
     console.log("[updater] booting staged payload", m.tag);
+    appendGateLog("boot.resolve", { verdict: "staged", tag: m.tag, target: f });
     return f;
   } catch (e) {
-    console.warn("[updater] staged payload rejected — using bundled:", String((e && e.message) || e));
+    const reason = String((e && e.message) || e);
+    console.warn("[updater] staged payload rejected — using bundled:", reason);
+    appendGateLog("boot.resolve", { verdict: "bundled", reason, target: bundledFile });
     try { fs.rmSync(manifestPath(), { force: true }); } catch {}
     return bundledFile;
   }
@@ -240,9 +266,12 @@ function get(url, redirects, onProgress, maxBytes) {
         total += c.length;
         if (total > maxBytes) { req.destroy(new Error("asset too large")); return; }
         chunks.push(c);
-        if (onProgress && expected > 0) onProgress(Math.round((total / expected) * 100));
+        if (onProgress && expected > 0) onProgress(Math.round((total / expected) * 100), total, expected);
       });
-      res.on("end", () => resolve(Buffer.concat(chunks)));
+      res.on("end", () => {
+        if (onProgress) onProgress(100, total, expected);
+        resolve(Buffer.concat(chunks));
+      });
       res.on("error", reject);
     });
     req.on("timeout", () => req.destroy(new Error("timeout")));
@@ -289,22 +318,35 @@ async function downloadWrapperPortable(man, wrapperMin, onStatus, isCancelled) {
   const spec = wrapperSpecFromManifest(man);
   if (!spec) throw new Error("signed wrapper asset metadata missing");
   const latest = displayTag(man.tag);
+  appendGateLog("wrapper.download.start", { tag: man.tag, wrapperMin, repo: spec.repo, file: spec.file, sha256: spec.sha256 });
   onStatus({ state: "downloading", latest, pct: 0, note: "Downloading the new launcher." });
   const rel = JSON.parse((await get(`https://api.github.com/repos/${spec.repo}/releases/tags/${encodeURIComponent(man.tag)}`)).toString("utf8"));
   assertNotCancelled(isCancelled);
   const asset = releaseAsset(rel, spec.file);
   if (!asset) throw new Error("wrapper asset not found in release");
-  const buf = await get(asset.browser_download_url, 3, (pct) => {
+  let lastPct = -1;
+  let lastBytes = 0;
+  const buf = await get(asset.browser_download_url, 3, (pct, bytes, expected) => {
+    lastBytes = bytes || lastBytes;
+    if (pct !== lastPct) {
+      lastPct = pct;
+      appendGateLog("wrapper.download.progress", { tag: man.tag, pct, bytes: bytes || 0, expected: expected || 0 });
+    }
     onStatus({ state: "downloading", latest, pct, note: "Downloading the new launcher." });
   }, MAX_WRAPPER_BYTES);
   assertNotCancelled(isCancelled);
   if (sha256(buf) !== spec.sha256) throw new Error("wrapper sha256 mismatch");
-  const dest = path.join(path.dirname(process.execPath), spec.file);
+  appendGateLog("wrapper.verify", { tag: man.tag, verdict: "ok", bytes: lastBytes || buf.length, sha256: spec.sha256 });
+  const destDir = wrapperDownloadDir();
+  fs.mkdirSync(destDir, { recursive: true });
+  const dest = path.join(destDir, spec.file);
   const tmp = dest + "." + process.pid + ".download";
   fs.writeFileSync(tmp, buf);
   fs.renameSync(tmp, dest);
+  appendGateLog("wrapper.staged", { tag: man.tag, path: dest });
   onStatus({ state: "restarting", latest, pct: 100, note: "Starting the updated launcher." });
   spawn(dest, [], { detached: true, stdio: "ignore" }).unref();
+  appendGateLog("wrapper.spawned", { tag: man.tag, path: dest });
   return { kind: "wrapper-restarting", exe: dest, wrapperMin };
 }
 async function prepareLaunchUpdate(bundledFile, opts) {
@@ -312,34 +354,47 @@ async function prepareLaunchUpdate(bundledFile, opts) {
   const onStatus = opts.onStatus || (() => {});
   const isCancelled = opts.isCancelled || (() => false);
   const current = displayTag(currentPayloadTag(bundledFile));
+  appendGateLog("feed.check.start", { repo: REPO, current, wrapperVersion: WRAPPER_VERSION, builtTag: BUILT_TAG });
   onStatus({ state: "checking", current, note: "Contacting the update feed." });
 
-  if (!REPO) return { kind: "offline", gameFile: resolveGamePayload(bundledFile), note: "No update feed is configured." };
-  if (!PUBKEY) return { kind: "offline", gameFile: resolveGamePayload(bundledFile), note: "No release public key is baked into this launcher." };
+  if (!REPO) {
+    appendGateLog("feed.verdict", { verdict: "offline", reason: "no-update-repo" });
+    return { kind: "offline", gameFile: resolveGamePayload(bundledFile), note: "No update feed is configured." };
+  }
+  if (!PUBKEY) {
+    appendGateLog("feed.verdict", { verdict: "offline", reason: "no-public-key" });
+    return { kind: "offline", gameFile: resolveGamePayload(bundledFile), note: "No release public key is baked into this launcher." };
+  }
 
   try {
     const rel = await fetchLatestRelease();
+    appendGateLog("feed.release.seen", { tag: rel.tag_name, assets: (rel.assets || []).map((a) => ({ name: a.name, size: a.size })) });
     assertNotCancelled(isCancelled);
     const fetched = await fetchPayloadManifest(rel);
     assertNotCancelled(isCancelled);
     if (!fetched) {
+      appendGateLog("feed.verdict", { verdict: "offline", reason: "missing-payload-assets", releaseTag: rel.tag_name });
       return { kind: "offline", gameFile: resolveGamePayload(bundledFile), note: "Latest release has no payload manifest." };
     }
     const { man, payAsset, wrapperMin } = fetched;
     const latest = displayTag(man.tag);
     const remoteNewer = semverNewer(man.tag, "v" + current);
     const visibleLatest = remoteNewer ? latest : current;
+    appendGateLog("manifest.verified", { tag: man.tag, file: man.file, sha256: man.sha256, wrapperMin, remoteNewer, current, latest: visibleLatest, wrapper: man.wrapper ? { repo: man.wrapper.repo, file: man.wrapper.file, sha256: man.wrapper.sha256 } : null });
     onStatus({ state: "checking", current, latest: visibleLatest, note: "Signed manifest verified." });
 
     if (!remoteNewer) {
+      appendGateLog("feed.verdict", { verdict: "up-to-date", current, latest: visibleLatest });
       return { kind: "up-to-date", gameFile: resolveGamePayload(bundledFile), current, latest: visibleLatest };
     }
 
     if (semverNewer(wrapperMin, WRAPPER_VERSION)) {
+      appendGateLog("feed.verdict", { verdict: "wrapper-required", currentWrapper: WRAPPER_VERSION, wrapperMin, latest });
       try {
         return await downloadWrapperPortable(man, wrapperMin, onStatus, isCancelled);
       } catch (e) {
         if (e && e.cancelled) throw e;
+        appendGateLog("feed.verdict", { verdict: "wrapper-error", latest, reason: String((e && e.message) || e) });
         return {
           kind: "error",
           gameFile: resolveGamePayload(bundledFile),
@@ -350,8 +405,16 @@ async function prepareLaunchUpdate(bundledFile, opts) {
       }
     }
 
+    appendGateLog("payload.download.start", { tag: man.tag, asset: payAsset.name, size: payAsset.size || 0 });
     onStatus({ state: "downloading", current, latest, pct: 0, note: "Downloading the signed payload." });
-    const buf = await get(payAsset.browser_download_url, 3, (pct) => {
+    let lastPayloadPct = -1;
+    let lastPayloadBytes = 0;
+    const buf = await get(payAsset.browser_download_url, 3, (pct, bytes, expected) => {
+      lastPayloadBytes = bytes || lastPayloadBytes;
+      if (pct !== lastPayloadPct) {
+        lastPayloadPct = pct;
+        appendGateLog("payload.download.progress", { tag: man.tag, pct, bytes: bytes || 0, expected: expected || 0 });
+      }
       onStatus({ state: "downloading", current, latest, pct, note: "Downloading the signed payload." });
     });
     assertNotCancelled(isCancelled);
@@ -359,13 +422,20 @@ async function prepareLaunchUpdate(bundledFile, opts) {
     const shaHex = sha256(buf);
     if (shaHex !== String(man.sha256 || "").toLowerCase()) throw new Error("sha256 mismatch");
     if (!validPayloadText(buf.toString("utf8"))) throw new Error("payload failed invariants");
+    appendGateLog("payload.verify", { tag: man.tag, verdict: "ok", bytes: lastPayloadBytes || buf.length, sha256: shaHex });
     stagePayload(buf, man.tag, shaHex, man.file, man.sig, wrapperMin);
     const gameFile = resolveGamePayload(bundledFile);
+    appendGateLog("feed.verdict", { verdict: "payload-staged", current, latest, bootTarget: gameFile });
     return { kind: "payload-staged", gameFile, current, latest, tag: man.tag };
   } catch (e) {
-    if (e && e.cancelled) return { kind: "cancelled", gameFile: resolveGamePayload(bundledFile), current };
-    console.warn("[updater] launch gate check failed:", String((e && e.message) || e));
-    return { kind: "error", gameFile: resolveGamePayload(bundledFile), current, note: String((e && e.message) || e) };
+    const reason = String((e && e.message) || e);
+    if (e && e.cancelled) {
+      appendGateLog("feed.verdict", { verdict: "cancelled", current });
+      return { kind: "cancelled", gameFile: resolveGamePayload(bundledFile), current };
+    }
+    console.warn("[updater] launch gate check failed:", reason);
+    appendGateLog("feed.verdict", { verdict: "error", current, reason });
+    return { kind: "error", gameFile: resolveGamePayload(bundledFile), current, note: reason };
   }
 }
 
@@ -403,4 +473,4 @@ async function checkForUpdates(win) {
   }
 }
 
-module.exports = { resolveGamePayload, prepareLaunchUpdate, checkForUpdates, stageForSmoke, cleanupSmokeStage };
+module.exports = { resolveGamePayload, prepareLaunchUpdate, checkForUpdates, stageForSmoke, cleanupSmokeStage, appendGateLog, gateLogPath };

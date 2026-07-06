@@ -30,6 +30,27 @@ with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
 
 ## CLEARED AUDIT HISTORY
 
+- 2026-07-06: v0.3.7 launch gate readability/logging repair and updater self-swap fix.
+  Drop-kit launch HTML SHA-256
+  `EA59379E25841FB35F0454E84408501BEF92D87F445831421A44ABCEEAA43FE6`;
+  payload SHA-256 unchanged at
+  `7DF06A4A1D2177DD1D96CE3F0C2370EFAE71D3269C10F1311B859266AB285552`;
+  portable exe SHA-256
+  `A0E10EBAFAE3819B2D17CE42A2FEE423182B9CF40B73A62CEE60037B43337D59`.
+  Verdict: green after the gate gained an on-screen event log, click-hold + PLAY release,
+  visible up-to-date countdown, and persistent `updates/gate.log`. Repo-side fixes keep the
+  gate open until the game is visible + 800ms, add `--gate-verbose`, log every gate/updater
+  decision, keep the 5s cap to the checking phase only, and save future portable wrapper
+  downloads beside the original double-clicked exe instead of the temp extracted inner exe.
+  Checks: kit SHA verification, `node --check` for wrapper scripts, `npm run validate:payload`,
+  `npm run pack:win`, source/unpacked/staged/portable smokes with `blockedRequests: []`, normal
+  gate-log probe (`feed.check.start` -> `game.visible` -> `gate.close`), verbose hold probe
+  (log written, no boot/close without PLAY), and live v0.3.5 -> v0.3.6 compatibility probe.
+  Follow-up: publish/tag the player-facing v0.3.7 exe. Keep the update-feed latest at the
+  re-signed v0.3.6 compatibility manifest (`wrapperMin 0.3.5`, SHA-256
+  `767A9F8C76709D6246D65F79B7EC9A62C6BCA68DB5ED3AE3E853DDDA0228CDB7`) because shipped
+  0.3.5/0.3.6 wrappers cannot auto-receive the wrapper repair; they can only auto-stage the
+  current game payload.
 - 2026-07-06: v0.3.6 M7.3 ship lane plus stable payload rename. Candidate kit payload
   SHA-256 `8A2067CD126A883F83946AC7534E858FD18D1C01835A9CAEA88837CCA87A60F6`;
   shipped payload SHA-256 `7DF06A4A1D2177DD1D96CE3F0C2370EFAE71D3269C10F1311B859266AB285552`
@@ -104,6 +125,13 @@ A previous round audited an outdated zip and re-reported fixed findings. Never a
 
 **Blocker:** a payload-only diff that also edits wrapper files, or a wrapper diff that
 doesn't raise `wrapperMin`.
+
+**Legacy exception:** v0.3.5/v0.3.6 wrappers had a broken full-wrapper self-swap path
+(the 5s gate race cancelled large exe downloads, and downloads targeted the temporary
+extracted inner exe folder). Until the installed floor is known to be v0.3.7 or newer,
+do not make the public update-feed latest require a newer wrapper unless you are willing
+to strand those old exes. Keep a compatibility payload feed available and tell players to
+download the fixed portable exe once.
 
 ## Step 2 — Invariant gates (hard blockers)
 

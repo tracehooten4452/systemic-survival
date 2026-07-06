@@ -53,6 +53,8 @@
       </div>
       <div class="barBox" id="barBox" style="display:none"><div class="bar" id="bar"></div></div>
       <div class="note" id="note">Contacting the update feed — offline goes straight to the game.</div>
+      <div id="log" style="font-size:8px;line-height:1.7;color:#5b6e69;max-height:96px;overflow-y:auto;border-top:1px solid rgba(54,224,207,.12);padding-top:6px"></div>
+      <div id="holdHint" style="font-size:7.5px;letter-spacing:1px;color:#4f9b94">CLICK ANYWHERE TO HOLD THIS SCREEN · EVERY EVENT STAYS LISTED ABOVE</div>
       <div class="btns">
         <button id="play" class="primary" style="display:none">▶ PLAY</button>
         <button id="skip" style="display:none">PLAY CURRENT VERSION</button>
@@ -71,7 +73,24 @@
 (function () {
   const $ = (id) => document.getElementById(id);
   const els = { state: $('state'), vers: $('vers'), note: $('note'), bar: $('bar'), barBox: $('barBox'), play: $('play'), skip: $('skip'), spin: $('spin') };
-  let acted = false;
+  let acted = false, held = false, pendingAuto = null;
+  const logEl = $('log');
+  const stamp = () => { const d = new Date(); return d.toTimeString().slice(0, 8); };
+  function logLine(txt, cls) {
+    const div = document.createElement('div');
+    div.textContent = '[' + stamp() + '] ' + txt;
+    if (cls) div.style.color = cls === 'err' ? '#ff8a93' : cls === 'warn' ? '#ffb454' : '#9be0d8';
+    logEl.appendChild(div); logEl.scrollTop = logEl.scrollHeight;
+  }
+  // CLICK-TO-HOLD: any click on the backdrop freezes auto-continue so events stay readable.
+  window.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON') return;
+    held = !held; window.__gateHeld = held;
+    if (held && pendingAuto) { clearTimeout(pendingAuto); pendingAuto = null; }
+    $('holdHint').textContent = held ? '■ HELD — CLICK AGAIN TO RELEASE · PLAY WHEN READY' : 'CLICK ANYWHERE TO HOLD THIS SCREEN · EVERY EVENT STAYS LISTED ABOVE';
+    $('holdHint').style.color = held ? '#ffd56b' : '#4f9b94';
+    if (held) { els.play.style.display = ''; }   // held = always offer the door
+  });
   const emit = (action) => {
     if (acted) return; acted = true;
     window.__gateAction = action;                                    // polled fallback
@@ -93,6 +112,7 @@
   };
   function set(s) {
     const c = CFG[s.state] || CFG.checking;
+    logLine(c.label + (s.latest && s.current && s.latest !== s.current ? ' · v' + s.current + ' → v' + s.latest : '') + (s.pct != null ? ' · ' + Math.round(s.pct) + '%' : '') + (s.note ? ' — ' + s.note : ''), c.cls || (s.state === 'error' ? 'err' : ''));
     els.state.textContent = c.label; els.state.className = 'stateLabel ' + (c.cls || '') + (c.spin ? ' pulse' : '');
     els.spin.style.display = c.spin ? '' : 'none';
     els.barBox.style.display = c.bar ? '' : 'none';
@@ -101,7 +121,11 @@
     els.vers.innerHTML = s.current ? ('<b>v' + s.current + '</b>' + (s.latest && s.latest !== s.current ? ' → <b>v' + s.latest + '</b>' : '')) : '';
     els.play.style.display = c.play ? '' : 'none';
     els.skip.style.display = c.skip ? '' : 'none';
-    if (s.state === 'uptodate' && s.autoPlayMs !== 0) setTimeout(() => emit('play'), s.autoPlayMs || 1200);   // brief flash, then in
+    if (s.state === 'uptodate' && s.autoPlayMs !== 0 && !held) {   // readable dwell; a click holds it open
+      let left = Math.max(1, Math.round((s.autoPlayMs || 2600) / 1000));
+      const tick = () => { if (held || acted) return; if (left <= 0) { emit('play'); return; } els.note.textContent = c.note + ' Launching in ' + left + '… (click to hold)'; left--; pendingAuto = setTimeout(tick, 1000); };
+      tick();
+    }
   }
   window.__gate = { set };
   if (window.gateAPI && window.gateAPI.onStatus) window.gateAPI.onStatus(set);
