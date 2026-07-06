@@ -5,8 +5,10 @@ defense, economy — grow them into automation, and hold the line. Tower defense
 Anno-style resource chains with real physics, a living civilian city, and an autonomous
 President who runs what you build.
 
-Runs as a fully offline Windows app (Electron). No account, no server, no network — the
-wrapper blocks all external requests by design.
+Runs as an offline-first Windows app (Electron). No account, no server — and the game page
+itself can never touch the network: all requests from the game are blocked by design. The
+launcher's one and only network act is an optional, read-only check of GitHub Releases for
+**signed** game updates at startup; offline, it silently skips and the game plays as always.
 
 ## Download & Play
 
@@ -20,7 +22,9 @@ wrapper blocks all external requests by design.
   `Systemic Survival.exe` inside.
 
 Your save lives on your own machine and carries across updates (the game only resets saves
-on rare breaking changes, and it does so safely).
+on rare breaking changes, and it does so safely). **The game keeps itself current:** when
+online at launch, it quietly downloads new game content (~0.6 MB) from Releases and plays it
+on your next start — you only re-download the exe when a release says the wrapper changed.
 
 ### Controls (basics)
 

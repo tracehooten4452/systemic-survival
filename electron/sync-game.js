@@ -13,10 +13,11 @@
  *
  * Then rebuild + verify:
  *   npm run pack:win
- *   .\dist\Systemic-Survival-0.1.0-portable.exe --smoke-test-output=%TEMP%\ss-smoke.json
+ *   .\dist\Systemic-Survival-<version>-portable.exe --smoke-test-output=%TEMP%\ss-smoke.json
  */
 const fs = require("node:fs");
 const path = require("node:path");
+const { payloadProblems } = require("./payload-validation");
 
 const TARGET_HTML = path.join(__dirname, "..", "Systemic Survival v2.dc.html");
 const TARGET_SUPPORT = path.join(__dirname, "..", "support.js");
@@ -46,8 +47,8 @@ const dst = fs.readFileSync(TARGET_HTML, "utf8");
 const sp = extractPayload(src, "source");
 let payload = src.slice(sp.start, sp.end);
 
-// 2. offline scrub — the wrapper blocks all external requests, and the smoke
-//    test fails on ANY blocked request, so external font/link tags must go.
+// 2. offline scrub — the wrapper blocks all external requests, and the validator
+//    rejects any remaining external script/style/import or file:// dependency.
 const scrubbed = [];
 payload = payload
   .split("\n")
@@ -64,6 +65,11 @@ if (fs.existsSync(LOCAL_FONTS_CSS)) {
     "<helmet>",
     '<helmet>\n<link rel="stylesheet" href="./vendor/fonts/fonts.css">'
   );
+}
+
+const payloadIssues = payloadProblems(payload);
+if (payloadIssues.length) {
+  fail("payload failed validation: " + payloadIssues.join(" · "));
 }
 
 // 4. splice the payload into the packaged html, keeping the wrapper's own

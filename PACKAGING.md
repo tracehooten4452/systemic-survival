@@ -10,7 +10,9 @@ npm start
 ```
 
 The wrapper loads `Systemic Survival v2.dc.html` directly from disk and blocks external
-HTTP/HTTPS requests. React and ReactDOM are vendored in `vendor/`.
+HTTP/HTTPS requests from the game page. React and ReactDOM are vendored in `vendor/`.
+The main process may make one optional, read-only GitHub Releases check for signed payload
+updates; offline play works without it.
 
 ## Build A Sendable Windows EXE
 
@@ -19,10 +21,13 @@ npm install
 npm run pack:win
 ```
 
+`pack:win` first runs `npm run validate:payload`, which rejects external `<script src>`,
+external `<link href>`, external `@import`, and `file://` references before an exe is built.
+
 The portable build is written to:
 
 ```text
-dist/Systemic-Survival-0.1.0-portable.exe
+dist/Systemic-Survival-<version>-portable.exe
 ```
 
 That `.exe` includes Chromium, Electron, the game HTML, `support.js`, and the local vendor files.
@@ -42,7 +47,7 @@ portable wrapper with `rcedit`, because that can break the NSIS integrity check.
 A zipped fallback of the verified unpacked app is also available at:
 
 ```text
-dist/Systemic-Survival-0.1.0-win-unpacked.zip
+dist/Systemic-Survival-<version>-win-unpacked.zip
 ```
 
 Use that if a recipient's Windows policy blocks NSIS portable/self-extracting executables.
@@ -52,7 +57,7 @@ Use that if a recipient's Windows policy blocks NSIS portable/self-extracting ex
 ```powershell
 $receipt = Join-Path $env:TEMP 'systemic-survival-portable-smoke.json'
 Remove-Item -LiteralPath $receipt -Force -ErrorAction SilentlyContinue
-& '.\dist\Systemic-Survival-0.1.0-portable.exe' "--smoke-test-output=$receipt"
+& ".\dist\Systemic-Survival-$version-portable.exe" "--smoke-test-output=$receipt"
 Get-Content -LiteralPath $receipt
 ```
 
@@ -75,7 +80,16 @@ Expected receipt:
 On this machine, `Start-Process`/low-level process launch can be blocked by local Application
 Control for the NSIS portable wrapper, while direct shell launch works and verifies cleanly.
 The unpacked packaged app at `dist/win-unpacked/Systemic Survival.exe` also passes the same
-offline smoke test.
+offline smoke test. The staged-update path must also pass:
+
+```powershell
+$receipt = Join-Path $env:TEMP 'systemic-survival-staged-smoke.json'
+Remove-Item -LiteralPath $receipt -Force -ErrorAction SilentlyContinue
+& ".\dist\win-unpacked\Systemic Survival.exe" "--smoke-staged" "--smoke-test-output=$receipt"
+Get-Content -LiteralPath $receipt
+```
+
+Expected: `"ok": true`, `"stagedMode": true`, and a `gameFile` under `updates\rt-...`.
 
 ## Updating The Game (modularity contract)
 
@@ -90,9 +104,9 @@ npm run pack:win
 # then run the smoke test below
 ```
 
-`sync-game.js` also scrubs any external `<link>`/`@import` URLs from the incoming payload
-(the wrapper blocks all network requests, and the smoke test fails on any blocked request),
-and auto-wires `vendor/fonts/fonts.css` into the helmet if that file exists.
+`sync-game.js` scrubs external `<link>`/`@import` font lines from the incoming payload,
+auto-wires `vendor/fonts/fonts.css` into the helmet if that file exists, then runs the same
+payload validator used by `pack:win` and `release:assets`.
 
 Stable interface the game side guarantees (smoke-test hooks — a game update must keep these):
 
@@ -110,7 +124,10 @@ or the app will try the CDN and fail offline.
 ## Notes
 
 - No local server is used by the packaged app.
-- The app intentionally blocks external network requests so offline behavior is enforced.
+- The game page intentionally blocks external network requests so offline behavior is enforced.
+- Payload updates are signed by `npm run release:assets`; installed exes verify the manifest
+  signature, SHA-256, wrapper minimum, payload invariants, and runtime siblings before booting
+  a staged update.
 - The player save uses the game's existing local storage key, `ss_outpost_v6`.
 - Windows builds are unsigned prototype artifacts. SmartScreen or local enterprise policy may
   warn on first launch until the app is code-signed.

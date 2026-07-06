@@ -1,13 +1,18 @@
 {
   "name": "systemic-survival",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Offline Windows package for Systemic Survival.",
   "author": "Trace",
   "main": "electron/main.js",
   "private": true,
+  "updateRepo": "tracehooten4452/systemic-survival",
+  "wrapperMin": "0.1.0",
   "scripts": {
     "start": "electron .",
-    "pack:win": "set CSC_IDENTITY_AUTO_DISCOVERY=false&& electron-builder --win portable --x64 && node electron/stamp-icons.js"
+    "validate:payload": "node electron/validate-payload.js",
+    "pack:win": "npm run validate:payload && set CSC_IDENTITY_AUTO_DISCOVERY=false&& electron-builder --win portable --x64 && node electron/stamp-icons.js",
+    "release:assets": "node electron/make-release-assets.js",
+    "keys": "node electron/make-signing-key.js"
   },
   "build": {
     "appId": "com.systemicsurvival.game",

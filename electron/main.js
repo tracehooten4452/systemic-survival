@@ -2,11 +2,19 @@ const { app, BrowserWindow, session } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const GAME_FILE = path.join(__dirname, "..", "Systemic Survival v2.dc.html");
+const GAME_BUNDLED = path.join(__dirname, "..", "Systemic Survival v2.dc.html");
 const ICON_FILE = path.join(__dirname, "..", "assets", "systemic-survival-icon.ico");
 const SMOKE_OUTPUT_ARG = process.argv.find((arg) => arg.startsWith("--smoke-test-output="));
 const SMOKE_OUTPUT = SMOKE_OUTPUT_ARG ? path.resolve(SMOKE_OUTPUT_ARG.slice("--smoke-test-output=".length)) : null;
-const SMOKE_TEST = process.argv.includes("--smoke-test") || Boolean(SMOKE_OUTPUT);
+const SMOKE_STAGED = process.argv.includes("--smoke-staged");
+const SMOKE_TEST = process.argv.includes("--smoke-test") || SMOKE_STAGED || Boolean(SMOKE_OUTPUT);
+const updater = require("./updater");
+// Payload-level auto-update: boot the newest VERIFIED staged payload. Plain smoke runs the
+// shipped payload (deterministic artifact check); --smoke-staged pushes the bundled payload
+// through the REAL staging path and boots THAT — proving a downloaded update can load.
+const GAME_FILE = SMOKE_STAGED ? updater.stageForSmoke(GAME_BUNDLED)
+  : SMOKE_TEST ? GAME_BUNDLED
+  : updater.resolveGamePayload(GAME_BUNDLED);
 
 function blockExternalNetwork(blockedRequests) {
   session.defaultSession.webRequest.onBeforeRequest(
@@ -45,6 +53,8 @@ function createWindow({ smokeTest = false, blockedRequests = [] } = {}) {
     console.error(err);
     app.exit(1);
   });
+
+  return win;
 }
 
 async function runSmokeTest(win, blockedRequests) {
@@ -116,6 +126,7 @@ async function runSmokeTest(win, blockedRequests) {
 }
 
 function finishSmoke(payload, exitCode) {
+  payload.stagedMode = SMOKE_STAGED;   // receipt proves WHICH path booted (gameFile shows updates\rt-… when staged)
   const serialized = JSON.stringify(payload, null, 2);
   console.log(serialized);
 
@@ -123,13 +134,16 @@ function finishSmoke(payload, exitCode) {
     fs.writeFileSync(SMOKE_OUTPUT, serialized);
   }
 
+  if (SMOKE_STAGED) updater.cleanupSmokeStage();
   app.exit(exitCode);
 }
 
 app.whenReady().then(() => {
   const blockedRequests = [];
   blockExternalNetwork(blockedRequests);
-  createWindow({ smokeTest: SMOKE_TEST, blockedRequests });
+  const win = createWindow({ smokeTest: SMOKE_TEST, blockedRequests });
+  // background update check — page stays network-blocked; offline = silent no-op
+  if (!SMOKE_TEST) setTimeout(() => updater.checkForUpdates(win), 4000);
 
   if (!SMOKE_TEST) app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

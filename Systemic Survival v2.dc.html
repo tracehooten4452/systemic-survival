@@ -97,6 +97,14 @@
         <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:2px;color:#4f9b94">⬆ UPGRADES</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;color:{{ upBtnSubColor }};line-height:1.2">{{ upBtnSub }}</div>
       </button>
+      <div title="HERO MODE (zoom all the way in): play the hero — loot stocks and glints as you explore. COMMANDER MODE (zoom out): the big picture. Wheel to switch." style="display:flex;flex-direction:column;justify-content:center;gap:1px;padding:0 10px;height:34px;text-align:left;flex:none;border:1px solid {{ modeBorder }};background:rgba(10,16,18,.5)">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:2px;color:#4f9b94">MODE</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;color:{{ modeColor }};line-height:1.2">{{ modeLabel }}</div>
+      </div>
+      <button onClick="{{ toggleGear }}" title="GEAR LOCKER — what every hand carries: ballistic cards, the armory, manual refits" style="display:flex;flex-direction:column;justify-content:center;gap:1px;padding:0 10px;height:34px;text-align:left;flex:none;border:1px solid rgba(54,224,207,.3);background:rgba(54,224,207,.05);cursor:pointer">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:2px;color:#4f9b94">⛨ GEAR</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;color:{{ gearBtnSubColor }};line-height:1.2">{{ gearBtnSub }}</div>
+      </button>
     </div>
 
     <div style="flex:1"></div>
@@ -586,6 +594,64 @@
       </div>
     </sc-if>
 
+    <sc-if value="{{ gearOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:rgba(4,8,10,.8);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:8" onClick="{{ toggleGear }}">
+        <div onClick="{{ stopClick }}" style="width:780px;max-width:calc(100% - 40px);background:linear-gradient(180deg,rgba(10,16,18,.97),rgba(7,11,13,.95));border:1px solid rgba(54,224,207,.35);box-shadow:0 30px 80px rgba(0,0,0,.6);max-height:calc(100% - 60px);display:flex;flex-direction:column">
+          <div style="padding:11px 14px;border-bottom:1px solid rgba(54,224,207,.2);display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;color:#9be0d8">⛨ GEAR LOCKER · {{ gearArmN }} IN ARMORY</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#4f9b94">REAL CARTRIDGES · DROPS AUTO-FIT, REFITS ARE YOURS</span>
+              <button onClick="{{ toggleGear }}" style="border:1px solid rgba(255,93,108,.3);background:rgba(255,93,108,.06);color:#ff8a93;font-size:11px;width:24px;height:22px;line-height:1;cursor:pointer">✕</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:0;overflow:hidden;min-height:0">
+            <div style="width:238px;flex:none;border-right:1px solid rgba(54,224,207,.14);padding:8px;display:flex;flex-direction:column;gap:3px;overflow-y:auto">
+              <sc-for list="{{ gearRoster }}" as="r" hint-placeholder-count="6">
+                <button onClick="{{ r.pick }}" style="display:flex;flex-direction:column;gap:1px;padding:6px 8px;text-align:left;border:1px solid {{ r.bd }};background:rgba(10,18,20,.4);cursor:pointer">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.5px;color:#e8e3d8">{{ r.name }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:{{ r.color }}">{{ r.wname }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:8px;overflow-y:auto">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;flex-direction:column;gap:1px">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:1px;color:#eafffb">{{ gearSelName }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9be0d8">{{ gearSelWpn }}</span>
+                </div>
+                <sc-if value="{{ gearSelLoot }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ gearEquipNone }}" style="padding:5px 10px;border:1px solid rgba(255,180,84,.4);background:rgba(255,180,84,.06);color:#ffd56b;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1px;cursor:pointer">▸ STOW · BACK TO ISSUE</button>
+                </sc-if>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;padding:8px 10px;border:1px solid rgba(120,135,130,.18);background:rgba(10,18,20,.4)">
+                <sc-for list="{{ gearCard }}" as="c" hint-placeholder-count="8">
+                  <div style="display:flex;justify-content:space-between;gap:8px">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:1px;color:#5b6e69">{{ c.l }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:{{ c.c }};text-align:right">{{ c.v }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:2px;color:#5b6e69">ARMORY — FIELD FINDS AWAITING A HAND</span>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <sc-for list="{{ gearArm }}" as="g" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:9px;padding:5px 9px;border:1px solid rgba(120,135,130,.14);background:rgba(10,18,20,.35)">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:{{ g.color }};min-width:170px">{{ g.name }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:1px;color:#5b6e69">{{ g.plat }}</span>
+                    <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:{{ g.deltaColor }}">{{ g.delta }}</span>
+                    <button onClick="{{ g.equip }}" style="{{ g.btnStyle }}">EQUIP ▸</button>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ gearArmNone }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#5b6e69;padding:6px 0">Nothing stored — field drops that don't beat a current weapon land here.</div>
+                </sc-if>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:#5b6e69;line-height:1.6">Every number is physical: ½mv² muzzle energy, transfer by load (FMJ/JHP/AP/API), penetration = retained energy through each body. Suppressors cut the noise the horde hears. ΔDMG compares against the selected carrier.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
     <sc-if value="{{ expedOpen }}" hint-placeholder-val="{{ false }}">
       <div style="position:absolute;inset:0;background:rgba(4,8,10,.8);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:8" onClick="{{ toggleExped2 }}">
         <div onClick="{{ stopClick }}" style="width:640px;max-width:calc(100% - 40px);background:linear-gradient(180deg,rgba(10,16,18,.97),rgba(7,11,13,.95));border:1px solid rgba(255,213,107,.4);box-shadow:0 30px 80px rgba(0,0,0,.6);max-height:calc(100% - 60px);display:flex;flex-direction:column">
@@ -973,7 +1039,7 @@ class Component extends DCLogic {
     const S = this.S = {
       scrap: 30, materials: 20, alloy: 0, kills: 0, totalEarned: 0, threat: 1, spawnT: 0, spawnGap: 2.6, ramp: 0,
       units: [], zombies: [], bullets: [], fx: [], floats: [], turrets: [], barricades: [], medbays: [], warehouses: [], civs: [], civT: 0, civLost: 0, food: 80, homes: [], civJobT: 0, starveT: 0, starved: 0, raw: 0, wool: 0, clothing: 0, milk: 0, meat: 0, dairy: 0, horses: 0, horseT: 0, ammo: 0, blds: [], sites: [], labor: { farm: null, hunt: null, ranch: null, cultivate: null, refine: null, gather: null, repair: null },
-      tool: null, sel: null, multiSel: [], groups: {}, dashFilter: 'all', dashOpen: true, lockdown: false, lockAuto: true, panels: { barracks: true, research: true, perimeter: true }, attackSquad: { ids: [], mode: 'idle' }, paused: false, speed: 1, gameOver: false,
+      tool: null, sel: null, multiSel: [], groups: {}, dashFilter: 'all', dashOpen: true, lockdown: false, lockAuto: true, panels: { barracks: true, research: true, perimeter: true }, attackSquad: { ids: [], mode: 'idle' }, armory: [], paused: false, speed: 1, gameOver: false,
       focus: 0, focusT: 0, tick: 0, nextId: 1,
       squadUnlocked: false, squadFormed: false, formTier: 0, specUnlocked: false, turretUnlocked: false, turretTier: 0,
       mechUnlocked: false, tankUnlocked: false,
@@ -992,6 +1058,41 @@ class Component extends DCLogic {
     this.cam = { x: S.hero.x, y: S.hero.y }; if (!this.zoom) this.zoom = 0.6; this.scale = this.zoom; this._followMode = 'hero';
     this.RARITY = [{ k: 'common', name: 'COMMON', mult: 0.06, color: '#9fb0ab' }, { k: 'rare', name: 'RARE', mult: 0.14, color: '#36e0cf' }, { k: 'epic', name: 'EPIC', mult: 0.28, color: '#b79cff' }, { k: 'legend', name: 'LEGENDARY', mult: 0.55, color: '#ffb454' }];
     this.GEARSTATS = ['dmg', 'hp', 'rof'];
+    // ============================================================ M5.2 BALLISTICS — real cartridges, no guessing
+    // E = ½mv² from published load data; damage = TRANSFERRED energy / JPH (dead-tissue doctrine: walkers
+    // stop by cumulative structural destruction or a CNS hit). JPH=50 J/hp calibrated so the 5.56 auto-gun
+    // lands at its old damage — the whole economy holds while the numbers become physical.
+    this.JPH = 50;
+    this.CARTS = {
+      p9: { name: '9×19MM', mg: 8.0, v: 360 },          // 518 J
+      p57: { name: '5.7×28MM', mg: 2.0, v: 716 },        // 513 J
+      c357: { name: '.357 MAG', mg: 10.2, v: 440 },      // 987 J
+      g12: { name: '12GA 00 BUCK', mg: 32, v: 400 },     // 2560 J (9-pellet aggregate)
+      b556: { name: '5.56 NATO', mg: 4.0, v: 940 },      // 1767 J
+      c762s: { name: '7.62×39', mg: 7.9, v: 730 },       // 2105 J
+      b762: { name: '7.62×51', mg: 9.5, v: 850 },        // 3431 J
+      b338: { name: '.338 LAPUA', mg: 16.2, v: 900 },    // 6561 J
+      b50: { name: '.50 BMG', mg: 42.8, v: 890 },        // 16951 J
+      api50: { name: '.50 API', mg: 41.9, v: 880 },      // 16224 J + incendiary + overpressure
+      mm30: { name: '30MM GAU-8', mg: 425, v: 1013 },    // 218 kJ
+      rail: { name: 'RAIL SLUG', mg: 120, v: 1400 },     // 118 kJ hypervelocity penetrator
+    };
+    // Terminal profiles: tr = fraction of E transferred per soft body, rt = fraction RETAINED (overpen —
+    // the round carries on to the next body in line until it runs out of energy).
+    this.AMMOS = {
+      fmj: { name: 'FMJ', tr: 0.40, rt: 0.30 },
+      jhp: { name: 'JHP', tr: 0.90, rt: 0.0 },
+      ap: { name: 'AP', tr: 0.25, rt: 0.60 },
+      api: { name: 'API', tr: 0.30, rt: 0.55, api: 1 },
+      buck: { name: 'BUCK', tr: 0.85, rt: 0.0 },
+      slug: { name: 'KE PEN', tr: 0.06, rt: 0.92 },      // hypervelocity rod — tiny transfer, deep lane
+    };
+    this.SHELLS = {   // HE naturally lives on W (kg TNT-eq) + fragmentation, not a dmg stat
+      he60: { name: '60MM HE', W: 0.36, n: 3000, Ef: 150 },
+      he105: { name: '105MM HE', W: 2.3, n: 4500, Ef: 180 },
+      he127: { name: '127MM HE', W: 3.3, n: 5500, Ef: 190 },
+      mk82: { name: 'MK 82 JDAM', W: 87, n: 10000, Ef: 220 },
+    };
     this.nodePool = [
       { x: this.AW / 2, y: 120, r: 19 }, { x: 170, y: this.AH - 120, r: 19 }, { x: this.AW - 170, y: this.AH - 120, r: 19 },
       { x: 150, y: this.AH * 0.42, r: 19 }, { x: this.AW - 150, y: this.AH * 0.42, r: 19 },
@@ -1021,8 +1122,9 @@ class Component extends DCLogic {
         threat: S.threat, ramp: S.ramp, spawnGap: S.spawnGap, dayT: S.dayT || 0, research: S.research,
         squadUnlocked: S.squadUnlocked, squadFormed: S.squadFormed, formTier: S.formTier, specUnlocked: S.specUnlocked, turretUnlocked: S.turretUnlocked, turretTier: S.turretTier,
         mechUnlocked: S.mechUnlocked, tankUnlocked: S.tankUnlocked,
-        cmd: S.cmd, cores: S.cores, sector: S.sector, sectorKills: S.sectorKills || 0, council: S.council, councilOn: S.councilOn, branches: S.branches, a10lvl: S.a10lvl || 0, rsLevel: S.rsLevel || 0, rsBuffs: S.rsBuffs, vetModel: 2, expand: S.expand || 0, hqLevel: S.hqLevel || 1, gates: S.gates.map(g => ({ pad: g.pad, lvl: g.lvl, hp: g.hp, maxhp: g.maxhp })), hero: { up: S.hero.up, gun: S.hero.gun, att: S.hero.att, gear: S.hero.gear || [] }, hqhp: this.hq.hp, nextId: S.nextId,
-        units: S.units.map(u => ({ id: u.id, role: u.role, x: u.x, y: u.y, squad: u.squad, cls: u.cls, up: u.up, hp: u.hp, turretId: u.turretId, gs: u.gs, load: u.load, vet: u.vet || 0, kills: u.kills || 0, chair: u.chair, vehicle: u.vehicle || null, heli: u.heli || null, guard: (u.guard == null ? null : u.guard), vgear: u.vgear || null })),
+        cmd: S.cmd, cores: S.cores, sector: S.sector, sectorKills: S.sectorKills || 0, council: S.council, councilOn: S.councilOn, branches: S.branches, a10lvl: S.a10lvl || 0, rsLevel: S.rsLevel || 0, rsBuffs: S.rsBuffs, vetModel: 2, expand: S.expand || 0, hqLevel: S.hqLevel || 1, gates: S.gates.map(g => ({ pad: g.pad, lvl: g.lvl, hp: g.hp, maxhp: g.maxhp })), hero: { up: S.hero.up, gun: S.hero.gun, att: S.hero.att, gear: S.hero.gear || [], wpn: S.hero.wpn || null }, hqhp: this.hq.hp, nextId: S.nextId,
+        units: S.units.map(u => ({ id: u.id, role: u.role, x: u.x, y: u.y, squad: u.squad, cls: u.cls, up: u.up, hp: u.hp, turretId: u.turretId, gs: u.gs, load: u.load, vet: u.vet || 0, kills: u.kills || 0, chair: u.chair, vehicle: u.vehicle || null, heli: u.heli || null, guard: (u.guard == null ? null : u.guard), vgear: u.vgear || null, wpn: u.wpn || null })),
+        armory: (S.armory || []).slice(0, 30),
         turrets: S.turrets.map(t => ({ id: t.id, x: t.x, y: t.y, r: t.r, hp: t.hp, maxhp: t.maxhp, techId: t.techId, type: t.type || 'gun', lvl: t.lvl || 1, mag: (t.mag == null ? 20 : t.mag), mode: t.mode || 'auto' })),
         barricades: S.barricades.map(b => ({ id: b.id, x: b.x, y: b.y, o: b.o || 'h', hp: b.hp, maxhp: b.maxhp })),
         medbays: S.medbays.map(m => ({ id: m.id, x: m.x, y: m.y, r: m.r, hp: m.hp, maxhp: m.maxhp })),
@@ -1046,14 +1148,15 @@ class Component extends DCLogic {
       if (d.cmd) S.cmd = Object.assign(S.cmd, d.cmd); S.cores = d.cores || 0; S.sector = d.sector || 1; S.sectorKills = d.sectorKills || 0; this.rebuildNodes();
       S.threat = Math.max(this.sectorBaseThreat(S.sector), Math.min(S.threat, this.sectorBaseThreat(S.sector) + 2));
       if (d.nextId) S.nextId = d.nextId;
-      S.units = (d.units || []).map(u => ({ id: u.id, role: u.role, x: u.x, y: u.y, squad: !!u.squad, cls: u.cls || null, up: u.up || { hp: 0, spd: 0, dmg: 0, rof: 0 }, cd: 0, aim: -Math.PI / 2, muzzle: 0, vehicle: u.vehicle || null, heli: u.heli || null, dead: false, reviveT: 0, turretId: u.turretId || null, load: u.load || 0, gs: u.gs || 'toNode', node: null, hp: u.hp, vet: u.vet || 0, kills: u.kills || 0, chair: (u.chair == null ? null : u.chair), guard: (u.guard == null ? null : u.guard), vgear: (u.vgear && typeof u.vgear === 'object') ? u.vgear : null }));
+      S.units = (d.units || []).map(u => ({ id: u.id, role: u.role, x: u.x, y: u.y, squad: !!u.squad, cls: u.cls || null, up: u.up || { hp: 0, spd: 0, dmg: 0, rof: 0 }, cd: 0, aim: -Math.PI / 2, muzzle: 0, vehicle: u.vehicle || null, heli: u.heli || null, dead: false, reviveT: 0, turretId: u.turretId || null, load: u.load || 0, gs: u.gs || 'toNode', node: null, hp: u.hp, vet: u.vet || 0, kills: u.kills || 0, chair: (u.chair == null ? null : u.chair), guard: (u.guard == null ? null : u.guard), vgear: (u.vgear && typeof u.vgear === 'object') ? u.vgear : null, wpn: (u.wpn && u.wpn.cart && this.CARTS[u.wpn.cart]) ? u.wpn : null }));
       if (Array.isArray(d.council)) S.council = d.council.slice(0, 5); if (Array.isArray(d.councilOn)) S.councilOn = d.councilOn.slice(0, 5);
       if (d.vetModel !== 2) { for (const u of S.units) u.vet = 0; S.council = [null, null, null, null, null]; S.councilOn = [false, false, false, false, false]; }
       this.sanitizeCouncil();
       S.rsLevel = d.rsLevel || 0; if (d.rsBuffs) S.rsBuffs = Object.assign(S.rsBuffs, d.rsBuffs);
       if (d.branches) S.branches = Object.assign({ army: false, marines: false, airforce: false, navy: false, ng: false }, d.branches); S.a10lvl = d.a10lvl || 0;
       S.expand = d.expand || 0; S.hqLevel = d.hqLevel || 1; S.gates = Array.isArray(d.gates) ? d.gates.map(g => ({ pad: g.pad, lvl: g.lvl, hp: g.hp, maxhp: g.maxhp })) : []; S.padTiers = (d.padTiers && typeof d.padTiers === 'object') ? d.padTiers : {};
-      if (d.hero) { S.hero.up = Object.assign({ hp: 0, dmg: 0, rof: 0, spd: 0 }, d.hero.up || {}); S.hero.gun = d.hero.gun || 0; S.hero.att = Object.assign({ dmg: 0, rof: 0, range: 0, acc: 0 }, d.hero.att || {}); S.hero.gear = Array.isArray(d.hero.gear) ? d.hero.gear : []; S.hero.maxhp = this.heroStat().maxhp; S.hero.hp = S.hero.maxhp; }
+      if (d.hero) { S.hero.up = Object.assign({ hp: 0, dmg: 0, rof: 0, spd: 0 }, d.hero.up || {}); S.hero.gun = d.hero.gun || 0; S.hero.att = Object.assign({ dmg: 0, rof: 0, range: 0, acc: 0 }, d.hero.att || {}); S.hero.gear = Array.isArray(d.hero.gear) ? d.hero.gear : []; S.hero.wpn = (d.hero.wpn && d.hero.wpn.cart && this.CARTS[d.hero.wpn.cart]) ? d.hero.wpn : null; S.hero.maxhp = this.heroStat().maxhp; S.hero.hp = S.hero.maxhp; }
+      S.armory = Array.isArray(d.armory) ? d.armory.filter(it => it && it.kind === 'wpn' && this.CARTS[it.cart]).slice(0, 30) : [];
       for (const u of S.units) { const st = this.stat(u); u.maxhp = st.hp; if (!u.hp || u.hp > u.maxhp) u.hp = u.maxhp; }
       S.turrets = (d.turrets || []).map(t => ({ id: t.id, x: t.x, y: t.y, r: t.r || 18, hp: t.hp, maxhp: t.maxhp || 260, techId: t.techId || null, cd: 0, type: t.type || 'gun', lvl: t.lvl || 1, mag: (t.mag == null ? 20 : t.mag), mode: ['auto', 'first', 'strong', 'dense', 'near'].includes(t.mode) ? t.mode : 'auto' }));
       S.barricades = (d.barricades || []).map(b => ({ id: b.id, x: b.x, y: b.y, o: b.o || 'h', hp: b.hp, maxhp: b.maxhp || 200 }));
@@ -1112,17 +1215,18 @@ class Component extends DCLogic {
   stat(u) { if (u._stF === this._frame && u._stC) return u._stC; const st = this._statRaw(u); const b = this.S.rsBuffs || {}; st.hp *= (1 + (b.hp || 0) * 0.025); if (st.rof) st.rof *= (1 + (b.rof || 0) * 0.02); if (st.spd) st.spd *= (1 + (b.speed || 0) * 0.02); u._stF = this._frame; u._stC = st; return st; }
   _statRaw(u) {
     if (u.role === 'gatherer') { const lm = this.logiMult(); const v = u.vehicle && this.VEHICLES[u.vehicle] ? this.VEHICLES[u.vehicle] : null; const gp = (s) => (v && u.vgear && u.vgear[s]) ? u.vgear[s].mult : 0; return { hp: (40 + u.up.hp * 14) * (v ? v.hp : 1) * (1 + gp('plating')), spd: (46 + u.up.spd * 0.95) * (v ? v.spd : 1) * (1 + gp('engine')), cap: Math.round((4 + u.up.cap * 2) * lm * (v ? v.carry : 1) * (1 + gp('engine') * 0.5)), dmg: 0, rof: 0, range: 0, dr: Math.min(0.7, (v ? v.dr : 0) + gp('plating') * 0.3), regen: 0, crit: 0, pierce: 0, slow: 0, heal: 0, vgun: 1 + gp('gun') * 2 }; }
-    if (u.role === 'runner') { let hp = 44 + u.up.hp * 14, spd = 54 + u.up.spd * 7, dmg = (7 + u.up.dmg * 3.4) * 0.8, rof = 1.45 + u.up.rof * 0.17, range = 140; return { hp, spd, dmg: dmg * this.powerMult(), rof, range, dr: 0, regen: 0, crit: 0, pierce: 0, slow: 0, heal: 0 }; }
-    if (u.role === 'mech') { return { hp: 260 + u.up.hp * 70, spd: 34 + u.up.spd * 4, dmg: (24 + u.up.dmg * 9) * this.powerMult(), rof: 1.0 + u.up.rof * 0.11, range: 178, dr: 0.25, regen: 4, crit: 0, pierce: 0, slow: 0, heal: 0, splash: 34, taunt: true }; }
-    if (u.role === 'tank') { return { hp: 420 + u.up.hp * 120, spd: 20 + u.up.spd * 3, dmg: (66 + u.up.dmg * 24) * this.powerMult(), rof: 0.45 + u.up.rof * 0.05, range: 320, dr: 0.15, regen: 3, crit: 0, pierce: 0, slow: 0, heal: 0, splash: 64, taunt: false }; }
-    let hp = 50 + u.up.hp * 16, spd = 46 + u.up.spd * 7, dmg = 7 + u.up.dmg * 3.4, rof = 1.5 + u.up.rof * 0.18, range = 152;
+    if (u.role === 'runner') { const w = this.wpnFor(u); let hp = 44 + u.up.hp * 14, spd = 54 + u.up.spd * 7, dmg = this.gunDmg(w.cart, w.amm, w.barrel) * (1 + u.up.dmg * 0.45) * 0.8, rof = (1.45 + u.up.rof * 0.17) * w.rofM, range = 140; return { hp, spd, dmg: dmg * this.powerMult(), rof, range, dr: 0, regen: 0, crit: 0, pierce: 0, slow: 0, heal: 0 }; }
+    if (u.role === 'mech') { const w = this.wpnFor(u); return { hp: 260 + u.up.hp * 70, spd: 34 + u.up.spd * 4, dmg: this.gunDmg(w.cart, w.amm, w.barrel) * (1 + u.up.dmg * 0.35) * this.powerMult(), rof: 1.0 + u.up.rof * 0.11, range: 178, dr: 0.25, regen: 4, crit: 0, pierce: 0, slow: 0, heal: 0, taunt: true }; }
+    if (u.role === 'tank') { return { hp: 420 + u.up.hp * 120, spd: 20 + u.up.spd * 3, dmg: (66 + u.up.dmg * 24) * this.powerMult(), rof: 0.45 + u.up.rof * 0.05, range: 320, dr: 0.15, regen: 3, crit: 0, pierce: 0, slow: 0, heal: 0, shellW: 2.3, taunt: false }; }
+    const wpn = this.wpnFor(u);
+    let hp = 50 + u.up.hp * 16, spd = 46 + u.up.spd * 7, dmg = this.gunDmg(wpn.cart, wpn.amm, wpn.barrel) * (1 + u.up.dmg * 0.45), rof = (1.5 + u.up.rof * 0.18) * wpn.rofM, range = 152;
     let dr = 0, regen = 0, crit = 0, pierce = 0, slow = 0, heal = 0;
     if (u.squad) { const ft = this.S.formTier || 1; dr = Math.min(0.93, 0.8 + ft * 0.025); regen = 5 + ft * 1.6; hp *= (1.18 + ft * 0.05); dmg *= (1 + ft * 0.1); }
-    if (u.cls === 'rifleman') { dmg *= 1.15; crit = 0.28; }
-    else if (u.cls === 'gunner') { rof *= 1.8; dmg *= 1.2; spd *= 0.85; }
+    if (u.cls === 'rifleman') { dmg *= 1.12; crit = 0.28; }
+    else if (u.cls === 'gunner') { rof *= 1.8; spd *= 0.85; }
     else if (u.cls === 'medic') { dmg *= 0.7; heal = 7; regen += 3; }
     else if (u.cls === 'scout') { spd *= 1.5; range *= 1.25; slow = 1; }
-    else if (u.cls === 'marksman') { range *= 1.8; dmg *= 1.9; rof *= 0.6; pierce = 2; }
+    else if (u.cls === 'marksman') { range *= 1.8; pierce = 2; }
     if (u.role === 'technician') { dmg *= 0.7; rof *= 0.85; range = (this.S.turrets.find(t => t.id === u.turretId) ? 240 : range); range *= (1 + 0.4 * this.S.turretTier); dmg *= (1 + 0.4 * this.S.turretTier); }
     if (u.heli && this.HELIS[u.heli]) { const h = this.HELIS[u.heli]; hp *= h.hp; dmg *= h.dmg; rof *= h.rof; range *= h.range; spd *= h.spd; dr = Math.max(dr, h.dr); }
     // VETERANCY PERKS (M5) — surviving battles makes a soldier deadlier: STEADY AIM (vet) → HARDENED (cmdr)
@@ -1133,33 +1237,56 @@ class Component extends DCLogic {
     return { hp, spd, dmg, rof, range, dr, regen, crit, pierce, slow, heal };
   }
   cost(base, lvl) { return Math.floor(base * (1 + lvl * 1.6 + lvl * lvl * 0.14)); }
+  // ---- ballistics helpers: energy, per-shot damage, platform defaults, live weapon resolution
+  cartE(cart, barrel) { const c = this.CARTS[cart]; if (!c) return 0; const v = c.v * (1 + (barrel || 0) * 0.055); return 0.5 * (c.mg / 1000) * v * v; }
+  gunDmg(cart, amm, barrel) { if (!this.CARTS || !this.AMMOS) return 8; const a = this.AMMOS[amm] || this.AMMOS.fmj; return this.cartE(cart, barrel) * a.tr / this.JPH; }
+  platDef(u) {   // baseline issue weapon per platform (a u.wpn loot item overrides)
+    if (u.role === 'runner') return { plat: 'rn', name: 'MP5', cart: 'p9', amm: 'jhp', hs: 0.03, rofM: 1 };
+    if (u.role === 'mech') return { plat: 'mech', name: 'M2HB', cart: 'b50', amm: 'ap', hs: 0, rofM: 1 };
+    if (u.cls === 'marksman') return { plat: 'mk', name: 'PSR .338', cart: 'b338', amm: 'fmj', hs: 0.30, rofM: 0.37 };
+    if (u.squad) return { plat: 'sq', name: 'M14 EBR', cart: 'b762', amm: 'fmj', hs: 0.07, rofM: 0.8 };
+    return { plat: 'op', name: 'M4 CARBINE', cart: 'b556', amm: 'fmj', hs: 0.05, rofM: 1 };
+  }
+  wpnFor(u) {   // resolved weapon: loot item if fitted (and platform-legal), else the issue default
+    const d = this.platDef(u); const w = u.wpn;
+    if (!this.CARTS || !w || w.plat !== d.plat || !this.CARTS[w.cart]) return d;
+    return { plat: w.plat, name: w.name, cart: w.cart, amm: this.AMMOS[w.amm] ? w.amm : d.amm, hs: d.hs + (w.optic || 0) * 0.05, rofM: d.rofM * (1 + (w.action || 0) * 0.08), barrel: w.barrel || 0, supp: w.supp || 0, rar: w.rar, color: w.color };
+  }
+  balDmg(u) { const w = this.wpnFor(u); return this.gunDmg(w.cart, w.amm, w.barrel); }
   heroStat() {
     const h = this.S.hero, b = this.S.rsBuffs || {}; const g = (st) => 1 + (h.gear || []).reduce((a, x) => a + (x.stat === st ? x.mult : 0), 0);
     const gun = this.heroGun(h.gun); const at = h.att || { dmg: 0, rof: 0, range: 0, acc: 0 };
+    const hw = h.wpn && this.CARTS[h.wpn.cart] ? h.wpn : null;   // fitted loot rifle overrides the ladder gun
+    const bD = hw ? this.gunDmg(hw.cart, hw.amm, hw.barrel) : gun.dmg;
+    const bR = hw ? 0.55 * (1 + (hw.action || 0) * 0.08) : gun.rof;
+    const bRg = hw ? 2.4 : gun.range, bSp = hw ? 0 : gun.spread;
     return {
       maxhp: (220 + h.up.hp * 80) * (1 + (b.hp || 0) * 0.025) * g('hp'),
-      dmg: gun.dmg * (1 + h.up.dmg * 0.5 + at.dmg * 0.18) * this.powerMult() * g('dmg'),
-      rof: gun.rof * (1 + h.up.rof * 0.12 + at.rof * 0.12) * (1 + (b.rof || 0) * 0.02) * g('rof'),
-      range: gun.range * (1 + at.range * 0.1),
-      acc: Math.max(0, gun.spread * (1 - at.acc * 0.2)),
+      dmg: bD * (1 + h.up.dmg * 0.5 + at.dmg * 0.18) * this.powerMult() * g('dmg'),
+      rof: bR * (1 + h.up.rof * 0.12 + at.rof * 0.12) * (1 + (b.rof || 0) * 0.02) * g('rof'),
+      range: bRg * (1 + at.range * 0.1),
+      acc: Math.max(0, bSp * (1 - at.acc * 0.2)),
       pspd: 560 + h.up.spd * 40,
     };
   }
   heroGun(g) {
+    // Hero ladder on REAL cartridges — dmg/pierce derive from the load (E·tr/JPH); hs = CNS-hit chance
+    // (shot placement per platform: precision glass climbs it). kb from true momentum in fireHero.
+    const D = (c, a) => this.gunDmg(c, a);
     const tiers = [
-      { name: 'PISTOL', rof: 2.4, range: 0.55, dmg: 12, spread: 0.08, pierce: 0, crit: 0.04, kb: 0.6 },
-      { name: 'REVOLVER', rof: 1.6, range: 0.7, dmg: 28, spread: 0.05, pierce: 0, crit: 0.18, kb: 1.4 },
-      { name: 'PDW', rof: 6.5, range: 0.5, dmg: 8, spread: 0.12, pierce: 0, crit: 0.05, kb: 0.4 },
-      { name: 'SHOTGUN', rof: 1.5, range: 0.45, dmg: 46, spread: 0.16, pierce: 1, crit: 0.06, kb: 2.6 },
-      { name: 'CARBINE', rof: 3.4, range: 0.75, dmg: 17, spread: 0.05, pierce: 0, crit: 0.1, kb: 1.0 },
-      { name: 'RIFLE', rof: 3.0, range: 0.95, dmg: 26, spread: 0.03, pierce: 1, crit: 0.12, kb: 1.3 },
-      { name: 'BATTLE RIFLE', rof: 2.2, range: 1.1, dmg: 44, spread: 0.03, pierce: 2, crit: 0.16, kb: 1.8 },
-      { name: 'MARKSMAN RIFLE', rof: 1.4, range: 1.5, dmg: 70, spread: 0.0, pierce: 3, crit: 0.32, kb: 2.0 },
-      { name: 'SNIPER RIFLE', rof: 0.8, range: 2.2, dmg: 150, spread: 0.0, pierce: 4, crit: 0.5, kb: 3.0 },
+      { name: 'M9 · 9×19', cart: 'p9', amm: 'jhp', rof: 2.4, range: 0.55, dmg: D('p9', 'jhp'), spread: 0.08, hs: 0.04, kb: 0.6 },
+      { name: 'GP100 · .357', cart: 'c357', amm: 'jhp', rof: 1.6, range: 0.7, dmg: D('c357', 'jhp'), spread: 0.05, hs: 0.14, kb: 1.4 },
+      { name: 'MP7 · 5.7', cart: 'p57', amm: 'jhp', rof: 6.5, range: 0.5, dmg: D('p57', 'jhp'), spread: 0.12, hs: 0.04, kb: 0.4 },
+      { name: 'M870 · 12GA', cart: 'g12', amm: 'buck', rof: 1.5, range: 0.45, dmg: D('g12', 'buck'), spread: 0.16, hs: 0.05, kb: 2.6 },
+      { name: 'M4 · 5.56', cart: 'b556', amm: 'fmj', rof: 3.4, range: 0.75, dmg: D('b556', 'fmj'), spread: 0.05, hs: 0.08, kb: 1.0 },
+      { name: 'AKM · 7.62×39', cart: 'c762s', amm: 'fmj', rof: 3.0, range: 0.95, dmg: D('c762s', 'fmj'), spread: 0.03, hs: 0.10, kb: 1.3 },
+      { name: 'M14 · 7.62×51', cart: 'b762', amm: 'fmj', rof: 2.2, range: 1.1, dmg: D('b762', 'fmj'), spread: 0.03, hs: 0.14, kb: 1.8 },
+      { name: 'PSR · .338', cart: 'b338', amm: 'fmj', rof: 1.4, range: 1.5, dmg: D('b338', 'fmj'), spread: 0.0, hs: 0.30, kb: 2.0 },
+      { name: 'M107 · .50 BMG', cart: 'b50', amm: 'ap', rof: 0.8, range: 2.2, dmg: D('b50', 'ap'), spread: 0.0, hs: 0.40, kb: 3.0 },
     ];
     if (g < tiers.length) return tiers[g];
     const o = g - tiers.length + 1;
-    return { name: 'RAILGUN ×' + o, rof: 1.0 + o * 0.1, range: 2.2 + o * 0.2, dmg: 150 + o * 60, spread: 0, pierce: 5 + o, crit: 0.5 + o * 0.03, kb: 3.0 + o * 0.4 };
+    return { name: 'RAILGUN ×' + o, cart: 'rail', amm: 'slug', rof: 1.0 + o * 0.1, range: 2.2 + o * 0.2, dmg: D('rail', 'slug') * (1 + o * 0.18), spread: 0, hs: 0.35 + o * 0.02, kb: 3.0 + o * 0.4 };
   }
   heroGunCost() { return Math.floor(120 * Math.pow(1.6, this.S.hero.gun)); }
   upgradeHero = (stat) => { const h = this.S.hero; const base = { hp: 30, dmg: 34, rof: 40, spd: 28 }[stat]; if (base == null || h.up[stat] == null) return; const c = this.cost(base, h.up[stat]); if (this.spend(c)) { h.up[stat]++; this.forceUpdate(); } };
@@ -1171,13 +1298,17 @@ class Component extends DCLogic {
   fireHero(aim, st, gun) {
     const h = this.S.hero;
     if (this.S.lockdown) return;   // weapons safe — one shot would blow the silence
-    this.noiseAdd(h.x, h.y, 6);
+    const hw = h.wpn && this.CARTS[h.wpn.cart] ? h.wpn : null;   // fitted loot rifle overrides the ladder gun
+    this.noiseAdd(h.x, h.y, 6 * (hw && hw.supp ? 0.18 : 1));
     h.muzzle = 0.05;
-    let dmg = st.dmg; let crit = false;
-    if (gun.crit && Math.random() < gun.crit) { dmg *= 2.4; crit = true; }
+    const amm = this.AMMOS[(hw ? hw.amm : gun.amm) || 'fmj'] || this.AMMOS.fmj;
+    const hs = Math.min(0.6, (hw ? 0.30 + (hw.optic || 0) * 0.05 : gun.hs || 0) + (h.att ? h.att.acc * 0.015 : 0));
+    const dmg = st.dmg;
     const adsMul = this._ads ? 0.18 : 1;
     const a = aim + (st.acc ? (Math.random() - 0.5) * 2 * st.acc * adsMul : 0);
-    this.S.bullets.push({ x: h.x + Math.cos(a) * 14, y: h.y + Math.sin(a) * 14, a, spd: st.pspd, life: 0.5 + (st.range || 0.7) * (this._ads ? 1.25 : 1), dmg, pierce: gun.pierce || 0, slow: 0, crit, splashR: 0, big: false, hero: true, kb: gun.kb || 0.8, hit: new Set() });
+    const cart = this.CARTS[hw ? hw.cart : gun.cart];
+    const kbP = cart ? (cart.mg / 1000) * cart.v * 2 : 40;   // true momentum — bullets nudge, they don't throw
+    this.S.bullets.push({ x: h.x + Math.cos(a) * 14, y: h.y + Math.sin(a) * 14, a, spd: st.pspd, life: 0.5 + (st.range || 0.7) * (this._ads ? 1.25 : 1), dmg, rt: amm.rt, hs, api: amm.api ? 1 : 0, slow: 0, crit: false, splashR: 0, big: false, hero: true, kb: Math.min(3.2, kbP / 25), hit: new Set() });
   }
   heroMelee(target, st) {
     const h = this.S.hero; h.muzzle = 0.06; h.aim = Math.atan2(target.y - h.y, target.x - h.x);
@@ -1483,6 +1614,8 @@ class Component extends DCLogic {
     this.genRuins();
     this.genExpSites();
     this.buildRoads();
+    this.genProps();
+    this.genCaches();
     if (!this._artWarm) {   // bake the per-pixel material set in 12ms slices so first frames never hitch
       this._artWarm = 1; const names = Object.keys(this.TERRA); let wi = 0;
       const step = () => { const t0 = performance.now(); while (wi < names.length && performance.now() - t0 < 12) this.artImg(names[wi++]); if (wi < names.length) setTimeout(step, 16); };
@@ -1914,6 +2047,27 @@ class Component extends DCLogic {
   // the inspector is where you act. This registry is also the PRESIDENT's future brain — his errand
   // AI will walk these same rows physically (travel → touch → execute).
   toggleUpBoard = () => { this.S.upOpen = !this.S.upOpen; this.forceUpdate(); };
+  // ---- M5.2 GEAR LOCKER: roster + ballistic cards + armory refits (the harmless micro-optimization layer)
+  toggleGear = () => { const S = this.S; S.gearOpen = !S.gearOpen; if (S.gearOpen && S.gearSel == null) S.gearSel = 'hero'; this.forceUpdate(); };
+  gearCurW(sel) {   // the selected carrier's CURRENT weapon as an affix-item shape (+ base rof for the card)
+    const S = this.S;
+    if (sel === 'hero') { const h = S.hero; const gun = this.heroGun(h.gun); return h.wpn ? { it: h.wpn, rof: 0.55 * (1 + (h.wpn.action || 0) * 0.08), loot: true } : { it: { cart: gun.cart, amm: gun.amm, barrel: 0, optic: 0, action: 0, supp: 0, name: gun.name }, rof: gun.rof, hs: gun.hs }; }
+    const u = S.units.find(x => x.id === sel && !x.dead); if (!u) return null;
+    const d = this.platDef(u), st = this.stat(u);
+    return u.wpn ? { it: u.wpn, rof: st.rof, loot: true, u } : { it: { cart: d.cart, amm: d.amm, barrel: 0, optic: 0, action: 0, supp: 0, name: d.name }, rof: st.rof, hs: d.hs, u };
+  }
+  gearEquip(idx) {
+    const S = this.S, it = (S.armory || [])[idx]; if (!it) return;
+    if (S.gearSel === 'hero') { if (it.plat !== 'hero') return; const h = S.hero; S.armory.splice(idx, 1); if (h.wpn) this.stashItem(h.wpn); h.wpn = it; }
+    else { const u = S.units.find(x => x.id === S.gearSel && !x.dead); if (!u || this.platDef(u).plat !== it.plat) return; S.armory.splice(idx, 1); if (u.wpn) this.stashItem(u.wpn); u.wpn = it; u._stF = -1; }
+    this.forceUpdate();
+  }
+  gearUnequip() {
+    const S = this.S;
+    if (S.gearSel === 'hero') { const h = S.hero; if (h.wpn) { this.stashItem(h.wpn); h.wpn = null; } }
+    else { const u = S.units.find(x => x.id === S.gearSel); if (u && u.wpn) { this.stashItem(u.wpn); u.wpn = null; u._stF = -1; } }
+    this.forceUpdate();
+  }
   barracksLvl() { let m = 0; for (const b of (this.S.blds || [])) if (b.kind === 'barracks') m = Math.max(m, b.lvl || 0); return m; }
   hireDisc() { return 1 - 0.08 * this.barracksLvl(); }
   barracksUpCost(b) { const l = b.lvl || 0; return Math.floor(200 * (1 + 0.55 * l * l + 0.35 * l)); }
@@ -2429,11 +2583,13 @@ class Component extends DCLogic {
     }
   }
   a10Run(t) {
-    const S = this.S, lvl = S.a10lvl, dmg = (40 + lvl * 30) * this.powerMult();
+    const S = this.S, lvl = S.a10lvl;
+    // GAU-8: 30MM API at 218 kJ — the strafe line doesn't wound, it DISINTEGRATES (dmg ≥ 4×hp → ash)
+    const dmg = this.gunDmg('mm30', 'api') * (1 + (lvl - 1) * 0.1) * this.powerMult();
     const horiz = Math.abs(t.x - this.hq.x) >= Math.abs(t.y - this.hq.y);
-    for (const z of S.zombies) { const d = horiz ? Math.abs(z.y - t.y) : Math.abs(z.x - t.x); if (d < 24) this.hurtZombie(z, dmg, z.x, z.y); }
+    for (const z of S.zombies) { const d = horiz ? Math.abs(z.y - t.y) : Math.abs(z.x - t.x); if (d < 24) { if (dmg >= z.maxhp * 4) z._ash = 1; this.hurtZombie(z, dmg, z.x, z.y); } }
     for (let i = 0; i <= 16; i++) { const f = i / 16; const x = horiz ? f * this.AW : t.x, y = horiz ? t.y : f * this.AH; S.fx.push({ x, y, r: 4, mr: 14, life: 0.5, t: 0, kind: 'strike' }); }
-    if (lvl >= 3) { for (const z of S.zombies) { if (Math.hypot(z.x - t.x, z.y - t.y) < 75) this.hurtZombie(z, dmg * 1.6, z.x, z.y); } S.fx.push({ x: t.x, y: t.y, r: 8, mr: 75, life: 0.5, t: 0, kind: 'strike' }); }
+    if (lvl >= 3) { const mk = this.SHELLS.mk82; this.boom(t.x, t.y, mk.W, { n: mk.n, Ef: mk.Ef }); S.floats.push({ x: t.x, y: t.y - 20, text: '◈ MK 82 AWAY', color: '#ffb454', life: 1.4, t: 0 }); }
     this.noiseAdd(t.x, t.y, 22); this.milestone('A-10 GUN RUN');
   }
   advanceKills() { return 25 + this.S.sector * 15; }
@@ -2686,23 +2842,24 @@ class Component extends DCLogic {
   }
 
   // ---------------------------------------------------------------- combat actions
-  strike(x, y) {
+  strike(x, y, W) {
     const S = this.S; if (S.lockdown) return;
-    this.noiseAdd(x, y, 26);
     S.focus = Math.min(40, S.focus + 1); S.focusT = 2.6;
-    const dmg = (9 + S.threat * 2.5) * this.powerMult();
-    S.fx.push({ x, y, r: 6, mr: 52, life: 0.32, t: 0, kind: 'strike' });
-    for (const z of S.zombies) { if (Math.hypot(z.x - x, z.y - y) < 50) { this.hurtZombie(z, dmg, x, y); } }
+    // 105MM FIRE MISSION — real HE: percussion + shrapnel via boom() (navy passes 127MM's 3.3kg)
+    const sh = W && W >= 3 ? this.SHELLS.he127 : this.SHELLS.he105;
+    this.boom(x, y, W || sh.W, { n: sh.n, Ef: sh.Ef });
   }
   hurtZombie(z, dmg, fx, fy, owner, veh) {
     z.hp -= dmg;
     if (z.hp > 0) this.zAgitate(z);
     if (z.hp <= 0 && !z._dead) { z._dead = true;
-      if (owner != null) { const ku = this.S.units.find(u => u.id === owner && !u.dead); if (ku && ku.role !== 'gatherer') { ku.kills = (ku.kills || 0) + 1; const rk0 = this.rankOf(ku); ku.vet = (ku.vet || 0) + 8; if (this.rankOf(ku) !== rk0) { ku._stF = -1; this.S.floats.push({ x: ku.x, y: ku.y - 16, text: '★ ' + this.rankOf(ku), color: '#ffd56b', life: 1.8, t: 0 }); } } } const mult = 1 + Math.min(3, this.S.focus * this.focusCoef()); const rw = Math.ceil(z.reward * mult * this.incomeMult()); this.S.scrap += rw; this.S.totalEarned += rw; this.S.kills++; this.S.sectorKills = (this.S.sectorKills || 0) + 1; this.S.threatKills = (this.S.threatKills || 0) + 1; this.S.focus = Math.min(40, this.S.focus + 0.5); this.S.focusT = 2.6; this.S.floats.push({ x: z.x, y: z.y, text: '+' + rw, color: '#ffd56b', life: 0.9, t: 0 }); for (let i = 0; i < 4; i++) this.S.fx.push({ x: z.x, y: z.y, vx: (Math.random() - .5) * 90, vy: (Math.random() - .5) * 90, life: 0.4, t: 0, kind: 'gib' }); this.spawnRagdoll(z.x, z.y, 10.5, '#8fcf5a', { dmg, maxhp: z.maxhp, fx, fy, fc: z._fc, zombie: true, veh }); this.dropLoot(z); }
+      if (owner != null) { const ku = this.S.units.find(u => u.id === owner && !u.dead); if (ku && ku.role !== 'gatherer') { ku.kills = (ku.kills || 0) + 1; const rk0 = this.rankOf(ku); ku.vet = (ku.vet || 0) + 8; if (this.rankOf(ku) !== rk0) { ku._stF = -1; this.S.floats.push({ x: ku.x, y: ku.y - 16, text: '★ ' + this.rankOf(ku), color: '#ffd56b', life: 1.8, t: 0 }); } } } const mult = 1 + Math.min(3, this.S.focus * this.focusCoef()); const rw = Math.ceil(z.reward * mult * this.incomeMult()); this.S.scrap += rw; this.S.totalEarned += rw; this.S.kills++; this.S.sectorKills = (this.S.sectorKills || 0) + 1; this.S.threatKills = (this.S.threatKills || 0) + 1; this.S.focus = Math.min(40, this.S.focus + 0.5); this.S.focusT = 2.6; this.S.floats.push({ x: z.x, y: z.y, text: '+' + rw, color: '#ffd56b', life: 0.9, t: 0 }); for (let i = 0; i < 4; i++) this.S.fx.push({ x: z.x, y: z.y, vx: (Math.random() - .5) * 90, vy: (Math.random() - .5) * 90, life: 0.4, t: 0, kind: 'gib' });
+      if (z._ash) { this.S.fx.push({ x: z.x, y: z.y, r: 8 + Math.random() * 4, life: 8, t: 0, kind: 'blood', red: false, ash: 1 }); }   // DISINTEGRATED — nothing left to fall
+      else this.spawnRagdoll(z.x, z.y, 10.5, '#8fcf5a', { dmg, maxhp: z.maxhp, fx, fy, fc: z._fc, zombie: true, veh }); this.dropLoot(z); }
   }
   dropLoot(z) {
     const S = this.S; const base = 0.012 + (this.isNight() ? 0.02 : 0) + S.threat * 0.001 + (z.maxhp > 60 ? 0.05 : 0);
-    if (Math.random() > base) return;
+    if (Math.random() > base * 0.22) return;   // SCAVENGING doctrine: corpses carry rare pocket finds — containers are THE source
     const roll = Math.random(); const ri = roll > 0.97 ? 3 : roll > 0.85 ? 2 : roll > 0.55 ? 1 : 0;
     const rar = this.RARITY[ri]; const stat = this.GEARSTATS[Math.floor(Math.random() * this.GEARSTATS.length)];
     // VEHICLE PARTS (Diablo hook): once rigs roll, half the drops are parts that auto-fit the weakest vehicle
@@ -2718,10 +2875,52 @@ class Component extends DCLogic {
       return;
     }
     const item = { stat, mult: rar.mult, rar: rar.k, color: rar.color, name: rar.name };
+    if (Math.random() < 0.6) { this.rollWeapon(rar, ri, z.x, z.y); return; }   // M5.2: most field finds are GUNS now
     const h = S.hero; if (!h.gear) h.gear = [];
     if (h.gear.length < 3) h.gear.push(item);
     else { let wi = 0; for (let i = 1; i < h.gear.length; i++) if (h.gear[i].mult < h.gear[wi].mult) wi = i; if (item.mult > h.gear[wi].mult) h.gear[wi] = item; else return; }
-    S.floats.push({ x: z.x, y: z.y - 10, text: '✦ ' + rar.name, color: rar.color, life: 1.4, t: 0 });
+    S.floats.push({ x: z.x, y: z.y - 10, text: '✦ ' + rar.name + ' TRINKET', color: rar.color, life: 1.4, t: 0 });
+  }
+  // ---- M5.2 WEAPON LOOT — physical affixes only: barrel (velocity→E), optics (CNS%), action (RPM), suppressor (noise)
+  scoreW(w) { return this.gunDmg(w.cart, w.amm, w.barrel || 0) * (1 + (w.optic || 0) * 0.12) * (1 + (w.action || 0) * 0.08); }
+  rollWeapon(rar, ri, x, y) {
+    const S = this.S;
+    const pool = [];
+    for (const u of S.units) { if (u.dead) continue; if (u.role === 'runner') pool.push('rn'); else if (u.role === 'mech') pool.push('mech'); else if (u.cls === 'marksman') pool.push('mk'); else if (u.squad) pool.push('sq'); else if (u.role === 'operator' || u.role === 'technician') pool.push('op'); }
+    if (!pool.length) pool.push('op');
+    let plat = pool[(Math.random() * pool.length) | 0];
+    if (ri === 3 && Math.random() < 0.4) plat = 'hero';   // the fabled .50 API rifle — legendary pool only
+    const CART = { op: 'b556', sq: 'b762', mk: 'b338', rn: 'p9', mech: 'b50', hero: 'api50' };
+    const BASE = { op: 'M4A1', sq: 'M14 EBR', mk: 'PSR', rn: 'MP5', mech: 'M2HB', hero: 'M82' };
+    const AMS = { op: ['fmj', 'jhp', 'ap'], sq: ['fmj', 'ap'], mk: ['fmj', 'ap'], rn: ['jhp', 'fmj'], mech: ['ap'], hero: ['api'] };
+    const it = { kind: 'wpn', plat, cart: CART[plat], amm: AMS[plat][0], barrel: 0, optic: 0, action: 0, supp: 0, rar: rar.k, color: rar.color, name: '' };
+    for (let i = 0; i <= ri; i++) { const r = Math.random(); if (r < 0.28 && it.barrel < 3) it.barrel++; else if (r < 0.56 && it.optic < 3) it.optic++; else if (r < 0.8 && it.action < 3) it.action++; else if (!it.supp) it.supp = 1; else if (it.barrel < 3) it.barrel++; else it.optic = Math.min(3, it.optic + 1); }
+    if (ri >= 1 && AMS[plat].length > 1 && Math.random() < 0.5) it.amm = AMS[plat][1 + ((Math.random() * (AMS[plat].length - 1)) | 0)];
+    it.name = BASE[plat] + (it.barrel >= 2 ? ' LB' : '') + (it.supp ? ' SD' : '') + ' · ' + this.CARTS[it.cart].name;
+    this.giveWeapon(it, x, y);
+  }
+  giveWeapon(it, x, y) {
+    const S = this.S;
+    if (it.plat === 'hero') {
+      const h = S.hero, cur = h.wpn;
+      if (!cur || this.scoreW(it) > this.scoreW(cur) * 1.02) { if (cur) this.stashItem(cur); h.wpn = it; S.floats.push({ x, y: y - 10, text: '✦ ' + it.name + ' → MAIN OP', color: it.color, life: 1.9, t: 0 }); }
+      else this.stashItem(it, x, y);
+      return;
+    }
+    let tgt = null, worst = 1e18;   // arm the weakest hand first
+    for (const u of S.units) { if (u.dead) continue; const d = this.platDef(u); if (d.plat !== it.plat) continue; const s = u.wpn ? this.scoreW(u.wpn) : this.gunDmg(d.cart, d.amm, 0); if (s < worst) { worst = s; tgt = u; } }
+    if (!tgt) { this.stashItem(it, x, y); return; }
+    if (this.scoreW(it) > worst * 1.02) {
+      if (tgt.wpn) this.stashItem(tgt.wpn);
+      tgt.wpn = it; tgt._stF = -1;
+      S.floats.push({ x, y: y - 10, text: '✦ ' + it.name + ' → ' + (tgt.role === 'mech' ? 'MK-' : tgt.role === 'runner' ? 'RN-' : 'OP-') + String(tgt.id).padStart(2, '0'), color: it.color, life: 1.7, t: 0 });
+    } else this.stashItem(it, x, y);
+  }
+  stashItem(it, x, y) {
+    const S = this.S; if (!S.armory) S.armory = [];
+    S.armory.push(it);
+    if (S.armory.length > 30) { const ridx = (w) => this.RARITY.findIndex(r => r.k === w.rar); let wi = 0; for (let i = 1; i < S.armory.length; i++) if (ridx(S.armory[i]) < ridx(S.armory[wi])) wi = i; S.armory.splice(wi, 1); }
+    if (x != null) S.floats.push({ x, y: y - 10, text: '▸ ARMORY · ' + it.name, color: it.color, life: 1.3, t: 0 });
   }
 
   // ---------------------------------------------------------------- zombies
@@ -2839,6 +3038,116 @@ class Component extends DCLogic {
     this.ruins = R;
   }
   nearestRuin(x, y) { let best = null, bd = 1e18; for (const r of this.ruins || []) { const d2 = (r.x - x) * (r.x - x) + (r.y - y) * (r.y - y); if (d2 < bd) { bd = d2; best = r; } } return best; }
+  // ---- M4 PROPS (clutter 3/10): wrecks stranded on the old roads, dead trees in the scrub, rubble by the ruins.
+  // Pure decor — no collision, no nav impact; painter-sorted with the other prisms/billboards.
+  genProps() {
+    const P = [], rr = ((this.ringR || 4) + 3) * this.TS;
+    for (const rd of this.roads || []) {
+      const pts = rd && rd.pts; if (!pts || pts.length < 10) continue;
+      for (let i = 4; i < pts.length - 3; i += 8) {
+        if (Math.random() > 0.30) continue;
+        const p0 = pts[i], p1 = pts[i + 1] || p0;
+        const a = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) + (Math.random() - 0.5) * 0.5;
+        const off = (Math.random() - 0.5) * 30;
+        const wx = p0[0] - Math.sin(a) * off, wy = p0[1] + Math.cos(a) * off;
+        if (Math.max(Math.abs(wx - this.hq.x), Math.abs(wy - this.hq.y)) < rr) continue;
+        if (this.isWallPx(wx, wy)) continue;
+        P.push({ k: 'wreck', x: wx, y: wy, a, v: (Math.random() * 3) | 0 });
+        if (P.length >= 16) break;
+      }
+      if (P.length >= 16) break;
+    }
+    let trees = 0, guard = 0;
+    while (trees < 40 && guard++ < 420) {
+      const x = 140 + Math.random() * (this.AW - 280), y = 140 + Math.random() * (this.AH - 280);
+      if (Math.max(Math.abs(x - this.hq.x), Math.abs(y - this.hq.y)) < rr) continue;
+      if (this.isWallPx(x, y)) continue;
+      const kind = this.terraKind((x / this.TS) | 0, (y / this.TS) | 0);
+      if (typeof kind !== 'string' || kind.indexOf('terra_scrub') !== 0) continue;   // dead trees keep to the scrub biome
+      P.push({ k: 'tree', x, y, s: 0.8 + Math.random() * 0.55, v: (Math.random() * 2) | 0, a: Math.random() * 6.283 });
+      trees++;
+    }
+    for (const ru of this.ruins || []) {
+      const n2 = 1 + ((Math.random() * 2) | 0);
+      for (let j = 0; j < n2; j++) {
+        const a = Math.random() * 6.283, d = (ru.w || 30) * 0.9 + 10 + Math.random() * 26;
+        const x = ru.x + Math.cos(a) * d, y = ru.y + Math.sin(a) * d;
+        if (this.isWallPx(x, y)) continue;
+        P.push({ k: 'rub', x, y, s: 6 + Math.random() * 9, a: Math.random() * 3.14 });
+      }
+    }
+    this.wprops = P;
+  }
+  // ================================================================ SCAVENGING LOOT (plan locked)
+  // HERO MODE (zoom ≥1.0, exit <0.9) is where the looter lives: containers STOCK only when the
+  // hero explores near them in hero mode, searching is a committed bar that FEEDS THE NOISE FIELD,
+  // and emptied sites refill after 3 in-game days that only count while the hero is far (anti-camp).
+  // COMMANDER MODE (zoomed out) keeps the C&C big picture — same world, different game.
+  heroMode() {
+    const z = this.zoom || 0.82;
+    if (this._hMode) { if (z < 0.9) this._hMode = false; }
+    else if (z >= 1.0) this._hMode = true;
+    return !!this._hMode;
+  }
+  genCaches() {
+    const C = [], rr = ((this.ringR || 4) + 3) * this.TS;
+    const tierOf = (x, y) => { const d = Math.max(Math.abs(x - this.hq.x), Math.abs(y - this.hq.y)); return d > 3300 ? 3 : d > 1700 ? 2 : 1; };
+    const push = (kind, x, y, extra) => {
+      if (x < 60 || y < 60 || x > this.AW - 60 || y > this.AH - 60) return;
+      if (this.isWallPx(x, y)) return;
+      if (Math.max(Math.abs(x - this.hq.x), Math.abs(y - this.hq.y)) < rr) return;
+      C.push(Object.assign({ id: C.length + 1, kind, x, y, tier: tierOf(x, y), state: 0, prog: 0, awayD: 0 }, extra || {}));
+    };
+    // supply caches dropped along the old roads + strays in the fields near salvage grounds
+    for (const rd of this.roads || []) {
+      const pts = rd && rd.pts; if (!pts || pts.length < 12) continue;
+      for (let i = 6; i < pts.length - 4; i += 10) { if (Math.random() > 0.22) continue; const p = pts[i], a = Math.random() * 6.283; push('cache', p[0] + Math.cos(a) * 30, p[1] + Math.sin(a) * 30); }
+    }
+    let g = 0;
+    while (C.length < 26 && g++ < 300 && this.resNodes.length) {
+      const nd = this.resNodes[(Math.random() * this.resNodes.length) | 0];
+      const a = Math.random() * 6.283, r2 = 140 + Math.random() * 680;
+      push('cache', nd.x + Math.cos(a) * r2, nd.y + Math.sin(a) * r2);
+    }
+    for (const pr of this.wprops || []) if (pr.k === 'wreck') push('trunk', pr.x, pr.y, { a: pr.a });   // trunks pop open
+    for (const ru of this.ruins || []) {   // 1-3 search spots inside each shell — the walk-in feel
+      const n = 1 + ((Math.random() * 3) | 0);
+      for (let j = 0; j < n; j++) { const a = Math.random() * 6.283, d = Math.random() * ((ru.w || 30) * 0.55); push('spot', ru.x + Math.cos(a) * d, ru.y + Math.sin(a) * d * 0.7, { ruin: 1 }); }
+    }
+    this.caches = C;   // transient per session, like ruins/dig sites — the map re-rolls each load
+  }
+  updateScav(dt) {
+    const S = this.S, h = S.hero; if (!this.caches || !h) return;
+    const hm = this.heroMode();
+    this._scavT = (this._scavT || 0) + dt;
+    if (this._scavT >= 0.5) {   // stocking + anti-camp recycle on a cheap tick
+      this._scavT = 0;
+      for (const c of this.caches) {
+        const d = Math.max(Math.abs(c.x - h.x), Math.abs(c.y - h.y));
+        if (c.state === 0) { if (hm && d < 640) c.state = 1; }                       // loot spawns as the hero explores
+        else if (c.state === 2) { if (d > 800) { c.awayD += 0.5 / this.dayCycle(); if (c.awayD >= 3) { c.state = 0; c.awayD = 0; c.prog = 0; } } }
+      }
+    }
+    // committed search: nearest stocked container in reach, hero standing still
+    if (h.down || S.lockdown || h.seated) { this._scavC = null; return; }
+    const moved = h.x !== this._shx || h.y !== this._shy; this._shx = h.x; this._shy = h.y;
+    let best = null, bd = 1e9;
+    for (const c of this.caches) { if (c.state !== 1) continue; const d = Math.max(Math.abs(c.x - h.x), Math.abs(c.y - h.y)); if (d < bd) { bd = d; best = c; } }
+    if (best && bd <= 20 && !moved && hm) {
+      const need = 3 + best.tier;                                                   // 4/5/6s by richness
+      best.prog += dt; this._scavC = best;
+      this.noiseAdd(h.x, h.y, 1.3 * dt);                                            // rummaging is audible — the horde hears
+      if (best.prog >= need) { best.state = 2; best.prog = 0; this._scavC = null; this.scavLoot(best); }
+    } else this._scavC = null;
+  }
+  scavLoot(c) {
+    const S = this.S, r = Math.random();
+    const ri = Math.min(3, (c.tier === 3 ? 2 : c.tier === 2 ? 1 : 0) + (Math.random() < 0.3 ? 1 : 0));   // rarity floor by distance band
+    if (r < 0.72) this.rollWeapon(this.RARITY[ri], ri, c.x, c.y);                    // mostly gear — per lock
+    else if (r < 0.86) { const s = Math.round((25 + Math.random() * 35) * c.tier); S.scrap += s; S.totalEarned += s; S.floats.push({ x: c.x, y: c.y - 10, text: '+' + s + ' SCRAP · CACHE', color: '#ffd56b', life: 1.5, t: 0 }); }
+    else { const a = Math.round(8 + Math.random() * 10); S.ammo = Math.min(this.resCap('ammo'), (S.ammo || 0) + a); S.floats.push({ x: c.x, y: c.y - 10, text: '+' + a + ' AMMO · CACHE', color: '#e8e3d8', life: 1.5, t: 0 }); }
+    this.noiseAdd(c.x, c.y, 4);   // the lid comes off with a bang
+  }
   // ================================================================ M3.3 EXPEDITIONS (medium stakes)
   // Far ruins become one-shot DIG SITES. The attack squad escorts a supply wagon out, cracks the
   // crates, and drives the haul home — no timers anywhere: the WALK is the mission. Cracking wakes
@@ -3635,6 +3944,7 @@ class Component extends DCLogic {
     if (this.resNodes) { ctx.fillStyle = '#aecadb'; for (const n of this.resNodes) ctx.fillRect(mmX + n.x * sx - 2, mmY + n.y * sy - 2, 4, 4); }
     ctx.fillStyle = '#36e0cf'; ctx.fillRect(mmX + this.hq.x * sx - 3, mmY + this.hq.y * sy - 3, 6, 6);
     if (this.hasBld('comms')) { ctx.fillStyle = '#ff5d6c'; for (const z of this.S.zombies) ctx.fillRect(mmX + z.x * sx - 1, mmY + z.y * sy - 1, 2, 2); }
+    if (this.hasBld('comms')) { ctx.fillStyle = '#ffd56b'; for (const c of this.caches || []) if (c.state === 1) ctx.fillRect(mmX + c.x * sx - 1, mmY + c.y * sy - 1, 2, 2); }   // stocked containers — comms intel
     else { const vbz = this.viewBounds(0); ctx.fillStyle = '#ff5d6c'; for (const z of this.S.zombies) { if (z.x < vbz.l || z.x > vbz.r || z.y < vbz.t || z.y > vbz.b) continue; ctx.fillRect(mmX + z.x * sx - 1, mmY + z.y * sy - 1, 2, 2); } ctx.fillStyle = 'rgba(255,93,108,.6)'; ctx.font = "7px 'IBM Plex Mono'"; ctx.textAlign = 'right'; ctx.fillText('NO FEED · BUILD COMMS', mmX + mmW, mmY - 5); ctx.textAlign = 'left'; }
     for (const u of this.S.units) { if (u.dead) continue; ctx.fillStyle = this.unitColor(u); ctx.fillRect(mmX + u.x * sx - 1.2, mmY + u.y * sy - 1.2, 2.4, 2.4); }
     for (const es of (this.expSites || [])) { if (es.swept) continue; ctx.save(); ctx.translate(mmX + es.x * sx, mmY + es.y * sy); ctx.rotate(Math.PI / 4); ctx.strokeStyle = '#ffd56b'; ctx.lineWidth = 1; ctx.strokeRect(-2.2, -2.2, 4.4, 4.4); ctx.restore(); }
@@ -3718,7 +4028,7 @@ class Component extends DCLogic {
     // A-10 gun runs (Airforce field upgrade): strafe the strongest enemy on an interval
     if (S.a10lvl > 0 && this.hasBld('hangar') && !S.lockdown) { S.a10cd -= dt; if (S.a10cd <= 0 && S.zombies.length) { S.a10cd = Math.max(8, 20 - (S.a10lvl - 1) * 2); let best = null, bh = -1; for (const z of S.zombies) { if (z.maxhp > bh) { bh = z.maxhp; best = z; } } if (best) this.a10Run(best); } }
     // NAVY branch: offshore battery — shells the densest horde cluster on a timer (no player input; the fleet has your back)
-    if (S.branches && S.branches.navy && !S.lockdown) { S.navyCd = (S.navyCd || 0) - dt; if (S.navyCd <= 0) { const ntgt = this.computeSquadTarget(this.hq.x, this.hq.y, 2400); if (ntgt && ntgt.n >= 6) { S.navyCd = 25; for (let i = 0; i < 3; i++) this.strike(ntgt.x + (Math.random() - 0.5) * 90, ntgt.y + (Math.random() - 0.5) * 90); S.floats.push({ x: ntgt.x, y: ntgt.y - 16, text: '◈ NAVAL BOMBARDMENT', color: '#9be0d8', life: 1.3, t: 0 }); } else S.navyCd = 4; } }
+    if (S.branches && S.branches.navy && !S.lockdown) { S.navyCd = (S.navyCd || 0) - dt; if (S.navyCd <= 0) { const ntgt = this.computeSquadTarget(this.hq.x, this.hq.y, 2400); if (ntgt && ntgt.n >= 6) { S.navyCd = 25; for (let i = 0; i < 3; i++) this.strike(ntgt.x + (Math.random() - 0.5) * 90, ntgt.y + (Math.random() - 0.5) * 90, 3.3); S.floats.push({ x: ntgt.x, y: ntgt.y - 16, text: '◈ NAVAL BOMBARDMENT', color: '#9be0d8', life: 1.3, t: 0 }); } else S.navyCd = 4; } }
     // HQ fortification (Command upgrade)
     const hqMax = 600 * this.fortMult();
     if (Math.abs(this.hq.maxhp - hqMax) > 0.5) { const r = this.hq.hp / this.hq.maxhp; this.hq.maxhp = hqMax; this.hq.hp = r * hqMax; }
@@ -3740,6 +4050,7 @@ class Component extends DCLogic {
     for (const z of S.zombies) this.updateZombie(z, dt);
     this.buildZGrid();   // re-bucket AFTER the zombies moved — bullet hit-tests query true positions, not last-move ones (red-team: the actual stale-grid fix)
     this.physPass(dt);   // REAL PHYSICS — ram outcomes at every zoom; fidelity (jostle/shake) view-gated
+    this.updateScav(dt);   // SCAVENGING — hero-mode loot stocking, committed searches, anti-camp recycle
     // bullets
     for (const b of S.bullets) this.updateBullet(b, dt);
     S.bullets = S.bullets.filter(b => b.life > 0);
@@ -3956,44 +4267,61 @@ class Component extends DCLogic {
   }
   fire(u, z, st) {
     if (this.S.lockdown) return;
-    this.noiseAdd(u.x, u.y, 3.5);
+    const w = this.wpnFor(u);
+    this.noiseAdd(u.x, u.y, 3.5 * (w.supp ? 0.18 : 1));
     u.muzzle = 0.06;
-    let dmg = st.dmg; let crit = false;
+    let dmg = st.dmg;
     if (u.inTower && this.hasBld('ammo') && (this.S.ammo || 0) > 0) dmg *= 1.15;   // supplied tower operators hit harder
     const twT = (u.inTower && u.tower != null) ? this.padTier(u.tower) : 0;
     if (twT > 1) dmg *= 1 + 0.10 * (twT - 1);                                      // raised tower tiers perk the occupant's fire
-    if (st.crit && Math.random() < st.crit) { dmg *= 2.2; crit = true; }
-    const heavy = st.splash > 0;
+    let crit = false;
+    if (st.crit && Math.random() < st.crit) { dmg *= 2.2; crit = true; }           // trained double-tap (rifleman/commander drill)
+    const heavy = !!st.shellW;
+    const amm = this.AMMOS[w.amm] || this.AMMOS.fmj;
+    const rk = this.rankOf(u);
+    const hs = Math.min(0.55, (w.hs || 0) + (rk === 'COMMANDER' ? 0.05 : rk === 'VETERAN' ? 0.02 : 0));
     const overWall = u.role === 'technician' || u.inTower;
-    this.S.bullets.push({ own: u.id, x: u.x + Math.cos(u.aim) * 12, y: u.y + Math.sin(u.aim) * 12, a: u.aim, spd: heavy ? 380 : 520, life: heavy ? 1.1 : 0.6, dmg, pierce: (st.pierce || 0) + (twT >= 5 ? 1 : 0), slow: st.slow || 0, crit, splashR: st.splash || 0, big: heavy, overWall, hit: new Set() });
+    const b = { own: u.id, x: u.x + Math.cos(u.aim) * 12, y: u.y + Math.sin(u.aim) * 12, a: u.aim, spd: heavy ? 380 : 520, life: heavy ? 1.1 : 0.6, dmg, rt: heavy ? 0 : amm.rt, hs: heavy ? 0 : hs, api: amm.api ? 1 : 0, slow: st.slow || 0, crit, splashR: 0, big: heavy, overWall, hit: new Set() };
+    if (heavy) b.shell = { W: st.shellW, n: this.SHELLS.he105.n, Ef: this.SHELLS.he105.Ef };   // tank 105MM HE-FRAG
+    if (twT >= 5) b.rt = Math.max(b.rt, 0.45);   // citadel platform: stable rest = cleaner pass-throughs
+    this.S.bullets.push(b);
   }
   turretDef(type) {
+    // Kinetic turrets fire real cartridges (dmg = E·tr/JPH); MORTAR throws real 60MM HE (the SHELLS
+    // table owns it); CRYO/TESLA are the non-kinetic exceptions and keep tuned numbers.
     const D = {
-      gun: { name: 'AUTO-GUN', dmg: 14, rof: 2.2, range: 150, color: '#36e0cf', cost: 1 },
+      gun: { name: 'AUTO-GUN', cart: 'b556', amm: 'fmj', dmg: this.gunDmg('b556', 'fmj'), rof: 2.2, range: 150, color: '#36e0cf', cost: 1 },
       slow: { name: 'CRYO', dmg: 6, rof: 1.6, range: 140, slow: 1, color: '#7fd4ff', cost: 1.2 },
-      splash: { name: 'MORTAR', dmg: 20, rof: 0.7, range: 205, splash: 48, color: '#ffb454', cost: 1.6 },
+      splash: { name: 'MORTAR', shell: 'he60', dmg: 20, rof: 0.7, range: 205, splash: 48, color: '#ffb454', cost: 1.6 },
       chain: { name: 'TESLA', dmg: 11, rof: 1.4, range: 155, chain: 3, color: '#b79cff', cost: 1.6 },
-      ap: { name: 'RAILGUN', dmg: 24, rof: 1.0, range: 180, ap: 1, color: '#ff5d6c', cost: 1.8 },
-      sniper: { name: 'SNIPER', dmg: 62, rof: 0.5, range: 330, color: '#eafffb', cost: 2 },
+      ap: { name: 'RAILGUN', cart: 'rail', amm: 'slug', dmg: this.gunDmg('rail', 'slug'), rof: 1.0, range: 180, ap: 1, color: '#ff5d6c', cost: 1.8 },
+      sniper: { name: 'SNIPER', cart: 'b338', amm: 'fmj', dmg: this.gunDmg('b338', 'fmj'), rof: 0.5, range: 330, color: '#eafffb', cost: 2 },
     };
     return D[type] || D.gun;
   }
+  sniperCart(lvl) { return lvl >= 8 ? 'api50' : lvl >= 5 ? 'b50' : 'b338'; }   // the .50 API's turret home: Lv8+ SNIPER
   turretStat(t) {
-    const d = this.turretDef(t.type); const lv = t.lvl || 1; const m = 1 + (lv - 1) * 0.5; const tech = t.techId ? 1.3 : 1;
+    const d = this.turretDef(t.type); const lv = t.lvl || 1; let m = 1 + (lv - 1) * 0.5; const tech = t.techId ? 1.3 : 1;
+    let cart = d.cart, amm = d.amm;
+    if (t.type === 'sniper') { cart = this.sniperCart(lv); amm = lv >= 5 ? 'ap' : 'fmj'; if (lv >= 8) amm = 'api'; m = 1 + (lv - 1) * 0.14; }   // sniper levels climb the CARTRIDGE ladder, not a stat curve
+    const base = cart ? this.gunDmg(cart, amm) : d.dmg;
     // AMMO LOGISTICS (active once an AMMO DEPOT exists): stocked magazine = +20% fire rate, dry = scavenged rounds at 55%
     let ammoMul = 1;
     if (this.hasBld('ammo')) { const mag = (t.mag == null ? 20 : t.mag); ammoMul = mag > 0 ? 1.2 : 0.55; }
-    return { dmg: d.dmg * m * tech * this.powerMult(), rof: d.rof * (1 + (lv - 1) * 0.12) * ammoMul, range: d.range * (1 + (lv - 1) * 0.05), slow: d.slow || 0, splash: d.splash ? d.splash * (1 + (lv - 1) * 0.2) : 0, chain: d.chain || 0, ap: d.ap || 0, color: d.color };
+    return { dmg: base * m * tech * this.powerMult(), rof: d.rof * (1 + (lv - 1) * 0.12) * ammoMul, range: d.range * (1 + (lv - 1) * 0.05), slow: d.slow || 0, splash: d.splash ? d.splash * (1 + (lv - 1) * 0.2) : 0, shell: d.shell || null, chain: d.chain || 0, ap: d.ap || 0, cart, amm, color: d.color };
   }
   turretUpgradeCost(t) { const l = (t.lvl || 1) - 1; return Math.floor(this.turretDef(t.type).cost * 120 * (1 + 0.35 * l * l)); }   // polynomial — Lv10 reachable (was 1.55^9 = 52×)
   turretMaxLevel() { return 10; }
   upgradeTurretSel = (tOpt) => { const t = tOpt || this.selTurret(); if (!t || (t.lvl || 1) >= this.turretMaxLevel()) return; const c = this.turretUpgradeCost(t); if (this.spendMat(c)) { t.lvl = (t.lvl || 1) + 1; this.forceUpdate(); } };
   fireTurret(t, z, st) {
     if (this.S.lockdown) return;
-    this.noiseAdd(t.x, t.y, st.splash ? 8 : 3);
+    this.noiseAdd(t.x, t.y, st.shell ? 8 : 3);
     t.muzzle = 0.06;
     if (this.hasBld('ammo')) t.mag = Math.max(0, (t.mag == null ? 20 : t.mag) - 0.15 * this.sectorUpkeep());
-    this.S.bullets.push({ x: t.x + Math.cos(t.aim) * 12, y: t.y + Math.sin(t.aim) * 12, a: t.aim, spd: st.splash ? 380 : 560, life: 0.9, dmg: st.dmg, pierce: 0, slow: st.slow, crit: false, splashR: st.splash, big: !!st.splash, chain: st.chain, ap: st.ap, overWall: true, hit: new Set() });
+    const amm = st.amm ? this.AMMOS[st.amm] : null;
+    const b = { x: t.x + Math.cos(t.aim) * 12, y: t.y + Math.sin(t.aim) * 12, a: t.aim, spd: st.shell ? 380 : 560, life: 0.9, dmg: st.dmg, rt: amm ? amm.rt : 0, hs: t.type === 'sniper' ? 0.30 : t.type === 'gun' ? 0.04 : 0, api: amm && amm.api ? 1 : 0, slow: st.slow, crit: false, splashR: 0, big: !!st.shell, chain: st.chain, ap: st.ap, overWall: true, hit: new Set() };
+    if (st.shell) { const sh = this.SHELLS[st.shell]; b.shell = { W: sh.W * (1 + ((t.lvl || 1) - 1) * 0.08), n: sh.n, Ef: sh.Ef }; }   // heavier charges as the crew levels
+    this.S.bullets.push(b);
   }
   updateTurret(t, dt) {
     if (t.muzzle > 0) t.muzzle -= dt;
@@ -4025,29 +4353,89 @@ class Component extends DCLogic {
   updateBullet(b, dt) {
     b.x += Math.cos(b.a) * b.spd * dt; b.y += Math.sin(b.a) * b.spd * dt; b.life -= dt;
     if (b.x < -20 || b.x > this.AW + 20 || b.y < -20 || b.y > this.AH + 20) { b.life = 0; return; }
-    if (!b.overWall && this.isWallPx(b.x, b.y)) { this.S.fx.push({ x: b.x, y: b.y, r: 1, mr: 5, life: 0.12, t: 0, kind: 'strike' }); b.life = 0; return; }
+    if (!b.overWall && this.isWallPx(b.x, b.y)) {
+      if (b.shell) { this.boom(b.x, b.y, b.shell.W, { n: b.shell.n, Ef: b.shell.Ef, own: b.own }); }   // contact fuse on hard cover
+      else this.S.fx.push({ x: b.x, y: b.y, r: 1, mr: 5, life: 0.12, t: 0, kind: 'strike' });
+      b.life = 0; return;
+    }
+    if (b.shell && b.life <= 0) { this.boom(b.x, b.y, b.shell.W, { n: b.shell.n, Ef: b.shell.Ef, own: b.own }); return; }   // airburst at max range
     const hitR = b.big ? 16 : 12; let cands = null;
-    this.zNear(b.x, b.y, hitR + 10, (zz) => { if (b.hit.has(zz.id)) return; const ddx = zz.x - b.x, ddy = zz.y - b.y; if (ddx * ddx + ddy * ddy < hitR * hitR) { if (cands) cands.push(zz); else cands = [zz]; } });
+    const scanR = b.api ? hitR + 12 : hitR;   // .50 API: the pressure wave counts near-misses (≤~50cm)
+    this.zNear(b.x, b.y, scanR + 10, (zz) => { if (b.hit.has(zz.id)) return; const ddx = zz.x - b.x, ddy = zz.y - b.y; if (ddx * ddx + ddy * ddy < scanR * scanR) { if (cands) cands.push(zz); else cands = [zz]; } });
     if (!cands) return;
+    if (cands.length > 1) cands.sort((za, zb) => ((za.x - b.x) ** 2 + (za.y - b.y) ** 2) - ((zb.x - b.x) ** 2 + (zb.y - b.y) ** 2));
     for (const z of cands) {
-      const apMul = (b.ap && z.maxhp >= 60) ? 2 : 1;
-      this.hurtZombie(z, b.dmg * apMul, b.x, b.y, b.own); b.hit.add(z.id);
+      const dd2 = (z.x - b.x) * (z.x - b.x) + (z.y - b.y) * (z.y - b.y);
+      if (b.api && dd2 > hitR * hitR) {   // OVERPRESSURE near-miss: percussion alone finishes the weak, rocks the rest
+        b.hit.add(z.id);
+        if (z.hp < z.maxhp * 0.45) { this.hurtZombie(z, z.hp + 1, b.x, b.y, b.own); this.S.floats.push({ x: z.x, y: z.y - 8, text: '◉ PRESSURE', color: '#ffb454', life: 0.8, t: 0 }); }
+        else { z._stagT = Math.max(z._stagT || 0, 0.5); }
+        continue;
+      }
+      if (b.shell) { this.boom(b.x, b.y, b.shell.W, { n: b.shell.n, Ef: b.shell.Ef, own: b.own }); b.life = 0; return; }   // HE fuses on the first body
+      if (b.hs && Math.random() < b.hs) {   // CNS HIT — shot placement stops a corpse regardless of mass
+        this.hurtZombie(z, Math.max(z.hp + 1, z.maxhp * 2.5), b.x, b.y, b.own);
+        this.S.floats.push({ x: z.x, y: z.y - 8, text: '⊕ CNS', color: '#eafffb', life: 0.7, t: 0 });
+        b.hit.add(z.id);
+      } else {
+        const apMul = (b.ap && z.maxhp >= 60) ? 2 : 1;
+        this.hurtZombie(z, b.dmg * apMul, b.x, b.y, b.own); b.hit.add(z.id);
+      }
       if (b.kb) { z.kx = (z.kx || 0) + Math.cos(b.a) * 60 * b.kb; z.ky = (z.ky || 0) + Math.sin(b.a) * 60 * b.kb; }
       if (b.slow) { z.slowT = 1.2; }
       if (b.crit) this.S.floats.push({ x: z.x, y: z.y - 6, text: '!', color: '#fff', life: 0.5, t: 0 });
       if (b.chain > 0) {
+        z._stagT = Math.max(z._stagT || 0, 0.4);   // electric lock — muscles seize (tesla stagger)
         let nx2 = null, nd = 90 * 90; this.zNear(z.x, z.y, 90, (z2) => { if (b.hit.has(z2.id)) return; const d2 = (z2.x - z.x) ** 2 + (z2.y - z.y) ** 2; if (d2 < nd) { nd = d2; nx2 = z2; } });
-        if (nx2) { this.S.bullets.push({ x: z.x, y: z.y, a: Math.atan2(nx2.y - z.y, nx2.x - z.x), spd: 620, life: 0.3, dmg: b.dmg * 0.8, pierce: 0, slow: b.slow, crit: false, splashR: 0, chain: b.chain - 1, ap: 0, overWall: true, hit: new Set([...b.hit]) }); }
+        if (nx2) { this.S.bullets.push({ x: z.x, y: z.y, a: Math.atan2(nx2.y - z.y, nx2.x - z.x), spd: 620, life: 0.3, dmg: b.dmg * 0.8, rt: 0, hs: 0, slow: b.slow, crit: false, splashR: 0, chain: b.chain - 1, ap: 0, overWall: true, hit: new Set([...b.hit]) }); }
         b.life = 0; return;
       }
-      if (b.splashR > 0) {
-        const sr2 = b.splashR * b.splashR;   // squared distance — no hypot in the splash inner loop (red-team perf note)
+      if (b.splashR > 0) {   // legacy area path (non-shell)
+        const sr2 = b.splashR * b.splashR;
         this.zNear(b.x, b.y, b.splashR, (z2) => { if (z2 !== z && !b.hit.has(z2.id) && (z2.x - b.x) * (z2.x - b.x) + (z2.y - b.y) * (z2.y - b.y) < sr2) this.hurtZombie(z2, b.dmg * 0.55, b.x, b.y); });
         this.S.fx.push({ x: b.x, y: b.y, r: 6, mr: b.splashR, life: 0.28, t: 0, kind: 'strike' });
         b.life = 0; return;
       }
-      if (b.pierce > 0) { b.pierce--; } else { b.life = 0; return; }
+      // OVERPENETRATION — the round keeps its retained energy and carries to the next body in line
+      if (b.rt > 0) { b.dmg *= b.rt; if (b.dmg < 2) { b.life = 0; return; } }
+      else if (b.pierce > 0) { b.pierce--; } else { b.life = 0; return; }
     }
+  }
+  // ================================================================ M5.2 EXPLOSIONS — percussion + shrapnel
+  // Not 'explosion then damage happens': Hopkinson-Cranz scaled distance drives BLAST (disintegrate /
+  // throw+knockdown / stagger by R·W^-⅓) and FRAGMENTATION wounds far beyond it (expected-value hits
+  // from areal density n/4πR²). A JDAM throws bodies outside its kill radius; anything at nuke-scale W
+  // simply disintegrates everything — the model is scale-correct by construction.
+  boom(x, y, W, o) {
+    o = o || {}; const PXM = this.PXM, W3 = Math.cbrt(Math.max(0.01, W));
+    const Rk = 2.0 * W3 * PXM, Rd = 5.5 * W3 * PXM, Rs = 9.0 * W3 * PXM;
+    const n = o.n || 0, Ef = o.Ef || 150;
+    const Rf = n ? Math.sqrt(n * 0.35 * Ef / (4 * Math.PI * this.JPH * 0.6)) * PXM : 0;   // frag cutoff: expected wound < 0.6hp
+    const R = Math.max(Rs, Rf), P = this.phys();
+    this.zNear(x, y, R, (z) => {
+      if (z.hp <= 0) return;
+      const dx = z.x - x, dy = z.y - y, d = Math.max(8, Math.hypot(dx, dy)); if (d > R) return;
+      const Rm = d / PXM;
+      let dmg = 0;
+      if (d < Rk) dmg = z.maxhp * 5;                                   // inside the fireball
+      else dmg = z.maxhp * 4 * (Rk / d) * (Rk / d);                     // blast quadratic falloff
+      if (n) { const hits = n * 0.35 / (4 * Math.PI * Rm * Rm); dmg += hits * Ef / this.JPH * (0.7 + Math.random() * 0.6); }   // shrapnel
+      if (dmg >= z.maxhp * 4) z._ash = 1;                               // DISINTEGRATE — no body to ragdoll
+      const nx = dx / d, ny = dy / d;
+      const dv = 1.8 * Math.pow(Rd / d, 1.5);                           // throw Δv (m/s): stability limit at Rd
+      if (dmg > 0.5) this.hurtZombie(z, dmg, x, y, o.own, dmg >= z.maxhp ? { cvx: nx * dv * PXM * 0.5, cvy: ny * dv * PXM * 0.5, dv } : undefined);
+      if (z.hp > 0) {   // survivors: thrown / knocked flat / staggered by the pressure wave
+        if (dv >= P.down) { z.down = Math.max(z.down || 0, 1.4 + Math.random()); z.dvx = nx * dv * PXM * 0.5; z.dvy = ny * dv * PXM * 0.5; z.tu = null; }
+        else if (d < Rs) z._stagT = Math.max(z._stagT || 0, 0.5);
+      }
+    });
+    const S = this.S;
+    S.fx.push({ x, y, r: Math.max(8, Rk * 0.7), mr: Rd, life: 0.34, t: 0, kind: 'strike' });
+    S.fx.push({ x, y, r: 4, mr: Rk + 8, life: 0.5, t: 0, kind: 'strike' });
+    S.fx.push({ x, y, r: Rk * 0.9, life: 9, t: 0, kind: 'blood', red: false, ash: 1 });   // scorch ring
+    for (let i = 0; i < Math.min(10, 3 + W3 * 2); i++) S.fx.push({ x: x + (Math.random() - .5) * Rk * 1.6, y: y + (Math.random() - .5) * Rk * 1.6, vx: (Math.random() - .5) * 160, vy: (Math.random() - .5) * 160, life: 0.5, t: 0, kind: 'gib' });
+    if (!o.quiet) this.noiseAdd(x, y, Math.min(40, 10 + W3 * 9));
+    if (this.inView(x, y, Rd + 80)) this.addShake(Math.min(4.5, 0.8 + W3 * 1.1));
   }
   // ================================================================ REAL PHYSICS (plan locked)
   // "Real life physics, no guessing" — world scale 24px = 1m (hero 168px/s = 7m/s sprint); every
@@ -4716,9 +5104,13 @@ class Component extends DCLogic {
   terraNoise(x, y) { const x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0; const sm = (t) => t * t * (3 - 2 * t), mx = (a, b, t) => a + (b - a) * t; return mx(mx(this.terraHash(x0, y0), this.terraHash(x0 + 1, y0), sm(fx)), mx(this.terraHash(x0, y0 + 1), this.terraHash(x0 + 1, y0 + 1), sm(fx)), sm(fy)); }
   terraKind(c, r) {
     const m = this.terraNoise(c / 7, r / 7), d2 = this.terraNoise(c / 3 + 53, r / 3 + 53);
-    if (m > 0.72) return 'terra_scrub' + (d2 > 0.5 ? 0 : 1);
-    if (m < 0.24) return 'terra_gravel' + (d2 > 0.5 ? 0 : 1);
-    if (d2 > 0.82 && m < 0.52) return 'terra_crack' + (c & 1);
+    // (M5.2 restoration) thresholds recalibrated to the noise engine's MEASURED range — the M4.2
+    // engine swap capped terraNoise at ~0.49, which silently EMPTIED the scrub + crack biomes and
+    // flooded gravel to ~half the map. These quantiles restore the intended mix (scrub ~top 22%,
+    // gravel ~bottom 18%, crack pockets) with the same blobby patch structure.
+    if (m > 0.33) return 'terra_scrub' + (d2 > 0.245 ? 0 : 1);
+    if (m < 0.135) return 'terra_gravel' + (d2 > 0.245 ? 0 : 1);
+    if (d2 > 0.35 && m < 0.25) return 'terra_crack' + (c & 1);
     return 'terra_dirt' + (((c * 7 + r * 13) ^ (c >> 2)) & 3);
   }
   buildRoads() {
@@ -4968,7 +5360,7 @@ class Component extends DCLogic {
     for (const f of S.fx) {
       if (f.kind === 'strike') { const p = f.t / f.life; ctx.strokeStyle = `rgba(54,224,207,${0.6 * (1 - p)})`; ctx.lineWidth = 2.5 / this.scale; ctx.beginPath(); ctx.arc(f.x, f.y, f.r + (f.mr - f.r) * p, 0, 6.283); ctx.stroke(); }
       else if (f.kind === 'gib') { ctx.fillStyle = `rgba(143,207,90,${0.7 * (1 - f.t / f.life)})`; ctx.fillRect(f.x - 2, f.y - 2, 3, 3); }
-      else if (f.kind === 'blood') { const ba = 0.45 * (1 - f.t / f.life); ctx.fillStyle = f.red ? `rgba(255,93,108,${ba})` : `rgba(110,150,66,${ba})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r || 6, 0, 6.283); ctx.fill(); }
+      else if (f.kind === 'blood') { const ba = 0.45 * (1 - f.t / f.life); ctx.fillStyle = f.ash ? `rgba(56,54,48,${ba})` : f.red ? `rgba(255,93,108,${ba})` : `rgba(110,150,66,${ba})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r || 6, 0, 6.283); ctx.fill(); }
     }
     if (this._box) { const b = this._box; const x = Math.min(b.x0, b.x1), y = Math.min(b.y0, b.y1), w = Math.abs(b.x1 - b.x0), h = Math.abs(b.y1 - b.y0); ctx.strokeStyle = 'rgba(126,240,166,.9)'; ctx.fillStyle = 'rgba(126,240,166,.1)'; ctx.lineWidth = 1.2 / this.scale; ctx.setLineDash([4 / this.scale, 3 / this.scale]); ctx.fillRect(x, y, w, h); ctx.strokeRect(x, y, w, h); ctx.setLineDash([]); }
     if (S.multiSel && S.multiSel.length > 1) { ctx.strokeStyle = 'rgba(126,240,166,.85)'; ctx.lineWidth = 1.4 / this.scale; for (const id of S.multiSel) { const u = S.units.find(x => x.id === id); if (!u || u.dead) continue; ctx.beginPath(); ctx.arc(u.x, u.y, 13, 0, 6.283); ctx.stroke(); } }
@@ -5024,6 +5416,70 @@ class Component extends DCLogic {
     // barricades
     for (const b of S.barricades) { const o = this.barOrient(b), SQ = 22, bx = b.x, by = b.y;
       P(bx, by, () => { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); for (let i = -1; i <= 1; i++) { const cx = bx + (o === 'h' ? i * SQ : 0), cy = by + (o === 'v' ? i * SQ : 0); this.exTR(ctx, cx - SQ / 2, cy - SQ / 2, cx + SQ / 2, cy + SQ / 2, 0, 9, 'tex_scrap', { roofTint: 'rgba(0,0,0,.3)', edge: 'rgba(159,182,201,.5)', lw: elw, grime: 0, lodPx: 13, lodSide: '#1a262c', lodRoof: '#2c3d46' }); } const hh = this.barHalf(b), hf = b.hp / b.maxhp; if (hf < 1) { this.billboard(ctx, bx, by, 12); ctx.fillStyle = 'rgba(255,93,108,.3)'; ctx.fillRect(bx - hh.x, by - hh.y - 5, hh.x * 2, 2.4); ctx.fillStyle = '#7ef0a6'; ctx.fillRect(bx - hh.x, by - hh.y - 5, hh.x * 2 * hf, 2.4); } });
+    }
+    // props (M4 clutter 3): wrecks on the old roads / dead trees in the scrub / rubble by the ruins
+    if (this.wprops) for (const pr of this.wprops) {
+      if (pr.x < vb.l - 60 || pr.x > vb.r + 60 || pr.y < vb.t - 60 || pr.y > vb.b + 60) continue;
+      if (pr.k === 'wreck') {
+        P(pr.x, pr.y, () => {
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          const L2 = 21 + pr.v * 3, W2 = 9, cols = ['#5a4238', '#4c4a46', '#514b3c'];
+          this.exTR(ctx, pr.x - L2 / 2, pr.y - W2 / 2, pr.x + L2 / 2, pr.y + W2 / 2, 0, 5.5, 'tex_rust', { flat: cols[pr.v], grime: 0, lodPx: 5, roofTint: 'rgba(0,0,0,.28)' });
+          this.exTR(ctx, pr.x - L2 * 0.16, pr.y - W2 / 2 + 1.6, pr.x + L2 * 0.30, pr.y + W2 / 2 - 1.6, 5.5, 9.5, 'tex_metal', { flat: '#3a3d3c', grime: 0, lodPx: 7, roofTint: 'rgba(0,0,0,.35)' });
+        });
+      } else if (pr.k === 'tree') {
+        P(pr.x, pr.y, () => {
+          const pj = this.project(pr.x, pr.y, 0); if (pj.zv <= 44 || 26 * pr.s * pj.s < 3) return;
+          ctx.save(); this.billboard(ctx, pr.x, pr.y, 0);
+          const H2 = 26 * pr.s, x = pr.x, y0 = pr.y;
+          ctx.fillStyle = 'rgba(0,0,0,.16)'; ctx.beginPath(); ctx.ellipse(x, y0 + 1, 4.5 * pr.s, 1.7 * pr.s, 0, 0, 6.283); ctx.fill();
+          const tx = x + Math.sin(pr.a) * 2, ty = y0 - H2 * 0.62;
+          ctx.strokeStyle = pr.v ? '#3d3630' : '#46403a'; ctx.lineCap = 'round';
+          ctx.lineWidth = Math.max(1, 2.1 * pr.s);
+          ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(tx, ty); ctx.stroke();
+          ctx.lineWidth = Math.max(0.7, 1.0 * pr.s);
+          ctx.beginPath();
+          for (let i = 0; i < 4; i++) { const aa = -1.5708 + (i - 1.5) * 0.6 + Math.sin(pr.a * 3 + i) * 0.18; const ln = H2 * (0.26 + ((i * 97 + pr.v * 31) % 13) / 42); const sy = ty + (i % 2) * H2 * 0.12; ctx.moveTo(tx, sy); ctx.lineTo(tx + Math.cos(aa) * ln, sy + Math.sin(aa) * ln); }
+          ctx.stroke(); ctx.restore();
+        });
+      } else {
+        P(pr.x, pr.y, () => {
+          const pj = this.project(pr.x, pr.y, 0); if (pj.zv <= 44) return;
+          ctx.save(); this.billboard(ctx, pr.x, pr.y, 0);
+          for (let i = 0; i < 3; i++) { const ox = Math.cos(pr.a + i * 2.1) * pr.s * 0.5, oy = Math.sin(pr.a + i * 2.1) * pr.s * 0.26; ctx.fillStyle = ['#4a453f', '#544e46', '#3f3b36'][i]; ctx.beginPath(); ctx.ellipse(pr.x + ox, pr.y + oy - i * 1.1, pr.s * (0.55 - i * 0.12), pr.s * (0.33 - i * 0.07), pr.a, 0, 6.283); ctx.fill(); }
+          ctx.restore();
+        });
+      }
+    }
+    // scavenge containers — caches/trunks/ruin spots (stocked = glint in hero mode; searching = bar)
+    if (this.caches) { const hm = this.heroMode(), hh = this.S.hero;
+      for (const c of this.caches) {
+        if (c.x < vb.l - 40 || c.x > vb.r + 40 || c.y < vb.t - 40 || c.y > vb.b + 40) continue;
+        const cc = c;
+        P(cc.x, cc.y, () => {
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          if (cc.kind === 'cache') {
+            this.exTR(ctx, cc.x - 5.5, cc.y - 4, cc.x + 5.5, cc.y + 4, 0, cc.state === 2 ? 3.4 : 5, 'tex_wood', { flat: cc.state === 2 ? '#3f4234' : '#565b41', grime: 0, lodPx: 4, roofTint: 'rgba(0,0,0,.25)' });
+          } else if (cc.kind === 'spot') {
+            this.exTR(ctx, cc.x - 4, cc.y - 3, cc.x + 4, cc.y + 3, 0, cc.state === 2 ? 2.6 : 4, 'tex_wood', { flat: cc.state === 2 ? '#463d30' : '#5d4f3a', grime: 0, lodPx: 4, roofTint: 'rgba(0,0,0,.3)' });
+          }
+          const pj = this.project(cc.x, cc.y, 0); if (pj.zv <= 44) return;
+          ctx.save(); this.billboard(ctx, cc.x, cc.y, 0);
+          if (cc.state === 1 && hm && hh && Math.max(Math.abs(cc.x - hh.x), Math.abs(cc.y - hh.y)) < 380) {
+            const pu = 0.5 + 0.5 * Math.sin((this.S.tick || 0) * 0.16 + cc.id);   // the glint that rewards walking the world
+            ctx.fillStyle = 'rgba(255,213,107,' + (0.35 + 0.5 * pu).toFixed(2) + ')';
+            ctx.beginPath(); ctx.moveTo(cc.x, cc.y - 13 - pu * 2); ctx.lineTo(cc.x + 2.4, cc.y - 9.6 - pu * 2); ctx.lineTo(cc.x, cc.y - 6.2 - pu * 2); ctx.lineTo(cc.x - 2.4, cc.y - 9.6 - pu * 2); ctx.closePath(); ctx.fill();
+          }
+          if (this._scavC === cc) {
+            const need = 3 + cc.tier, w2 = 26;
+            ctx.fillStyle = 'rgba(4,8,10,.72)'; ctx.fillRect(cc.x - w2 / 2 - 1, cc.y - 20, w2 + 2, 5.6);
+            ctx.fillStyle = '#ffd56b'; ctx.fillRect(cc.x - w2 / 2, cc.y - 19.2, w2 * Math.min(1, cc.prog / need), 4);
+            ctx.fillStyle = '#eafffb'; ctx.font = "4.5px 'IBM Plex Mono', monospace"; ctx.textAlign = 'center';
+            ctx.fillText('SEARCHING', cc.x, cc.y - 22);
+          }
+          ctx.restore();
+        });
+      }
     }
     // ruins — derelict shells out in the waste (lockdown hide spots)
     if (this.ruins) for (const rn of this.ruins) { if (rn.x < vb.l - 80 || rn.x > vb.r + 80 || rn.y < vb.t - 80 || rn.y > vb.b + 80) continue;
@@ -5707,7 +6163,7 @@ class Component extends DCLogic {
       });
       const gc = this.heroGunCost(); const gAfford = S.scrap >= gc; const next = this.heroGun(h.gun + 1);
       ins = { name: 'MAIN OPERATOR', role: 'HERO · ' + gun.name, color: '#ffd56b', hpStr: Math.ceil(h.hp) + '/' + Math.round(hst.maxhp), upgrades,
-        showClasses: false, showTurret: true, showScrap: false, note: gun.name + ': ' + hst.rof.toFixed(1) + '/s · ' + Math.round(hst.range * 100) + ' rng · ' + (gun.pierce ? 'pierce ' + gun.pierce + ' · ' : '') + 'attachments upgrade THIS gun' + ((h.gear && h.gear.length) ? ' · GEAR ' + h.gear.length : ''),
+        showClasses: false, showTurret: true, showScrap: false, note: (h.wpn ? h.wpn.name : gun.name) + ' · ' + Math.round(hst.dmg) + ' DMG · ' + hst.rof.toFixed(1) + '/S · ' + Math.round(this.cartE(h.wpn ? h.wpn.cart : gun.cart, h.wpn ? (h.wpn.barrel || 0) : 0)) + ' J · refits at the ⛨ GEAR locker' + ((h.gear && h.gear.length) ? ' · TRINKETS ' + h.gear.length : ''),
         turretAction: this.upgradeHeroGun, turretBtnLabel: '⬆ NEXT GUN → ' + next.name + ' · ' + fmt(gc),
         turretBtnStyle: `flex:1;padding:8px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;border:1px solid ${gAfford ? 'rgba(255,213,107,.45)' : 'rgba(255,213,107,.15)'};background:${gAfford ? 'rgba(255,213,107,.1)' : 'rgba(255,213,107,.03)'};color:${gAfford ? '#ffe9a8' : '#8a8366'};text-align:center`,
         scrapTurret: this.upgradeHeroGun };
@@ -6044,6 +6500,52 @@ class Component extends DCLogic {
       ledgerOpen: !!S.ledgerOpen, toggleLedger: this.toggleLedger, stopClick: this.stopClick,
       // ---- UPGRADE BOARD (entity-specific doctrine: jump-only) ----
       upOpen: !!S.upOpen, toggleUp: this.toggleUpBoard,
+      // ---- GEAR LOCKER (M5.2) ----
+      gearOpen: !!S.gearOpen, toggleGear: this.toggleGear, gearEquipNone: this.gearUnequip,
+      // ---- HERO / COMMANDER mode chip ----
+      ...(() => { const hm = this.heroMode(); const stocked = (this.caches || []).reduce((a, c) => a + (c.state === 1 ? 1 : 0), 0); return { modeLabel: hm ? '⚔ HERO' + (stocked ? ' · ' + stocked + ' LOOT' : '') : '▦ COMMAND', modeColor: hm ? '#ffd56b' : '#9be0d8', modeBorder: hm ? 'rgba(255,213,107,.45)' : 'rgba(54,224,207,.25)' }; })(),
+      ...(() => {
+        const armN = (S.armory || []).length;
+        const out = { gearBtnSub: armN ? armN + ' STORED' : 'ISSUE ARMS', gearBtnSubColor: armN ? '#ffd56b' : '#9fb0ab', gearRoster: [], gearCard: [], gearArm: [], gearArmN: armN, gearSelName: '', gearSelWpn: '', gearSelLoot: false, gearArmNone: !armN };
+        if (!S.gearOpen) return out;
+        const h = S.hero;
+        const roster = [{ key: 'hero', name: 'MAIN OPERATOR', wname: h.wpn ? h.wpn.name : this.heroGun(h.gun).name, color: h.wpn ? h.wpn.color : '#ffd56b', on: S.gearSel === 'hero', bd: S.gearSel === 'hero' ? 'rgba(54,224,207,.55)' : 'rgba(120,135,130,.16)', pick: () => { S.gearSel = 'hero'; this.forceUpdate(); } }];
+        for (const u of S.units) {
+          if (u.dead || u.role === 'gatherer' || u.role === 'tank' || u.heli) continue;
+          const d = this.platDef(u);
+          roster.push({ key: u.id, name: (u.role === 'mech' ? 'MK-' : u.role === 'runner' ? 'RN-' : 'OP-') + String(u.id).padStart(2, '0') + (u.cls ? ' · ' + u.cls.toUpperCase() : u.squad ? ' · SQUAD' : ''), wname: u.wpn ? u.wpn.name : d.name, color: u.wpn ? u.wpn.color : '#9fb0ab', on: S.gearSel === u.id, bd: S.gearSel === u.id ? 'rgba(54,224,207,.55)' : 'rgba(120,135,130,.16)', pick: (() => { const id = u.id; return () => { S.gearSel = id; this.forceUpdate(); }; })() });
+        }
+        out.gearRoster = roster.slice(0, 16);
+        const cur = this.gearCurW(S.gearSel) || this.gearCurW('hero');
+        if (!cur) return out;
+        const it = cur.it, c = this.CARTS[it.cart], am = this.AMMOS[it.amm] || this.AMMOS.fmj;
+        const E = this.cartE(it.cart, it.barrel || 0);
+        const dmg = E * am.tr / this.JPH;
+        let pen = 1, dd = dmg; while (am.rt > 0 && dd * am.rt >= 2 && pen < 9) { dd *= am.rt; pen++; }
+        const hsP = Math.min(0.6, (cur.hs != null ? cur.hs : 0.30) + (it.optic || 0) * 0.05);
+        out.gearSelName = S.gearSel === 'hero' ? 'MAIN OPERATOR' : (roster.find(r => r.on) || {}).name || '';
+        out.gearSelWpn = it.name + (cur.loot ? ' · LOOT' : ' · ISSUE');
+        out.gearSelLoot = !!cur.loot;
+        out.gearCard = [
+          { l: 'CARTRIDGE', v: c.name, c: '#eafffb' },
+          { l: 'BULLET MASS', v: c.mg + ' g', c: '#9fb0ab' },
+          { l: 'MUZZLE VELOCITY', v: Math.round(c.v * (1 + (it.barrel || 0) * 0.055)) + ' m/s' + ((it.barrel || 0) ? ' · BARREL+' + it.barrel : ''), c: (it.barrel || 0) ? '#7ef0a6' : '#9fb0ab' },
+          { l: 'MUZZLE ENERGY', v: Math.round(E) + ' J', c: '#ffd56b' },
+          { l: 'LOAD', v: am.name + ' · ' + Math.round(am.tr * 100) + '% TRANSFER', c: '#9fb0ab' },
+          { l: 'PENETRATION', v: pen + (pen > 1 ? ' BODIES' : ' BODY'), c: pen > 2 ? '#ff8a93' : '#9fb0ab' },
+          { l: 'CNS HIT', v: Math.round(hsP * 100) + '%' + ((it.optic || 0) ? ' · OPTIC+' + it.optic : ''), c: (it.optic || 0) ? '#7ef0a6' : '#9fb0ab' },
+          { l: 'FIRE RATE', v: (cur.rof || 1).toFixed(1) + '/s' + ((it.action || 0) ? ' · ACTION+' + it.action : ''), c: (it.action || 0) ? '#7ef0a6' : '#9fb0ab' },
+          { l: 'DMG / SHOT', v: dmg.toFixed(1) + ' · DPS ' + (dmg * (cur.rof || 1)).toFixed(0), c: '#eafffb' },
+          { l: 'REPORT', v: it.supp ? 'SUPPRESSED · ÷5 NOISE' : 'LOUD', c: it.supp ? '#7ef0a6' : '#c9a06b' },
+        ];
+        const curScore = this.scoreW(it);
+        const selPlat = S.gearSel === 'hero' ? 'hero' : (() => { const u = S.units.find(x => x.id === S.gearSel); return u ? this.platDef(u).plat : null; })();
+        out.gearArm = (S.armory || []).map((g, i) => ({ g, i })).sort((a, b) => ((b.g.plat === selPlat) - (a.g.plat === selPlat)) || (this.scoreW(b.g) - this.scoreW(a.g))).slice(0, 12).map(({ g, i }) => {
+          const fit = g.plat === selPlat; const dS = this.scoreW(g) - curScore;
+          return { name: g.name, color: g.color, plat: g.plat.toUpperCase(), fit, delta: (dS >= 0 ? '+' : '') + dS.toFixed(1) + ' DMG', deltaColor: dS > 0 ? '#7ef0a6' : '#ff8a93', equip: (() => { const idx = i; return () => this.gearEquip(idx); })(), btnStyle: 'padding:4px 9px;border:1px solid ' + (fit ? 'rgba(54,224,207,.4)' : 'rgba(120,135,130,.2)') + ';background:' + (fit ? 'rgba(54,224,207,.06)' : 'transparent') + ';color:' + (fit ? '#9be0d8' : '#5b6e69') + ";font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1px;cursor:" + (fit ? 'pointer' : 'default') + ';white-space:nowrap' };
+        });
+        return out;
+      })(),
       jumpBarracks: () => { const b = (S.blds || []).find(x => x.kind === 'barracks'); if (!b) { this.milestone('BUILD A BARRACKS TO RECRUIT'); return; } S.sel = { type: 'bld', id: b.id }; this.centerOn(b.x, b.y); this.forceUpdate(); },
       ...(() => { const rows = this.upgradeRows(); const ready = rows.filter(r => r.afford).length;
         return { upRows: rows, upNone: !rows.length, upReady: ready,
