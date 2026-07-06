@@ -30,6 +30,7 @@ try { PUBKEY = require("./release-pubkey.json"); } catch { /* updates disabled u
 
 const ALLOWED_HOSTS = new Set([
   "api.github.com",
+  "github.com",
   "objects.githubusercontent.com",
   "release-assets.githubusercontent.com",
   "github-releases.githubusercontent.com",
