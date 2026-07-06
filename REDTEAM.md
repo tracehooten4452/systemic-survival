@@ -30,6 +30,17 @@ with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
 
 ## CLEARED AUDIT HISTORY
 
+- 2026-07-06: v0.3.5 launch gate wrapper release plus repaired repo payload. Candidate
+  payload SHA-256 `828435BBE7CF6BF3102147785D10219033065E822E00896F12E782E088F3EEFD`;
+  portable exe SHA-256 `65A2C259D457C3A319B07F792D077911F5DAF126B3360D90BED4C51440F91901`;
+  signed manifest SHA-256 `B524DE50ABE51FC501A5DD59FD8A3D52811F867BD136AE4BD81EE9965FC91ED5`.
+  Verdict: green after the drop-kit payload replaced the dirty browser-dev copy, removing
+  external font links and restoring the Codex v0.3.4 payload fixes with `GAME_VER 0.3.5`.
+  Checks: kit SHA verification, `npm run validate:payload`, `node --check` for wrapper files,
+  `npm run pack:win`, portable/unpacked/staged smoke receipts with `blockedRequests: []`,
+  signed payload staging probe, tampered-manifest rejection, wrapperMin-too-high fallback,
+  `npm run release:assets`, and manifest SHA/signature verification. Follow-up: publish/tag
+  `v0.3.5`; this is a wrapper release, so player notes must say to grab the new exe.
 - 2026-07-06: v0.3.1-v0.3.4 package pass: combat feel, tesla knockdown, M5 closeout
   (gunsmith 3->1, sector loot, TACMAP v2), settings/pause v2, onboarding, session-owner
   save lock, and toast-lane fix. Candidate payload SHA-256

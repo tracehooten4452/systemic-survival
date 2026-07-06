@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Systemic Survival — Launch</title>
+<!-- WRAPPER-OWNED LAUNCH GATE — lives OUTSIDE the game payload (its job is to swap that payload
+     before anything loads). ZERO network requests from this page itself; the MAIN PROCESS does all
+     fetching/verifying and drives this UI through the gate protocol below. System fonts only
+     (offline contract — no webfonts anywhere in the wrapper). -->
+<style>
+  html, body { margin: 0; height: 100%; background: #070b0c; overflow: hidden; user-select: none; }
+  body { display: flex; align-items: center; justify-content: center; font-family: 'Consolas', 'Cascadia Mono', 'Courier New', monospace; color: #9fb0ab; }
+  .wrap { width: 460px; display: flex; flex-direction: column; gap: 22px; align-items: center; }
+  .mark { display: flex; align-items: center; gap: 12px; }
+  .sq { width: 30px; height: 30px; border: 1.5px solid #36e0cf; display: flex; align-items: center; justify-content: center; color: #36e0cf; font-weight: 700; font-size: 15px; box-shadow: 0 0 18px rgba(54,224,207,.35); }
+  .word { font-size: 20px; font-weight: 700; letter-spacing: 6px; color: #eafffb; }
+  .word b { color: #36e0cf; }
+  .tag { font-size: 8.5px; letter-spacing: 3px; color: #5b6e69; margin-top: 3px; }
+  .panel { width: 100%; border: 1px solid rgba(54,224,207,.25); background: rgba(10,16,18,.6); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .stateLabel { font-size: 10px; letter-spacing: 2.5px; color: #36e0cf; flex: 1; }
+  .stateLabel.warn { color: #ffb454; }
+  .stateLabel.err { color: #ff8a93; }
+  .vers { font-size: 9px; letter-spacing: 1px; color: #5b6e69; }
+  .vers b { color: #9be0d8; font-weight: 400; }
+  .barBox { height: 5px; background: rgba(54,224,207,.1); border: 1px solid rgba(54,224,207,.2); }
+  .bar { height: 100%; width: 0%; background: #36e0cf; box-shadow: 0 0 12px rgba(54,224,207,.5); transition: width .25s ease; }
+  .note { font-size: 8.5px; letter-spacing: .5px; color: #5b6e69; line-height: 1.6; min-height: 26px; }
+  .btns { display: flex; gap: 10px; justify-content: center; }
+  button { font-family: inherit; font-size: 10px; letter-spacing: 2px; padding: 9px 22px; cursor: pointer; border: 1px solid rgba(54,224,207,.4); background: rgba(54,224,207,.07); color: #9be0d8; }
+  button.primary { background: #36e0cf; color: #04080a; font-weight: 700; border-color: #36e0cf; box-shadow: 0 0 20px rgba(54,224,207,.4); }
+  button:disabled { opacity: .35; cursor: default; }
+  .pulse { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+  .spin { width: 10px; height: 10px; border: 1.5px solid rgba(54,224,207,.25); border-top-color: #36e0cf; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="mark">
+      <div class="sq">◢</div>
+      <div>
+        <div class="word">SYSTEMIC <b>SURVIVAL</b></div>
+        <div class="tag">OUTPOST // HOLD THE LINE</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="row">
+        <div class="spin" id="spin"></div>
+        <div class="stateLabel pulse" id="state">CHECKING FOR UPDATES</div>
+        <div class="vers" id="vers"></div>
+      </div>
+      <div class="barBox" id="barBox" style="display:none"><div class="bar" id="bar"></div></div>
+      <div class="note" id="note">Contacting the update feed — offline goes straight to the game.</div>
+      <div class="btns">
+        <button id="play" class="primary" style="display:none">▶ PLAY</button>
+        <button id="skip" style="display:none">PLAY CURRENT VERSION</button>
+      </div>
+    </div>
+  </div>
+<script>
+// ============================ GATE PROTOCOL (main process → this page) ============================
+// Main drives the UI:   gateWin.webContents.send('gate:status', {state, current, latest, pct, note})
+//   (or, if this window has no ipc preload, executeJavaScript(`window.__gate.set(${JSON.stringify(s)})`))
+// This page answers:    'gate:action' {action:'play'|'skip'}  via window.gateAPI.action(a) when a
+//   preload bridge exists, else main polls  executeJavaScript('window.__gateAction')  (self-clearing).
+// States: checking | uptodate | downloading | applying | restarting | offline | error
+// HARD RULES (spec): offline/timeout/error NEVER block play · smoke-test mode bypasses the gate
+// entirely · every fetch/verify happens in MAIN with the existing signed-manifest machinery.
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const els = { state: $('state'), vers: $('vers'), note: $('note'), bar: $('bar'), barBox: $('barBox'), play: $('play'), skip: $('skip'), spin: $('spin') };
+  let acted = false;
+  const emit = (action) => {
+    if (acted) return; acted = true;
+    window.__gateAction = action;                                    // polled fallback
+    if (window.gateAPI && window.gateAPI.action) window.gateAPI.action(action);   // preload bridge
+    els.play.disabled = els.skip.disabled = true;
+  };
+  els.play.onclick = () => emit('play');
+  els.skip.onclick = () => emit('skip');
+  window.addEventListener('keydown', (e) => { if (e.key === 'Enter' && els.play.style.display !== 'none') emit('play'); });
+
+  const CFG = {
+    checking:    { label: 'CHECKING FOR UPDATES', cls: '', spin: 1, note: 'Contacting the update feed — offline goes straight to the game.', skip: 1 },
+    uptodate:    { label: 'UP TO DATE', cls: '', spin: 0, note: 'You are on the latest build.', play: 1 },
+    downloading: { label: 'DOWNLOADING UPDATE', cls: '', spin: 1, bar: 1, note: 'Pulling the new build from the feed. You can play the current version while it finishes staging.', skip: 1 },
+    applying:    { label: 'APPLYING UPDATE', cls: '', spin: 1, note: 'Verifying signature and staging the new build — a few seconds.' },
+    restarting:  { label: 'UPDATE READY — RESTARTING', cls: 'warn', spin: 1, note: 'A new launcher version is starting. This window closes itself.' },
+    offline:     { label: 'OFFLINE — PLAYING CURRENT', cls: 'warn', spin: 0, note: 'No feed reachable. The bundled build is fully playable.', play: 1 },
+    error:       { label: 'UPDATE CHECK FAILED', cls: 'err', spin: 0, note: 'The feed answered strangely. Your current build is untouched and safe to play.', play: 1 },
+  };
+  function set(s) {
+    const c = CFG[s.state] || CFG.checking;
+    els.state.textContent = c.label; els.state.className = 'stateLabel ' + (c.cls || '') + (c.spin ? ' pulse' : '');
+    els.spin.style.display = c.spin ? '' : 'none';
+    els.barBox.style.display = c.bar ? '' : 'none';
+    if (s.pct != null) els.bar.style.width = Math.max(0, Math.min(100, s.pct)) + '%';
+    els.note.textContent = s.note || c.note;
+    els.vers.innerHTML = s.current ? ('<b>v' + s.current + '</b>' + (s.latest && s.latest !== s.current ? ' → <b>v' + s.latest + '</b>' : '')) : '';
+    els.play.style.display = c.play ? '' : 'none';
+    els.skip.style.display = c.skip ? '' : 'none';
+    if (s.state === 'uptodate' && s.autoPlayMs !== 0) setTimeout(() => emit('play'), s.autoPlayMs || 1200);   // brief flash, then in
+  }
+  window.__gate = { set };
+  if (window.gateAPI && window.gateAPI.onStatus) window.gateAPI.onStatus(set);
+  // SAFETY NET: if main never drives us (integration bug), never strand the player.
+  setTimeout(() => { if (!acted && els.state.textContent === 'CHECKING FOR UPDATES') set({ state: 'error', note: 'The launcher never reported status — playing the current build.' }); }, 12000);
+})();
+</script>
+</body>
+</html>

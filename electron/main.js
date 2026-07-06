@@ -3,18 +3,22 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const GAME_BUNDLED = path.join(__dirname, "..", "Systemic Survival v2.dc.html");
+const GATE_FILE = path.join(__dirname, "launch-gate", "launch.html");
 const ICON_FILE = path.join(__dirname, "..", "assets", "systemic-survival-icon.ico");
 const SMOKE_OUTPUT_ARG = process.argv.find((arg) => arg.startsWith("--smoke-test-output="));
 const SMOKE_OUTPUT = SMOKE_OUTPUT_ARG ? path.resolve(SMOKE_OUTPUT_ARG.slice("--smoke-test-output=".length)) : null;
 const SMOKE_STAGED = process.argv.includes("--smoke-staged");
 const SMOKE_TEST = process.argv.includes("--smoke-test") || SMOKE_STAGED || Boolean(SMOKE_OUTPUT);
 const updater = require("./updater");
-// Payload-level auto-update: boot the newest VERIFIED staged payload. Plain smoke runs the
-// shipped payload (deterministic artifact check); --smoke-staged pushes the bundled payload
-// through the REAL staging path and boots THAT — proving a downloaded update can load.
-const GAME_FILE = SMOKE_STAGED ? updater.stageForSmoke(GAME_BUNDLED)
-  : SMOKE_TEST ? GAME_BUNDLED
-  : updater.resolveGamePayload(GAME_BUNDLED);
+function smokeGameFile() {
+  // Plain smoke runs the shipped payload (deterministic artifact check); --smoke-staged pushes
+  // the bundled payload through the REAL staging path and boots THAT, proving a downloaded
+  // update can load. The launch gate is never created for any smoke receipt.
+  return SMOKE_STAGED ? updater.stageForSmoke(GAME_BUNDLED) : GAME_BUNDLED;
+}
+function currentGameFile() {
+  return updater.resolveGamePayload(GAME_BUNDLED);
+}
 
 function blockExternalNetwork(blockedRequests) {
   session.defaultSession.webRequest.onBeforeRequest(
@@ -26,7 +30,7 @@ function blockExternalNetwork(blockedRequests) {
   );
 }
 
-function createWindow({ smokeTest = false, blockedRequests = [] } = {}) {
+function createWindow({ gameFile = currentGameFile(), smokeTest = false, blockedRequests = [], gateWin = null } = {}) {
   const win = new BrowserWindow({
     width: 1280,
     height: 720,
@@ -44,11 +48,12 @@ function createWindow({ smokeTest = false, blockedRequests = [] } = {}) {
   });
 
   if (!smokeTest) win.once("ready-to-show", () => {
+    if (gateWin && !gateWin.isDestroyed()) gateWin.close();
     win.show();
   });
 
-  win.loadFile(GAME_FILE).then(() => {
-    if (smokeTest) runSmokeTest(win, blockedRequests);
+  win.loadFile(gameFile).then(() => {
+    if (smokeTest) runSmokeTest(win, blockedRequests, gameFile);
   }).catch((err) => {
     console.error(err);
     app.exit(1);
@@ -57,7 +62,7 @@ function createWindow({ smokeTest = false, blockedRequests = [] } = {}) {
   return win;
 }
 
-async function runSmokeTest(win, blockedRequests) {
+async function runSmokeTest(win, blockedRequests, gameFile) {
   try {
     const result = await win.webContents.executeJavaScript(`
       new Promise((resolve) => {
@@ -110,7 +115,7 @@ async function runSmokeTest(win, blockedRequests) {
 
     finishSmoke({
       ok,
-      gameFile: GAME_FILE,
+      gameFile,
       args: process.argv,
       blockedRequests,
       result
@@ -118,7 +123,7 @@ async function runSmokeTest(win, blockedRequests) {
   } catch (err) {
     finishSmoke({
       ok: false,
-      gameFile: GAME_FILE,
+      gameFile,
       args: process.argv,
       error: err && err.stack ? err.stack : String(err)
     }, 1);
@@ -138,15 +143,146 @@ function finishSmoke(payload, exitCode) {
   app.exit(exitCode);
 }
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function createGateWindow() {
+  const gateWin = new BrowserWindow({
+    width: 560,
+    height: 360,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    backgroundColor: "#070b0c",
+    autoHideMenuBar: true,
+    icon: ICON_FILE,
+    show: false,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  });
+
+  gateWin.once("ready-to-show", () => {
+    if (!gateWin.isDestroyed()) gateWin.show();
+  });
+  gateWin.loadFile(GATE_FILE).catch((err) => {
+    console.warn("[launch-gate] failed to load gate:", String((err && err.message) || err));
+  });
+  return gateWin;
+}
+
+function sendGateStatus(gateWin, status) {
+  if (!gateWin || gateWin.isDestroyed()) return;
+  const script = "window.__gate && window.__gate.set(" + JSON.stringify(status) + ")";
+  gateWin.webContents.executeJavaScript(script).catch(() => {});
+}
+
+function pollGateAction(gateWin, onAction) {
+  let stopped = false;
+  const poll = async () => {
+    if (stopped || !gateWin || gateWin.isDestroyed()) return;
+    try {
+      const action = await gateWin.webContents.executeJavaScript(`
+        (() => {
+          const action = window.__gateAction || null;
+          window.__gateAction = null;
+          return action;
+        })();
+      `);
+      if (action === "play" || action === "skip") {
+        stopped = true;
+        onAction(action);
+        return;
+      }
+    } catch {}
+    setTimeout(poll, 150);
+  };
+  poll();
+  return () => { stopped = true; };
+}
+
+async function launchWithGate(blockedRequests) {
+  const gateWin = createGateWindow();
+  let booted = false;
+  let cancelled = false;
+  const stopPolling = pollGateAction(gateWin, () => {
+    cancelled = true;
+    bootCurrent();
+  });
+
+  const bootGame = (gameFile) => {
+    if (booted) return;
+    booted = true;
+    stopPolling();
+    createWindow({ gameFile, blockedRequests, gateWin });
+  };
+  const bootCurrent = () => bootGame(currentGameFile());
+
+  const launchCheck = updater.prepareLaunchUpdate(GAME_BUNDLED, {
+    isCancelled: () => cancelled,
+    onStatus: (status) => {
+      if (!cancelled && !booted) sendGateStatus(gateWin, status);
+    }
+  });
+
+  const result = await Promise.race([
+    launchCheck,
+    delay(5000).then(() => ({ kind: "timeout", gameFile: currentGameFile(), note: "Update check timed out." }))
+  ]);
+
+  if (booted) return;
+
+  if (result.kind === "timeout") {
+    cancelled = true;
+    sendGateStatus(gateWin, { state: "offline", note: "Update check timed out. Launching the current build." });
+    await delay(350);
+    bootGame(result.gameFile);
+    return;
+  }
+
+  if (result.kind === "wrapper-restarting") {
+    stopPolling();
+    await delay(250);
+    app.quit();
+    return;
+  }
+
+  if (result.kind === "payload-staged") {
+    bootGame(result.gameFile);
+    return;
+  }
+
+  if (result.kind === "up-to-date") {
+    sendGateStatus(gateWin, { state: "uptodate", current: result.current, latest: result.latest, autoPlayMs: 0 });
+    await delay(650);
+    bootGame(result.gameFile);
+    return;
+  }
+
+  const state = result.kind === "error" ? "error" : "offline";
+  sendGateStatus(gateWin, { state, current: result.current, note: result.note || "Launching the current build." });
+  await delay(650);
+  bootGame(result.gameFile || currentGameFile());
+}
+
 app.whenReady().then(() => {
   const blockedRequests = [];
   blockExternalNetwork(blockedRequests);
-  const win = createWindow({ smokeTest: SMOKE_TEST, blockedRequests });
-  // background update check — page stays network-blocked; offline = silent no-op
-  if (!SMOKE_TEST) setTimeout(() => updater.checkForUpdates(win), 4000);
+  if (SMOKE_TEST) {
+    createWindow({ gameFile: smokeGameFile(), smokeTest: true, blockedRequests });
+  } else {
+    launchWithGate(blockedRequests).catch((err) => {
+      console.warn("[launch-gate] failed open:", String((err && err.message) || err));
+      createWindow({ gameFile: currentGameFile(), blockedRequests });
+    });
+  }
 
   if (!SMOKE_TEST) app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) createWindow({ blockedRequests });
   });
 });
 
