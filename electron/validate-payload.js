@@ -4,7 +4,7 @@ const path = require("node:path");
 const { payloadProblems } = require("./payload-validation");
 
 const root = path.join(__dirname, "..");
-const src = process.argv[2] ? path.resolve(process.argv[2]) : path.join(root, "Systemic Survival v2.dc.html");
+const src = process.argv[2] ? path.resolve(process.argv[2]) : path.join(root, "Systemic Survival.dc.html");
 const text = fs.readFileSync(src, "utf8");
 const problems = payloadProblems(text);
 

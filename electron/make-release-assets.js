@@ -8,7 +8,7 @@ const { payloadProblems } = require("./payload-validation");
 
 const root = path.join(__dirname, "..");
 const pkg = require(path.join(root, "package.json"));
-const src = path.join(root, "Systemic Survival v2.dc.html");
+const src = path.join(root, "Systemic Survival.dc.html");
 const privPath = path.join(root, "release-signing-key.json");
 const pubPath = path.join(__dirname, "release-pubkey.json");
 const dist = path.join(root, "dist");

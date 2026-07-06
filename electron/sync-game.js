@@ -19,7 +19,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { payloadProblems } = require("./payload-validation");
 
-const TARGET_HTML = path.join(__dirname, "..", "Systemic Survival v2.dc.html");
+const TARGET_HTML = path.join(__dirname, "..", "Systemic Survival.dc.html");
 const TARGET_SUPPORT = path.join(__dirname, "..", "support.js");
 const LOCAL_FONTS_CSS = path.join(__dirname, "..", "vendor", "fonts", "fonts.css");
 
@@ -60,7 +60,7 @@ payload = payload
   .join("\n");
 
 // 3. if local fonts are vendored, point the helmet at them
-if (fs.existsSync(LOCAL_FONTS_CSS)) {
+if (fs.existsSync(LOCAL_FONTS_CSS) && !payload.includes("./vendor/fonts/fonts.css")) {
   payload = payload.replace(
     "<helmet>",
     '<helmet>\n<link rel="stylesheet" href="./vendor/fonts/fonts.css">'

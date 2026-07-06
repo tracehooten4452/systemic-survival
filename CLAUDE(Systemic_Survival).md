@@ -1,6 +1,6 @@
-# Systemic Survival v2 — project notes
+# Systemic Survival — project notes
 
-Main file: `Systemic Survival v2.dc.html` (v1 logistics build kept as backup).
+Main file: `Systemic Survival.dc.html` (v1 logistics build kept as backup).
 
 ## Read this first - current snapshot
 
@@ -11,20 +11,21 @@ current routing map before making changes.
 
 ### Current package
 - Folder: `Systemic Survival`
-- Main artifact: `Systemic Survival v2.dc.html`
+- Main artifact: `Systemic Survival.dc.html`
 - Runtime: `support.js`
-- Offline runtime assets: `vendor/react.production.min.js` and `vendor/react-dom.production.min.js`
+- Offline runtime assets: `vendor/react.production.min.js`, `vendor/react-dom.production.min.js`,
+  and `vendor/fonts/` (Chakra Petch + IBM Plex Mono TTFs with OFL licenses).
 - Game icon: `assets/systemic-survival-icon.png` source and `assets/systemic-survival-icon.ico`
   Windows icon.
 - Windows wrapper: `electron/main.js`
 - Game-update transplant: `electron/sync-game.js` (payload-only sync + offline scrub; see PACKAGING.md)
-- Sendable build: `dist/Systemic-Survival-0.3.4-portable.exe`
+- Sendable build: `dist/Systemic-Survival-0.3.6-portable.exe`
 - Fallback build: `dist/win-unpacked/`
 - Save key: `ss_outpost_v6`
-- Current audited payload: GAME_VER `0.3.4`, SHA-256
-  `D616F9EF0E4C59D9A3FCF63B363CE1AAF2519D557444496893A3789B975F14A7`.
+- Current audited payload: GAME_VER `0.3.6`, SHA-256
+  `7DF06A4A1D2177DD1D96CE3F0C2370EFAE71D3269C10F1311B859266AB285552`.
 - Signed update assets: `dist/game-payload.html` + `dist/payload-manifest.json`,
-  tag `v0.3.4`, wrapperMin `0.3.0`.
+  tag `v0.3.6`, wrapperMin `0.3.6`.
 - Current architecture: one exported Design Component HTML file plus generated DC runtime,
   with an Electron shell for offline/no-server play.
 
@@ -40,9 +41,9 @@ current routing map before making changes.
 - Defense/combat: Main Operator, operators, gatherers, runners, technicians, squads,
   specialists, mechs, tanks, branches, vehicles, helicopters, A-10 runs, turrets, gates,
   towers, barricades, med bays, and Command Council automation.
-- Latest packages through `0.3.4`: combat feel (hit-stop, kill ticks, gated shake) + tesla
-  knockdown; M5 closeout (gunsmith 3->1, sector loot, TACMAP v2); settings + pause v2 with
-  player-facing physics dials; onboarding chain + session-owner save lock + toast-lane fix.
+- Latest packages through `0.3.6`: launch gate wrapper, renamed stable payload
+  `Systemic Survival.dc.html`, M7.3 field saves/export/import, threat-scaled 500-zombie siege
+  cap, balance harness, and vendored offline brand fonts.
 - Earlier milestone packages remain live: tower platforms T1-T5, airfield, Navy/NG branches,
   per-vehicle loot parts, ragdolls + dismemberment, sector scaling pressure, efficiency rating,
   turret targeting modes, heatmap, and siege telegraph.
@@ -61,12 +62,13 @@ current routing map before making changes.
   and remaining roughness from the horizon camera.
 - Diablo hooks: per-vehicle parts are DONE (engine/plating/gun auto-fit from loot); deeper loot
   progression (set bonuses, rarity depth, vehicle part UI) still open.
-- Offline fonts: still deferred. Until `vendor/fonts/fonts.css` exists, shipped HTML must have
-  zero external font links; `npm run validate:payload` is the gate.
+- Offline fonts: DONE. `vendor/fonts/fonts.css` is auto-wired into the payload by
+  `electron/sync-game.js`; shipped HTML must still have zero external font links.
 - Combat visuals: DONE for the queued scope — death ragdolls + severing landed (see DONE section);
   living-unit jointed limbs and occlusion remain future polish.
-- Balance pass: preserve the doctrine that capped systems use reachable polynomial costs and
-  difficulty is player-gated by threat/sector, not runaway timers.
+- Balance harness: `await __SS.balanceHarness({hours, profile:'idle'|'active'})` is available
+  as a console-only dev tool for doctrine runs. Preserve reachable polynomial costs and
+  player-gated threat/sector difficulty.
 
 ### Current doctrine
 - No timers for core construction. The walk is the timer: civilians physically haul resources.
@@ -86,6 +88,28 @@ current routing map before making changes.
 - Still-current rough edges: horizon-camera polish, occlusion/readability, and deeper
   MATERIEL -> ALLOY -> factory/bay logistics.
 
+### Codex REDTEAM - 2026-07-06 v0.3.6 / M7.3
+
+Status: green after the M7.3 drop kit was applied through the stable renamed payload lane.
+Save schema remains `ss_outpost_v6`; field save slots/export/import are additive.
+
+What shipped in this pass:
+- Stable payload filename: `Systemic Survival.dc.html` (the old `v2` filename is retired).
+- M7.3 gameplay/tooling: 3 field save slots, save export/import, threat-scaled siege cap
+  (`zCap()` reaches 500 at high threat), and the console-only `balanceHarness()`.
+- Vendored offline fonts: `vendor/fonts/` contains Chakra Petch + IBM Plex Mono TTFs and OFL
+  license files. `electron/sync-game.js` auto-wired `./vendor/fonts/fonts.css` into the payload.
+- Wrapper release metadata bumped to `0.3.6` / `wrapperMin 0.3.6`.
+
+Adversarial notes for Claude:
+- The kit payload SHA `8A2067CD...` was verified before wrapper transplant; the shipped payload
+  hash is `7DF06A4A...` after `sync-game.js` injected the local font stylesheet.
+- Do not reintroduce external Google Fonts links. Brand fonts now ship from `vendor/fonts/`.
+- Future payload drop kits should use `Systemic Survival.dc.html`; do not revive the old `v2`
+  filename in source, docs, or mirrors.
+- M1 through M7 are complete. Remaining ideas (factions, political layer, patrol path editor,
+  TEXWRAP life pass, deeper loot polish) are post-1.0 unless explicitly pulled forward.
+
 ### Codex REDTEAM - 2026-07-06 v0.3.4
 
 Status: green for a payload-only 0.3.4 merge after Codex fixes. Save schema remains
@@ -102,7 +126,7 @@ Fixes Codex made in this pass:
   from blocking the clean save.
 - Tutorial skip/completion saves immediately, and fresh hero/unit gear fields now match the
   loaded-save shape (`wpn: null`, unit gear/scav fields present).
-- Mirrored `Systemic Survival v2.dc.html` into `Systemic Survival/uploads/Systemic Survival/`
+- Mirrored `Systemic Survival.dc.html` into `Systemic Survival/uploads/Systemic Survival/`
   and rebuilt Electron output so every payload copy hashes to
   `D616F9EF0E4C59D9A3FCF63B363CE1AAF2519D557444496893A3789B975F14A7`.
 
@@ -122,7 +146,7 @@ Checks Codex ran:
 Adversarial notes for Claude:
 - The fresh DC export can reintroduce remote font links and strip wrapper-owned title/icon lines.
   Run `npm run validate:payload` after every transplant, not just after packaging.
-- Treat `Systemic Survival v2.dc.html`, the upload mirror, `dist/win-unpacked/resources/app/`,
+- Treat `Systemic Survival.dc.html`, the upload mirror, `dist/win-unpacked/resources/app/`,
   and `dist/game-payload.html` as a four-way hash check before calling a candidate current.
 - Keep old saves as first-class probes for every additive `ss_outpost_v6` change; malformed
   persisted settings should never escape the UI ranges.

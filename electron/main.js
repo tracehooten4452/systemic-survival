@@ -2,7 +2,7 @@ const { app, BrowserWindow, session } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const GAME_BUNDLED = path.join(__dirname, "..", "Systemic Survival v2.dc.html");
+const GAME_BUNDLED = path.join(__dirname, "..", "Systemic Survival.dc.html");
 const GATE_FILE = path.join(__dirname, "launch-gate", "launch.html");
 const ICON_FILE = path.join(__dirname, "..", "assets", "systemic-survival-icon.ico");
 const SMOKE_OUTPUT_ARG = process.argv.find((arg) => arg.startsWith("--smoke-test-output="));

@@ -9,8 +9,9 @@ npm install
 npm start
 ```
 
-The wrapper loads `Systemic Survival v2.dc.html` directly from disk and blocks external
-HTTP/HTTPS requests from the game page. React and ReactDOM are vendored in `vendor/`.
+The wrapper loads `Systemic Survival.dc.html` directly from disk and blocks external
+HTTP/HTTPS requests from the game page. React, ReactDOM, and brand fonts are vendored in
+`vendor/`.
 The main process may make one optional, read-only GitHub Releases check for signed payload
 updates; offline play works without it.
 
@@ -30,7 +31,8 @@ The portable build is written to:
 dist/Systemic-Survival-<version>-portable.exe
 ```
 
-That `.exe` includes Chromium, Electron, the game HTML, `support.js`, and the local vendor files.
+That `.exe` includes Chromium, Electron, the game HTML, `support.js`, and the local vendor files
+including `vendor/fonts/`.
 It can be sent to another Windows user as a single download.
 
 The custom game icon lives in:

@@ -10,6 +10,7 @@
 <body>
 <x-dc>
 <helmet>
+<link rel="stylesheet" href="./vendor/fonts/fonts.css">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;background:#070b0c;overflow:hidden}
@@ -843,6 +844,25 @@
           <button onClick="{{ restartGame }}" style="padding:11px 26px;font-family:'Chakra Petch';font-size:13px;font-weight:700;letter-spacing:3px;color:#ff8a93;background:rgba(255,93,108,.08);border:1px solid rgba(255,93,108,.5)">⟲ RESTART</button>
         </div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1.5px;color:#5b6e69;margin-top:4px">Restart wipes all progress and regenerates the map · {{ gameVer }}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;width:540px;max-width:calc(100% - 40px)">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:2.5px;color:#4f9b94;text-align:center">FIELD SAVES</span>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <sc-for list="{{ saveSlots }}" as="sl" hint-placeholder-count="3">
+              <div style="border:1px solid rgba(54,224,207,.22);background:rgba(10,16,18,.6);padding:8px 10px;display:flex;flex-direction:column;gap:5px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:2px;color:#4f9b94">SLOT {{ sl.n }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9fb0ab;line-height:1.5;min-height:24px">{{ sl.meta }}</span>
+                <div style="display:flex;gap:6px">
+                  <button onClick="{{ sl.save }}" style="flex:1;padding:5px 0;border:1px solid rgba(54,224,207,.4);background:rgba(54,224,207,.07);color:#9be0d8;font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:1.5px;cursor:pointer">SAVE</button>
+                  <button onClick="{{ sl.load }}" style="{{ sl.loadStyle }}">LOAD</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center">
+            <button onClick="{{ exportSave }}" title="download the current save as a file — moves between machines" style="padding:6px 16px;border:1px solid rgba(54,224,207,.35);background:rgba(54,224,207,.05);color:#9be0d8;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1.5px;cursor:pointer">⇩ EXPORT SAVE FILE</button>
+            <label title="load a save file exported from any machine" style="padding:6px 16px;border:1px solid rgba(255,213,107,.35);background:rgba(255,213,107,.05);color:#ffd56b;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1.5px;cursor:pointer">⇧ IMPORT SAVE FILE<input type="file" accept=".json,application/json" onChange="{{ importSave }}" style="display:none"></label>
+          </div>
+        </div>
       </div>
     </sc-if>
 
@@ -3424,7 +3444,7 @@ class Component extends DCLogic {
   };
   // ---- game version: baked payload tag; a STAGED auto-update payload (payload-vX.Y.Z.html) reports its
   // release tag instead, so the top-left always tells the truth about what's actually running.
-  GAME_VER = '0.3.5';
+  GAME_VER = '0.3.6';
   gameVer() {
     if (this._gv) return this._gv;
     let v = this.GAME_VER;
@@ -3470,6 +3490,78 @@ class Component extends DCLogic {
       this.save();
       this.forceUpdate();
     }
+  }
+  // ---- M7.3 FIELD SAVES: 3 snapshot slots + file export/import. The RUNNING game always uses the
+  // main key; slots are copies (zero risk to the hot path). Loads restamp the session-owner lock.
+  slotKey(n) { return this.SAVE + '_slot' + n; }
+  slotMeta(n) {
+    try { const d = JSON.parse(localStorage.getItem(this.slotKey(n))); if (!d) return null; return { t: d._slotT || 0, kills: d.kills || 0, pop: d.civPop || 0, ver: d._slotV || '?' }; } catch (e) { return null; }
+  }
+  slotSave(n) {
+    this.save();
+    try { const d = JSON.parse(localStorage.getItem(this.SAVE)); if (!d) return; d._slotT = Date.now(); d._slotV = this.GAME_VER; localStorage.setItem(this.slotKey(n), JSON.stringify(d)); } catch (e) { return; }
+    this.milestone('▤ SAVED → SLOT ' + n); this.forceUpdate();
+  }
+  slotLoad(n) {
+    const raw = localStorage.getItem(this.slotKey(n)); if (!raw) return;
+    if (!confirm('LOAD SLOT ' + n + '? Current progress is replaced by the snapshot.')) return;
+    try { if (this._bootId) localStorage.setItem(this.SAVE + '_owner', this._bootId); localStorage.setItem(this.SAVE, raw); } catch (e) { return; }
+    location.reload();
+  }
+  exportSave = () => {
+    this.save();
+    const raw = localStorage.getItem(this.SAVE) || '{}';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([raw], { type: 'application/json' }));
+    a.download = 'systemic-survival-save-' + this.gameVer() + '-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+  importSave = (e) => {
+    const f = e.target.files && e.target.files[0]; if (!f) return; e.target.value = '';
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const d = JSON.parse(rd.result);
+        if (!d || typeof d !== 'object' || (d.kills == null && !Array.isArray(d.units))) throw new Error('shape');
+        if (!confirm('IMPORT SAVE? Current progress is replaced.')) return;
+        if (this._bootId) localStorage.setItem(this.SAVE + '_owner', this._bootId);
+        localStorage.setItem(this.SAVE, JSON.stringify(d));
+        location.reload();
+      } catch (err) { this.milestone('✕ NOT A SYSTEMIC SURVIVAL SAVE'); this.forceUpdate(); }
+    };
+    rd.readAsText(f);
+  };
+  // ---- M7.3 population ceiling: ambient pressure (maxZ) is UNTOUCHED — only player-provoked mass
+  // events (threat the player raised, screamer pulls, woken nests) may exceed 200, up to 500.
+  zCap() { return Math.min(500, 200 + Math.max(0, (this.S.threat || 1) - 1) * 25); }
+  // ---- M7.3 BALANCE HARNESS (dev/console only): await __SS.balanceHarness({hours:2, profile:'idle'})
+  // Runs the REAL sim headless-fast on the CURRENT colony (run it on a throwaway save), samples each
+  // game-minute, reports steady-state net rates vs the doctrine bands (~30d active / ~180d idle to max).
+  async balanceHarness(o) {
+    o = o || {}; if (this._hRun) return 'already running'; this._hRun = true;
+    const S = this.S, hours = Math.max(0.1, o.hours || 1), prof = o.profile || 'idle';
+    const total = hours * 3600, STEP = 0.05; let t = 0, nextSample = 0, lastYield = performance.now();
+    const rows = [];
+    const paused = S.paused; S.paused = false;
+    try {
+      while (t < total) {
+        this.update(STEP); t += STEP;
+        if (prof === 'active') {   // an attentive player: keeps threat rising when the quota clears
+          if ((S.threatKills || 0) >= (this.threatQuota ? this.threatQuota() : 1e9)) { try { this.raiseThreat(); } catch (e) {} }
+          if (S.prez && !S.prez.on && S.research.powers) S.prez.on = true;
+        }
+        if (t >= nextSample) {
+          nextSample += 60;
+          rows.push({ m: Math.round(t / 60), scrap: S.scrap | 0, raw: S.raw | 0, mat: S.materials | 0, alloy: S.alloy | 0, food: S.food | 0, ammo: S.ammo | 0, pop: S.civs.length, units: S.units.length, kills: S.kills, threat: S.threat });
+          if (performance.now() - lastYield > 800) { await new Promise(r => setTimeout(r, 0)); lastYield = performance.now(); }
+        }
+      }
+    } finally { S.paused = paused; this._hRun = false; }
+    const half = rows.slice(Math.floor(rows.length / 2));
+    const rate = (k) => half.length > 1 ? +(((half[half.length - 1][k] - half[0][k]) / ((half.length - 1) / 60))).toFixed(1) : 0;
+    const rep = { profile: prof, simHours: hours, samples: rows, ratesPerHour: { scrap: rate('scrap'), raw: rate('raw'), mat: rate('mat'), alloy: rate('alloy'), food: rate('food'), ammo: rate('ammo') }, endState: rows[rows.length - 1] || null, doctrine: 'targets: ~30 days ACTIVE (3h/day) to max · ~180 days pure IDLE — judge rates against remaining polynomial sinks (turretCost/gateCost/towerCost ladders)' };
+    console.log('[BALANCE HARNESS]', JSON.stringify(rep.ratesPerHour), 'end:', JSON.stringify(rep.endState));
+    return rep;
   }
   milestone(t) { this.S.toast = t; this.S.toastT = 3.2; this.sndRadio('toast'); }
   resetGame(confirmFirst) {
@@ -3950,7 +4042,7 @@ class Component extends DCLogic {
     this.ping(site.x, site.y, '#ff5d6c');
     this.noiseAdd(site.x, site.y, 8);   // crowbars on steel — the neighborhood hears the sweep begin
     const S = this.S, lv = S.threat, m = this.dmul; let n = 0;
-    for (let i = 0; i < site.nest && S.zombies.length < 196; i++) {
+    for (let i = 0; i < site.nest && S.zombies.length < this.zCap() - 4; i++) {
       let px = site.x, py = site.y, g = 0;
       do { const aa = Math.random() * 6.283, ar = 60 + Math.random() * 170; px = site.x + Math.cos(aa) * ar; py = site.y + Math.sin(aa) * ar; } while ((this.isWallPx(px, py) || px < 30 || py < 30 || px > this.AW - 30 || py > this.AH - 30) && g++ < 14);
       if (this.isWallPx(px, py)) continue;
@@ -4724,7 +4816,7 @@ class Component extends DCLogic {
     const S = this.S; S.tick += dt; S.ramp += dt; S.dayT = (S.dayT || 0) + dt;
     this._frame = (this._frame || 0) + 1; this.buildZGrid();
     // hard population caps (performance budget + runaway safety)
-    if (S.zombies.length > 200) S.zombies.splice(200);
+    if (S.zombies.length > this.zCap()) S.zombies.splice(this.zCap());
     if (S.bullets.length > 360) S.bullets.splice(0, S.bullets.length - 360);
     if (S.fx.length > 280) S.fx.splice(0, S.fx.length - 280);
     if (S.floats.length > 120) S.floats.splice(0, S.floats.length - 120);
@@ -7600,6 +7692,16 @@ class Component extends DCLogic {
       toastShow: !!S.toast, toast: S.toast,
       toastTop: (() => { const t = S.tut; return (t && !t.done && !S.gameOver) ? '186px' : '74px'; })(),   // objective card owns 60-175px — the toast lane yields below it during orientation
       gameOver: S.gameOver, paused: S.paused, restart: () => this.resetGame(false),
+      // ---- M7.3 field saves (computed only while paused — the menu is the only reader) ----
+      exportSave: this.exportSave, importSave: this.importSave,
+      saveSlots: !S.paused ? [] : [1, 2, 3].map(n => {
+        const m = this.slotMeta(n);
+        return {
+          n, meta: m ? new Date(m.t).toLocaleString() + ' · ' + m.kills + ' KILLS · POP ' + m.pop + ' · v' + m.ver : 'EMPTY',
+          save: () => this.slotSave(n), load: () => this.slotLoad(n),
+          loadStyle: 'flex:1;padding:5px 0;border:1px solid ' + (m ? 'rgba(255,213,107,.4)' : 'rgba(120,135,130,.2)') + ';background:' + (m ? 'rgba(255,213,107,.06)' : 'transparent') + ';color:' + (m ? '#ffd56b' : '#5b6e69') + ";font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:1.5px;cursor:" + (m ? 'pointer' : 'default'),
+        };
+      }),
       restartGame: () => this.resetGame(true),
     };
   }

@@ -30,6 +30,21 @@ with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
 
 ## CLEARED AUDIT HISTORY
 
+- 2026-07-06: v0.3.6 M7.3 ship lane plus stable payload rename. Candidate kit payload
+  SHA-256 `8A2067CD126A883F83946AC7534E858FD18D1C01835A9CAEA88837CCA87A60F6`;
+  shipped payload SHA-256 `7DF06A4A1D2177DD1D96CE3F0C2370EFAE71D3269C10F1311B859266AB285552`
+  after `sync-game.js` auto-wired `./vendor/fonts/fonts.css`; portable exe SHA-256
+  `A2E4E0D133A295D5F1EB7A4CEC901A8DD5468456DF5348D457D41B90E8846E06`;
+  signed manifest SHA-256 `AA09FA186D56757AF47658EC4FA655F85A273D722216B47D6ED8F55DD9CE0A06`.
+  Verdict: green after M7.3 added field save slots/export/import, threat-scaled 500-zombie
+  siege cap, console balance harness, vendored OFL fonts, and the stable `Systemic Survival.dc.html`
+  payload name. Checks: kit SHA verification, `npm run validate:payload`, wrapper script syntax,
+  isolated Electron M7.3 probe (local font loading, export download, 10MB garbage import rejection,
+  owner-lock restamp source check, active/idle harness smoke, 500-zombie perf at ~0.59ms update /
+  ~6.13ms draw with `blockedRequests: []`), `npm run pack:win`, portable/unpacked/staged smokes,
+  packaged font/license presence, `npm run release:assets`, four-way payload hash parity, and
+  manifest SHA/signature verification. Follow-up: publish/tag `v0.3.6`; this is a wrapper
+  release because the payload filename and vendored fonts changed package/runtime shape.
 - 2026-07-06: v0.3.5 launch gate wrapper release plus repaired repo payload. Candidate
   payload SHA-256 `828435BBE7CF6BF3102147785D10219033065E822E00896F12E782E088F3EEFD`;
   portable exe SHA-256 `65A2C259D457C3A319B07F792D077911F5DAF126B3360D90BED4C51440F91901`;
@@ -81,7 +96,7 @@ A previous round audited an outdated zip and re-reported fixed findings. Never a
 
 ## Step 1 — Classify the release
 
-- **PAYLOAD-ONLY** (the common case): diff touches only `Systemic Survival v2.dc.html`,
+- **PAYLOAD-ONLY** (the common case): diff touches only `Systemic Survival.dc.html`,
   `package.json` version, lockfile self-version. `wrapperMin` unchanged.
 - **WRAPPER**: anything in `electron/`, `support.js`, `vendor/`, build config, or Electron
   version. `wrapperMin` MUST be raised to the new version, and release notes must say
@@ -92,7 +107,7 @@ doesn't raise `wrapperMin`.
 
 ## Step 2 — Invariant gates (hard blockers)
 
-Payload (`Systemic Survival v2.dc.html`):
+Payload (`Systemic Survival.dc.html`):
 - contains `ss-canvas`, visible `SYSTEMIC` wordmark text, `<x-dc>` marker
 - NO external references: `<script src="http…">`, `<link href="http…">`,
   `@import url(http…)`, quoted `file://`, `fonts.googleapis|fonts.gstatic`

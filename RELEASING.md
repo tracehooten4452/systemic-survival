@@ -197,8 +197,8 @@ exe" in the notes — installed copies show that message instead of auto-updatin
 **How the updater behaves:** at launch (online) the exe checks
 `tracehooten4452/systemic-survival-updates`, downloads a newer `game-payload.html` (~0.6 MB), verifies the
 manifest SIGNATURE against its baked-in public key, then SHA-256 + game invariants, and stages
-it WITH its runtime siblings (support.js/vendor/assets copied beside it) so it boots exactly
-like the bundled file — on the NEXT start (in-game toast announces it). Offline = silent skip.
+it WITH its runtime siblings (support.js/vendor/assets copied beside it) so the launch gate can
+boot it before play starts. Offline = silent skip/fail-open to the current build.
 A failed/corrupt/unsigned download is discarded — the bundled payload is always the fallback.
 The game page itself stays fully network-blocked; only the wrapper's main process performs
 pinned, read-only GitHub fetches. **Releases must be public; the app ships no secrets.**
@@ -214,7 +214,7 @@ pinned, read-only GitHub fetches. **Releases must be public; the app ships no se
 Saves persist on his machine between versions — replacing the exe never touches them
 (breaking save-schema changes are handled inside the game by versioned save keys).
 Once installed, **the game updates itself**: when online at launch it fetches new game content
-(~0.6 MB) from Releases and applies it on the next start — a fresh exe download is only needed
+(~0.6 MB) from Releases and applies it before play starts — a fresh exe download is only needed
 when a release says the wrapper changed.
 
 ## Notes

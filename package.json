@@ -1,12 +1,12 @@
 {
   "name": "systemic-survival",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Offline Windows package for Systemic Survival.",
   "author": "Trace",
   "main": "electron/main.js",
   "private": true,
   "updateRepo": "tracehooten4452/systemic-survival-updates",
-  "wrapperMin": "0.3.5",
+  "wrapperMin": "0.3.6",
   "scripts": {
     "start": "electron .",
     "validate:payload": "node electron/validate-payload.js",
@@ -19,7 +19,7 @@
     "productName": "Systemic Survival",
     "asar": false,
     "files": [
-      "Systemic Survival v2.dc.html",
+      "Systemic Survival.dc.html",
       "support.js",
       "assets/**/*",
       "vendor/**/*",
