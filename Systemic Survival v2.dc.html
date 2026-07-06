@@ -135,6 +135,7 @@
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;color:{{ lockColor }};line-height:1.2">{{ lockLabel }}</div>
       </button>
       <button onClick="{{ cycleVol }}" title="{{ volTip }}" style="padding:0 8px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(54,224,207,.3);background:rgba(54,224,207,.06);color:{{ volColor }};font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;font-weight:600">{{ volLabel }}</button>
+      <button onClick="{{ toggleSettings }}" title="SETTINGS — audio mix, combat feel, camera, palette, experimental physics" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(54,224,207,.3);background:rgba(54,224,207,.06);color:#9be0d8;font-size:13px">⚙</button>
       <button onClick="{{ togglePause }}" title="Pause" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(54,224,207,.3);background:rgba(54,224,207,.06);color:#36e0cf;font-size:13px">{{ pauseIcon }}</button>
       <button onClick="{{ cycleSpeed }}" title="Speed" style="width:42px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(54,224,207,.3);background:rgba(54,224,207,.06);color:#36e0cf;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600">{{ speedLabel }}</button>
       <button onClick="{{ toggleHud }}" title="Show / hide HUD panels" style="padding:0 9px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(54,224,207,.3);background:rgba(54,224,207,.06);color:#36e0cf;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;font-weight:600">⊟ HUD</button>
@@ -526,7 +527,7 @@
     </div>
 
     <sc-if value="{{ toastShow }}" hint-placeholder-val="{{ false }}">
-      <div style="position:absolute;left:50%;top:74px;transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:4px;animation:pop .4s ease-out;pointer-events:none">
+      <div style="position:absolute;left:50%;top:{{ toastTop }};transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:4px;animation:pop .4s ease-out;pointer-events:none">
         <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:4px;color:#ffd56b">◆ MILESTONE</div>
         <div style="font-size:22px;font-weight:700;letter-spacing:2px;color:#ffe9a8;text-shadow:0 0 18px rgba(255,213,107,.5)">{{ toast }}</div>
       </div>
@@ -641,7 +642,8 @@
               <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:2px;color:#5b6e69">ARMORY — FIELD FINDS AWAITING A HAND</span>
               <div style="display:flex;flex-direction:column;gap:3px">
                 <sc-for list="{{ gearArm }}" as="g" hint-placeholder-count="4">
-                  <div style="display:flex;align-items:center;gap:9px;padding:5px 9px;border:1px solid rgba(120,135,130,.14);background:rgba(10,18,20,.35)">
+                  <div style="display:flex;align-items:center;gap:9px;padding:5px 9px;border:1px solid {{ g.rowBorder }};background:rgba(10,18,20,.35)">
+                    <button onClick="{{ g.mark }}" title="mark as gunsmith donor — three donors strip down into one rebuilt weapon" style="{{ g.markStyle }}">{{ g.markGlyph }}</button>
                     <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:{{ g.color }};min-width:170px">{{ g.name }}</span>
                     <span style="font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:1px;color:#5b6e69">{{ g.plat }}</span>
                     <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:{{ g.deltaColor }}">{{ g.delta }}</span>
@@ -651,6 +653,11 @@
                 <sc-if value="{{ gearArmNone }}" hint-placeholder-val="{{ false }}">
                   <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#5b6e69;padding:6px 0">Nothing stored — field drops that don't beat a current weapon land here.</div>
                 </sc-if>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:4px;padding:7px 9px;border:1px dashed rgba(183,156,255,.3);background:rgba(183,156,255,.04)">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:1.5px;color:#b79cff">⚒ GUNSMITH</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:#5b6e69;flex:1;line-height:1.5">{{ gearSmithNote }}</span>
+                  <button onClick="{{ gearTransmute }}" style="{{ gearSmithBtnStyle }}">{{ gearSmithBtnLabel }}</button>
+                </div>
               </div>
               <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:#5b6e69;line-height:1.6">Every number is physical: ½mv² muzzle energy, transfer by load (FMJ/JHP/AP/API), penetration = retained energy through each body. Suppressors cut the noise the horde hears. ΔDMG compares against the selected carrier.</div>
             </div>
@@ -809,15 +816,105 @@
       </div>
     </sc-if>
 
+    <sc-if value="{{ tutShow }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;top:60px;left:50%;transform:translateX(-50%);width:400px;max-width:calc(100% - 30px);z-index:5;background:linear-gradient(180deg,rgba(9,15,17,.94),rgba(7,12,14,.9));border:1px solid rgba(54,224,207,.35);box-shadow:0 12px 40px rgba(0,0,0,.45);padding:9px 12px;display:flex;flex-direction:column;gap:5px" data-screen-label="Objective card">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:2px;color:#4f9b94">OBJECTIVE {{ tutN }}/12</span>
+          <div style="flex:1;height:2px;background:rgba(54,224,207,.12)"><div style="height:100%;background:#36e0cf;width:{{ tutPct }}%"></div></div>
+          <button onClick="{{ tutSkip }}" title="skip the tutorial — objectives stop appearing" style="border:none;background:transparent;color:#5b6e69;font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:1px;cursor:pointer;padding:2px">SKIP ✕</button>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <span style="font-family:'Chakra Petch';font-size:13px;font-weight:700;letter-spacing:1.5px;color:#eafffb">{{ tutTitle }}</span>
+          <sc-if value="{{ tutHasAct }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ tutAct }}" style="margin-left:auto;padding:3px 10px;border:1px solid rgba(255,213,107,.45);background:rgba(255,213,107,.07);color:#ffd56b;font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:1px;cursor:pointer;white-space:nowrap">{{ tutActLabel }} ▸</button>
+          </sc-if>
+        </div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#9fb0ab;line-height:1.55">{{ tutDesc }}</span>
+      </div>
+    </sc-if>
+
     <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
       <div style="position:absolute;inset:0;background:rgba(4,8,10,.8);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:9">
         <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:5px;color:#36e0cf">// SIMULATION HALTED</div>
         <div style="font-size:46px;font-weight:700;letter-spacing:6px;color:#eafffb;text-shadow:0 0 30px rgba(54,224,207,.4)">PAUSED</div>
         <div style="display:flex;gap:12px;margin-top:10px">
           <button onClick="{{ togglePause }}" style="padding:11px 30px;font-family:'Chakra Petch';font-size:13px;font-weight:700;letter-spacing:3px;color:#04080a;background:#36e0cf;box-shadow:0 0 24px rgba(54,224,207,.45)">▶ RESUME</button>
+          <button onClick="{{ toggleSettings }}" style="padding:11px 26px;font-family:'Chakra Petch';font-size:13px;font-weight:700;letter-spacing:3px;color:#9be0d8;background:rgba(54,224,207,.08);border:1px solid rgba(54,224,207,.4)">⚙ SETTINGS</button>
           <button onClick="{{ restartGame }}" style="padding:11px 26px;font-family:'Chakra Petch';font-size:13px;font-weight:700;letter-spacing:3px;color:#ff8a93;background:rgba(255,93,108,.08);border:1px solid rgba(255,93,108,.5)">⟲ RESTART</button>
         </div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1.5px;color:#5b6e69;margin-top:4px">Restart wipes all progress and regenerates the map</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1.5px;color:#5b6e69;margin-top:4px">Restart wipes all progress and regenerates the map · {{ gameVer }}</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ setOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:rgba(4,8,10,.8);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10" onClick="{{ toggleSettings }}">
+        <div onClick="{{ stopClick }}" style="width:620px;max-width:calc(100% - 40px);background:linear-gradient(180deg,rgba(10,16,18,.97),rgba(7,11,13,.95));border:1px solid rgba(54,224,207,.35);box-shadow:0 30px 80px rgba(0,0,0,.6);max-height:calc(100% - 60px);display:flex;flex-direction:column">
+          <div style="padding:11px 14px;border-bottom:1px solid rgba(54,224,207,.2);display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;color:#9be0d8">⚙ SETTINGS · {{ gameVer }}</span>
+            <button onClick="{{ toggleSettings }}" style="border:1px solid rgba(255,93,108,.3);background:rgba(255,93,108,.06);color:#ff8a93;font-size:11px;width:24px;height:22px;line-height:1;cursor:pointer">✕</button>
+          </div>
+          <div style="padding:12px 16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:2px;color:#5b6e69">AUDIO</span>
+              <sc-for list="{{ setSliders }}" as="sl" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:120px 1fr 44px;align-items:center;gap:10px">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#9fb0ab">{{ sl.label }}</span>
+                  <input type="range" min="0" max="100" step="5" value="{{ sl.val }}" onInput="{{ sl.set }}" style="width:100%;accent-color:#36e0cf;height:14px">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#36e0cf;text-align:right">{{ sl.disp }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:2px;color:#5b6e69">COMBAT FEEL</span>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <sc-for list="{{ setToggles }}" as="tg" hint-placeholder-count="4">
+                  <button onClick="{{ tg.toggle }}" style="{{ tg.style }}">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:1px;font-weight:600">{{ tg.state }} {{ tg.label }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:#5b6e69;text-align:left">{{ tg.desc }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:2px;color:#5b6e69">CAMERA · FIELD PALETTE</span>
+              <div style="display:grid;grid-template-columns:120px 1fr 44px;align-items:center;gap:10px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#9fb0ab">PITCH (ZOOMED)</span>
+                <input type="range" min="50" max="115" step="5" value="{{ setPitchVal }}" onInput="{{ setPitch }}" style="width:100%;accent-color:#36e0cf;height:14px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#36e0cf;text-align:right">{{ setPitchDisp }}</span>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button onClick="{{ setCbOff }}" style="{{ setCbOffStyle }}">STANDARD</button>
+                <button onClick="{{ setCbOn }}" style="{{ setCbOnStyle }}">HIGH-VIS HOSTILES</button>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:#5b6e69;flex:1;line-height:1.5">colorblind-safe hostile reads — walkers, TACMAP dots, threat heat go amber-gold</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:2px;color:#b79cff">EXPERIMENTAL PHYSICS — REPORT WHAT FEELS RIGHT</span>
+                <button onClick="{{ setPhysReset }}" style="margin-left:auto;padding:3px 9px;border:1px solid rgba(183,156,255,.35);background:transparent;color:#cdb8ff;font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:1px;cursor:pointer">RESET</button>
+              </div>
+              <sc-for list="{{ setPhys }}" as="ph" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:120px 1fr 70px;align-items:center;gap:10px">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#9fb0ab" title="{{ ph.tip }}">{{ ph.label }}</span>
+                  <input type="range" min="{{ ph.min }}" max="{{ ph.max }}" step="{{ ph.step }}" value="{{ ph.val }}" onInput="{{ ph.set }}" style="width:100%;accent-color:#b79cff;height:14px">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#cdb8ff;text-align:right">{{ ph.disp }}</span>
+                </div>
+              </sc-for>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:#5b6e69;line-height:1.6">These numbers ARE the physics — knockdown Δv, fatal Δv, KE damage reference. Tell us the values that feel right; player consensus sets the defaults.</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:2px;color:#5b6e69">FIELD MANUAL — CONTROLS</span>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px 14px;font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:#7c8a86;line-height:1.7">
+                <span><b style="color:#9be0d8">WASD</b> MOVE THE OP</span><span><b style="color:#9be0d8">LMB HOLD</b> FIRE</span><span><b style="color:#9be0d8">RMB</b> AIMED FIRE</span>
+                <span><b style="color:#9be0d8">SPACE</b> RAISE THREAT</span><span><b style="color:#9be0d8">Q · E</b> ORBIT CAMERA</span><span><b style="color:#9be0d8">WHEEL</b> ZOOM</span>
+                <span><b style="color:#9be0d8">ARROWS</b> PAN</span><span><b style="color:#9be0d8">MMB DRAG</b> PAN</span><span><b style="color:#9be0d8">SHIFT+DRAG</b> BOX SELECT</span>
+                <span><b style="color:#9be0d8">CTRL+1-9</b> SET GROUP</span><span><b style="color:#9be0d8">1-9</b> RECALL GROUP</span><span><b style="color:#9be0d8">F</b> FOLLOW MODE</span>
+                <span><b style="color:#9be0d8">H</b> THREAT HEATMAP</span><span><b style="color:#9be0d8">R</b> ROTATE BARRICADE</span><span><b style="color:#9be0d8">G</b> GEAR LOCKER</span>
+                <span><b style="color:#9be0d8">L</b> LOCKDOWN</span><span><b style="color:#9be0d8">N</b> NOISE VIEW</span><span><b style="color:#9be0d8">ESC</b> CLEAR / CLOSE</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </sc-if>
 
@@ -836,7 +933,7 @@
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{},&quot;difficulty&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Calm&quot;,&quot;Standard&quot;,&quot;Brutal&quot;],&quot;default&quot;:&quot;Standard&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Simulation&quot;},&quot;scanlines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Look&quot;},&quot;physStability&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.8,&quot;min&quot;:0.6,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;m/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;physFatality&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:11,&quot;min&quot;:4,&quot;max&quot;:20,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;m/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;physLethality&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:900,&quot;min&quot;:300,&quot;max&quot;:3000,&quot;step&quot;:50,&quot;unit&quot;:&quot;J&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{},&quot;difficulty&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Calm&quot;,&quot;Standard&quot;,&quot;Brutal&quot;],&quot;default&quot;:&quot;Standard&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Simulation&quot;},&quot;scanlines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Look&quot;},&quot;physStability&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.8,&quot;min&quot;:0.6,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;m/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;physFatality&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:11,&quot;min&quot;:4,&quot;max&quot;:20,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;m/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;physLethality&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:900,&quot;min&quot;:300,&quot;max&quot;:3000,&quot;step&quot;:50,&quot;unit&quot;:&quot;J&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;feelHitstop&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Combat Feel&quot;},&quot;feelKillTicks&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Combat Feel&quot;},&quot;feelShake&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Combat Feel&quot;}}">
 class Component extends DCLogic {
   // ---------------------------------------------------------------- lifecycle
   componentDidMount() {
@@ -858,6 +955,7 @@ class Component extends DCLogic {
       else if (k === '=' || k === '+') { this.nudgeZoom(1); }
       else if (k === 'r') { if (this.S.tool === 'barricade') { this._barOrient = (this._barOrient === 'v') ? 'h' : 'v'; this.forceUpdate(); } }
       else if (k === 'h') { this.toggleHeat(); }
+      else if (k === 'g') { this.toggleGear(); }   // M7.1 — the field manual promises it
       else if (k === 'l') { this.toggleLockdown(); }
       else if (k === 'n') { this.toggleNoiseView(); }
       else if (k === 'x') { this.toggleExped(); }
@@ -866,7 +964,9 @@ class Component extends DCLogic {
     };
     this._keyUp = (e) => { const k = e.key.toLowerCase(); if (this._keys) this._keys[k] = false; };
     window.__SS = this;   // debug/testing handle (exe smoke tests may probe it)
-    this._audioWake = () => { this.audioInit(); if (this._ac && this._ac.state === 'suspended') { try { this._ac.resume(); } catch (e) {} } };   // autoplay policy: the context wakes on the first gesture
+    this._bootId = 'b' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+    try { localStorage.setItem(this.SAVE + '_owner', this._bootId); } catch (e) {}
+    this._audioWake = () => { this.audioInit(); if (this._ac && this._ac.state === 'suspended') { try { this._ac.resume(); } catch (e) {} } try { localStorage.setItem(this.SAVE + '_owner', this._bootId); } catch (e) {} };   // gesture: wake audio + reclaim save ownership for this tab
     window.addEventListener('pointerdown', this._audioWake, true);
     window.addEventListener('keydown', this._audioWake, true);
     window.addEventListener('keydown', this._key);
@@ -965,14 +1065,16 @@ class Component extends DCLogic {
 
   evtPt(e) {
     const r = this.canvas.getBoundingClientRect();
+    return this.unproj(e.clientX - r.left, e.clientY - r.top);
+  }
+  unproj(sx, sy) {   // canvas-local screen px → world (full perspective inverse — clicks land where you SEE them)
     const P = this._proj || this.calcProj(); const cam = this.cam || { x: this.AW / 2, y: this.AH / 2 };
-    const sx = e.clientX - r.left, sy = e.clientY - r.top;
     const a = (P.cy - sy) / P.F; let den = P.cosp - a * P.sinp; if (den < 0.02) den = 0.02;   // clamp near/above horizon
     const w = -P.E * (P.sinp + a * P.cosp) / den;
     const y = w + P.B, zv = -w * P.sinp + P.E * P.cosp;
     const x = (sx - P.cx) * zv / P.F;
     const co = Math.cos(-(this.rot || 0)), si = Math.sin(-(this.rot || 0));
-    return { x: cam.x + x * co - y * si, y: cam.y + x * si + y * co };   // full perspective inverse — clicks land where you SEE them
+    return { x: cam.x + x * co - y * si, y: cam.y + x * si + y * co };
   }
 
   // ---------------------------------------------------------------- init
@@ -1065,7 +1167,7 @@ class Component extends DCLogic {
     };
     this.hq = { x: this.AW / 2, y: this.AH / 2, r: 30, hp: 600, maxhp: 600 };
     this.bunker = { x: this.AW / 2, y: this.AH / 2 + 78, r: 20 };
-    S.hero = { x: this.AW / 2, y: this.AH / 2 - 70, aim: -Math.PI / 2, cd: 0, muzzle: 0, hp: 240, maxhp: 240, up: { hp: 0, dmg: 0, rof: 0, spd: 0 }, gun: 0, att: { dmg: 0, rof: 0, range: 0, acc: 0 }, down: false, reviveT: 0, gear: [] };
+    S.hero = { x: this.AW / 2, y: this.AH / 2 - 70, aim: -Math.PI / 2, cd: 0, muzzle: 0, hp: 240, maxhp: 240, up: { hp: 0, dmg: 0, rof: 0, spd: 0 }, gun: 0, att: { dmg: 0, rof: 0, range: 0, acc: 0 }, down: false, reviveT: 0, gear: [], wpn: null };
     this.cam = { x: S.hero.x, y: S.hero.y }; if (!this.zoom) this.zoom = 0.6; this.scale = this.zoom; this._followMode = 'hero';
     this.RARITY = [{ k: 'common', name: 'COMMON', mult: 0.06, color: '#9fb0ab' }, { k: 'rare', name: 'RARE', mult: 0.14, color: '#36e0cf' }, { k: 'epic', name: 'EPIC', mult: 0.28, color: '#b79cff' }, { k: 'legend', name: 'LEGENDARY', mult: 0.55, color: '#ffb454' }];
     this.GEARSTATS = ['dmg', 'hp', 'rof'];
@@ -1127,6 +1229,11 @@ class Component extends DCLogic {
 
   save() {
     try {
+      // SESSION-OWNER LOCK: the newest booted session owns the save. A stale tab/iframe (suspended
+      // timers, old code) may still be autosaving — without this it silently clobbers newer-schema
+      // saves (found live: a background instance stripped new fields every 4s). Ownership is stamped
+      // at boot + reclaimed on any user gesture in this tab.
+      if (this._bootId) { const own = localStorage.getItem(this.SAVE + '_owner'); if (own && own !== this._bootId) return; }   // null owner (storage denied at boot) never blocks — only a verifiably different session does
       const S = this.S;
       const data = {
         v: 1, t: Date.now(), scrap: S.scrap, materials: S.materials, alloy: S.alloy || 0, kills: S.kills, totalEarned: S.totalEarned, totalMat: S.totalMat || 0,
@@ -1144,6 +1251,8 @@ class Component extends DCLogic {
         exped: S.exped ? { state: S.exped.state, ids: S.exped.ids, crates: S.exped.crates, tier: S.exped.tier, name: S.exped.name, wagon: S.exped.wagon ? { x: Math.round(S.exped.wagon.x), y: Math.round(S.exped.wagon.y), hp: Math.round(S.exped.wagon.hp) } : null } : null,
         prez: S.prez ? { on: !!S.prez.on, floor: S.prez.floor || 0, bud: S.prez.bud || { defense: 2, economy: 2, hiring: 1 } } : null,
         vol: S.vol ? { m: +S.vol.m || 0 } : null,
+        set: S.set || null,
+        tut: S.tut ? { i: S.tut.i | 0, done: !!S.tut.done } : null,
       };
       localStorage.setItem(this.SAVE, JSON.stringify(data));
     } catch (e) {}
@@ -1185,6 +1294,15 @@ class Component extends DCLogic {
       S.groups = (d.groups && typeof d.groups === 'object') ? d.groups : {}; S.heat = !!d.heat; S.dashFilter = d.dashFilter || 'all'; S.dashOpen = d.dashOpen !== false; S.panels = (d.panels && typeof d.panels === 'object') ? d.panels : { barracks: true, research: true, perimeter: true }; S.attackSquad = (d.attackSquad && Array.isArray(d.attackSquad.ids)) ? { ids: d.attackSquad.ids.slice(), mode: d.attackSquad.mode === 'hunt' ? 'hunt' : 'idle' } : { ids: [], mode: 'idle' }; if (d.zoom) { this.zoom = d.zoom; this.scale = d.zoom; }
       S.lockdown = !!d.lockdown; S.lockAuto = d.lockAuto !== false;
       S.vol = (d.vol && typeof d.vol === 'object' && isFinite(+d.vol.m)) ? { m: Math.max(0, Math.min(1, +d.vol.m)) } : (S.vol || { m: 0.75 });
+      if (d.set && typeof d.set === 'object') {
+        S.set = Object.assign({ amb: 1, sfx: 1, ui: 1, gore: true, shake: true, hitstop: true, ticks: true, pitch: 1, cb: false, phys: null }, d.set);
+        S.set.amb = this.lim(S.set.amb, 0, 1, 1); S.set.sfx = this.lim(S.set.sfx, 0, 1, 1); S.set.ui = this.lim(S.set.ui, 0, 1, 1);
+        S.set.pitch = this.lim(S.set.pitch, 0.5, 1.15, 1);
+        S.set.phys = this.physClean(S.set.phys);
+      }
+      // M7.2: old saves with real progress skip orientation; genuine fresh-ish saves resume the chain
+      if (d.tut && typeof d.tut === 'object') S.tut = { i: Math.max(0, Math.min(12, d.tut.i | 0)), done: !!d.tut.done };
+      else S.tut = { i: 0, done: (d.kills || 0) > 10 || (d.units || []).length > 2 || ((d.blds || []).length > 1) };
       // M3.3: an expedition caught mid-save resumes as a RETURN leg — the map + dig sites re-roll per
       // session, but the crates in hand are kept and the road home is constant (units restore in place).
       S.prez = null;
@@ -1220,7 +1338,7 @@ class Component extends DCLogic {
     const u = {
       id: this.S.nextId++, role, x: this.bunker.x + Math.cos(a) * 26, y: this.bunker.y + Math.sin(a) * 26,
       squad: false, cls: null, up: { hp: 0, spd: 0, dmg: 0, rof: 0 }, cd: 0, aim: -Math.PI / 2, muzzle: 0,
-      dead: false, reviveT: 0, turretId: null, vet: 0, chair: null,
+      dead: false, reviveT: 0, turretId: null, vet: 0, chair: null, vgear: null, wpn: null, duty: null, sfinds: [],
     };
     if (role === 'gatherer') { u.up = { hp: 0, spd: 0, cap: 0 }; u.load = 0; u.gs = 'toNode'; u.node = null; }
     const st = this.stat(u); u.hp = st.hp; this.S.units.push(u); return u;
@@ -1571,6 +1689,7 @@ class Component extends DCLogic {
     S.fx.push({ x, y, r: 15, life: 9, t: 0, kind: 'blood', red: false, ash: 1 });   // masonry dust settles grey
     for (let k = 0; k < 5; k++) S.fx.push({ x: x + (Math.random() - .5) * 26, y: y + (Math.random() - .5) * 26, vx: (Math.random() - .5) * 130, vy: (Math.random() - .5) * 130, life: 0.5, t: 0, kind: 'gib' });
     this.noiseAdd(x, y, 7);   // a collapse rings the dinner bell
+    this.ping(x, y, '#c9a06b');
     if (this.inView(x, y, 80)) this.addShake(1.3);
     if (this.sndBreach) this.sndBreach(x, y);
     if ((this._breachFl || 0) <= 0) { this._breachFl = 4; S.floats.push({ x, y: y - 12, text: '◆ COVER BREACHED', color: '#c9a06b', life: 1.4, t: 0 }); }
@@ -2109,7 +2228,7 @@ class Component extends DCLogic {
   // whether you can afford it. JUMP-ONLY: the board never spends; it selects + centers the entity and
   // the inspector is where you act. This registry is also the PRESIDENT's future brain — his errand
   // AI will walk these same rows physically (travel → touch → execute).
-  toggleUpBoard = () => { this.S.upOpen = !this.S.upOpen; this.forceUpdate(); };
+  toggleUpBoard = () => { this.S.upOpen = !this.S.upOpen; if (this.S.upOpen) this._tutBoard = true; this.forceUpdate(); };
   // ---- M5.2 GEAR LOCKER: roster + ballistic cards + armory refits (the harmless micro-optimization layer)
   toggleGear = () => { const S = this.S; S.gearOpen = !S.gearOpen; if (S.gearOpen && S.gearSel == null) S.gearSel = 'hero'; this.forceUpdate(); };
   gearCurW(sel) {   // the selected carrier's CURRENT weapon as an affix-item shape (+ base rof for the card)
@@ -2131,6 +2250,25 @@ class Component extends DCLogic {
     else { const u = S.units.find(x => x.id === S.gearSel); if (u && u.wpn) { this.stashItem(u.wpn); u.wpn = null; u._stF = -1; } }
     this.forceUpdate();
   }
+  // ---- M5.3 GUNSMITH REBUILD (transmute 3→1, workshop-gated): strip three donors for parts, build one
+  // better gun on a donor pattern. Physical doctrine holds — no magic affixes, just a cleaner rebuild.
+  gearMark(it) { const M = this._gearMarks || (this._gearMarks = new Set()); if (M.has(it)) M.delete(it); else { if (M.size >= 3) return; M.add(it); } this.forceUpdate(); }
+  gearTransmute = () => {
+    const S = this.S, M = this._gearMarks;
+    if (!M || M.size !== 3 || !this.hasBld('workshop')) return;
+    const donors = [...M].filter(it => (S.armory || []).includes(it));
+    if (donors.length !== 3) { M.clear(); this.forceUpdate(); return; }
+    const ridx = (w) => Math.max(0, this.RARITY.findIndex(r => r.k === w.rar));
+    let ri = Math.max(...donors.map(ridx));
+    if (ri < 3 && Math.random() < 0.45) ri++;   // a careful bench pass — usually the best donor's grade, sometimes finer
+    const plat = donors[(Math.random() * 3) | 0].plat;   // rebuilt on one of the donor patterns
+    S.armory = S.armory.filter(it => !M.has(it)); M.clear();
+    const w = this.hq;
+    S.floats.push({ x: w.x, y: w.y - 26, text: '⚒ THREE STRIPPED FOR PARTS', color: '#b79cff', life: 1.4, t: 0 });
+    this.rollWeapon(this.RARITY[ri], ri, w.x, w.y, plat);   // giveWeapon path: auto-fits if strictly better, else armory
+    this.sndRadio('ui');
+    this.forceUpdate();
+  };
   barracksLvl() { let m = 0; for (const b of (this.S.blds || [])) if (b.kind === 'barracks') m = Math.max(m, b.lvl || 0); return m; }
   hireDisc() { return 1 - 0.08 * this.barracksLvl(); }
   barracksUpCost(b) { const l = b.lvl || 0; return Math.floor(200 * (1 + 0.55 * l * l + 0.35 * l)); }
@@ -2333,7 +2471,7 @@ class Component extends DCLogic {
     S.floats.push({ x: h.x, y: h.y - 18, text: '⌘ ' + call.icon + ' ' + call.name + (note ? ' — ' + note : ''), color: '#cdb8ff', life: 1.8, t: 0 });
     if (this.sndRadio) this.sndRadio('prez');
   }
-  toggleLedger = () => { this.S.ledgerOpen = !this.S.ledgerOpen; this.forceUpdate(); };
+  toggleLedger = () => { this.S.ledgerOpen = !this.S.ledgerOpen; if (this.S.ledgerOpen) this._tutLed = true; this.forceUpdate(); };
   stopClick = (e) => e.stopPropagation();
   LEDGER_RES() { return ['raw', 'materials', 'alloy', 'food', 'wool', 'clothing', 'milk', 'meat', 'dairy', 'ammo', 'scrap']; }
   sampleFlows() {
@@ -2816,6 +2954,7 @@ class Component extends DCLogic {
   castPower(p, x, y) {
     const S = this.S, key = p.key;
     S[p.res] -= p.cost; S.pcd = S.pcd || {}; S.pcd[key] = p.cd;
+    this.ping(x, y, '#cdb8ff');
     if (key === 'fire') { this.strike(x, y); }
     else if (key === 'beacon') { (this._beacons = this._beacons || []).push({ x, y, t: 12 }); this.noiseAdd(x, y, 10); this.milestone('⌖ SCREAMER LIVE — THE HORDE TURNS'); }
     else if (key === 'smoke') { (this._smokes = this._smokes || []).push({ x, y, r: 170, t: 15 }); S.fx.push({ x, y, r: 10, mr: 170, life: 0.5, t: 0, kind: 'strike' }); }
@@ -3020,6 +3159,18 @@ class Component extends DCLogic {
     for (let b = 0; b < beeps; b++) { const bt = t0 + 0.05 + b * 0.11; g2.gain.setValueAtTime(0.02, bt); g2.gain.setValueAtTime(0.0001, bt + 0.06); }
     os.connect(g2); g2.connect(i); this.axSpend(os, t0, 0.4); this.axSpend(n, t0, 0.18, i);
   }
+  sndTick() {   // M6.2 kill tick — a dry confirmation click; quick streaks climb a small pitch ladder
+    if (!this.feel().ticks) return;
+    const now = performance.now();
+    this._tickStreak = (now - (this._tickLast || 0) < 1200) ? Math.min(8, (this._tickStreak || 0) + 1) : 0;
+    this._tickLast = now;
+    if (!this.audioReady() || !this.axGate('tick', 45)) return;
+    const ac = this._ac, t0 = ac.currentTime, i = this.axOut(null, this._axUi);
+    const os = ac.createOscillator(); os.type = 'triangle';
+    os.frequency.value = 1650 * Math.pow(2, this._tickStreak * 0.055);
+    const g = ac.createGain(); g.gain.setValueAtTime(0.028, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.045);
+    os.connect(g); g.connect(i); this.axSpend(os, t0, 0.05, i);
+  }
   cycleVol = () => {
     const S = this.S; const v = S.vol || (S.vol = { m: 0.75 });
     v.m = v.m > 0.5 ? 0.35 : v.m > 0 ? 0 : 0.75;
@@ -3031,6 +3182,11 @@ class Component extends DCLogic {
     const S = this.S; if (!S || !this._ac || !this._axM) return;
     const t = this._ac.currentTime, vol = S.vol || (S.vol = { m: 0.75 });
     this._axM.gain.setTargetAtTime((document.hidden ? 0 : 1) * (vol.m || 0) * (S.paused ? 0.35 : 1), t, 0.08);
+    if (S.set) {   // M7.1 bus mixes ride the settings live
+      this._axAmb.gain.setTargetAtTime(0.6 * (S.set.amb == null ? 1 : S.set.amb), t, 0.1);
+      this._axSfx.gain.setTargetAtTime(1 * (S.set.sfx == null ? 1 : S.set.sfx), t, 0.1);
+      this._axUi.gain.setTargetAtTime(0.7 * (S.set.ui == null ? 1 : S.set.ui), t, 0.1);
+    }
     if (vol.m <= 0 || this._ac.state !== 'running') return;
     this._axDuck = Math.min(1, (this._axDuck == null ? 1 : this._axDuck) + dt * 0.5);
     const night = this.isNight(), lock = S.lockdown;
@@ -3268,16 +3424,57 @@ class Component extends DCLogic {
   };
   // ---- game version: baked payload tag; a STAGED auto-update payload (payload-vX.Y.Z.html) reports its
   // release tag instead, so the top-left always tells the truth about what's actually running.
-  GAME_VER = '0.3.0';
+  GAME_VER = '0.3.4';
   gameVer() {
     if (this._gv) return this._gv;
     let v = this.GAME_VER;
     try { const m = /payload-v(\d+\.\d+\.\d+[0-9A-Za-z.-]*)\.html/i.exec(decodeURIComponent(location.pathname || '')); if (m) v = m[1]; } catch (e) {}
     return (this._gv = 'v' + v);
   }
+  // ================================================================ M7.2 ONBOARDING — the guided 12-step chain
+  // Doctrine: teach the LOOP in play order, never block anything (objectives observe, they don't gate),
+  // skippable forever, persisted. Steps complete IN ORDER — each predicate reads live colony state.
+  TUT() {
+    if (this._tutDefs) return this._tutDefs;
+    const S = () => this.S;
+    return (this._tutDefs = [
+      { t: 'TAKE THE FIELD', d: 'WASD moves the MAIN OP. Hold LMB to fire, RMB for aimed shots — walk a lap around the HQ.', done: () => (this._tutMove || 0) > 250 },
+      { t: 'DRAW BLOOD', d: 'Three confirmed kills. Walkers hear noise — every shot rings the dinner bell. Point-blank, the knife comes out on its own.', done: () => S().kills >= 3 },
+      { t: 'WATCH THE BENCH', d: 'Civilians haul RAW salvage to the workshop and cultivate it into MATERIEL — the build currency. Reach 60 MATERIEL.', done: () => S().materials >= 60, act: () => { const w = (S().blds || []).find(b => b.kind === 'workshop'); if (w) { this.centerOn(w.x, w.y); S().sel = { type: 'bld', id: w.id }; this.forceUpdate(); } }, al: 'FIND IT' },
+      { t: 'RAISE A BARRACKS', d: 'Open BUILD → BARRACKS and stake an ⚒ industry plot. No timers — porters physically haul the materiel; crew size is speed.', done: () => this.hasBld('barracks') },
+      { t: 'STAFF THE FIELD', d: 'Hire at the barracks — OPERATORS hold towers and hunt, GATHERERS run the outside salvage lanes.', done: () => S().units.length >= 2, act: () => { const b = (S().blds || []).find(x => x.kind === 'barracks'); if (b) { S().sel = { type: 'bld', id: b.id }; this.centerOn(b.x, b.y); this.forceUpdate(); } }, al: 'TO THE BARRACKS' },
+      { t: 'FUND A PROTOCOL', d: 'RESEARCH turns scrap into capability — squads, turrets, refining, powers. Buy any protocol.', done: () => { const r = S().research || {}; return (S().rsLevel || 0) >= 1 || Object.keys(r).some(k => r[k]); } },
+      { t: 'ARM THE WALL', d: 'Build a turret on a wall pad (or a ◎ turret plot inside). Operators can garrison pads — towers multiply their range.', done: () => S().turrets.length >= 1 },
+      { t: 'FEED THE LINE', d: 'Farmers, hunters and ranchers feed the POP — the workforce auto-balances. Stock 120 FOOD.', done: () => (S().food || 0) >= 120 },
+      { t: 'RAISE THE THREAT', d: 'Threat is PLAYER-GATED: clear the kill quota, then SPACE lifts it. More threat, more salvage — the horde never outpaces you uninvited.', done: () => (S().threat || 1) >= 2 },
+      { t: 'READ THE LEDGER', d: '⚖ — net flow per minute for every stock, root causes named worst-first, your weakest system called out. The colony grade lives here.', done: () => !!this._tutLed, act: () => { if (!S().ledgerOpen) this.toggleLedger(); }, al: 'OPEN ⚖' },
+      { t: 'THE UPGRADE BOARD', d: 'Every upgradable entity, what it needs, whether you can afford it. JUMP goes to the entity; the inspector is where you act.', done: () => !!this._tutBoard, act: () => { if (!S().upOpen) this.toggleUpBoard(); }, al: 'OPEN BOARD' },
+      { t: 'SEAT THE PRESIDENT', d: 'Select the MAIN OP → ⌘ TAKE COMMAND. He walks the registry — hires, upgrades, restocks — under your budgets. You build systems; he runs them.', done: () => !!(S().prez && S().prez.on), act: () => { this.selectHero(); this.centerOn(S().hero.x, S().hero.y); }, al: 'THE MAIN OP' },
+    ]);
+  }
+  tutP() { const S = this.S; if (!S.tut) S.tut = { i: 0, done: false }; return S.tut; }
+  tutSkip = () => { const t = this.tutP(); t.done = true; this.milestone('▢ TUTORIAL SKIPPED — THE COLONY IS YOURS'); this.save(); this.forceUpdate(); };
+  tutTick(dt) {
+    const t = this.tutP(); if (t.done) return;
+    const defs = this.TUT();
+    if (t.i === 0) {   // step 1 accumulates hero displacement
+      const h = this.S.hero;
+      if (h) { if (this._tutHx != null) this._tutMove = (this._tutMove || 0) + Math.hypot(h.x - this._tutHx, h.y - this._tutHy); this._tutHx = h.x; this._tutHy = h.y; }
+    }
+    this._tutT = (this._tutT || 0) - dt; if (this._tutT > 0) return; this._tutT = 0.5;
+    const def = defs[t.i]; if (!def) { t.done = true; return; }
+    if (def.done()) {
+      this.milestone('✓ ' + def.t + ' — COMPLETE');
+      t.i++;
+      if (t.i >= defs.length) { t.done = true; this.milestone('⬡ ORIENTATION COMPLETE — SCALE, OPTIMIZE, SURVIVE'); }
+      this.save();
+      this.forceUpdate();
+    }
+  }
   milestone(t) { this.S.toast = t; this.S.toastT = 3.2; this.sndRadio('toast'); }
   resetGame(confirmFirst) {
     if (confirmFirst && typeof window !== 'undefined' && window.confirm && !window.confirm('Restart the game? All progress will be lost.')) return;
+    if (this._bootId) { try { localStorage.setItem(this.SAVE + '_owner', this._bootId); } catch (e) {} }
     // drop the persisted save FIRST so nothing can resurrect the old run
     try { localStorage.removeItem(this.SAVE); } catch (e) {}
     this._wipe = true; this.init(); this._wipe = false;   // init builds a brand-new S/hero/hq/map; loadSave is skipped under _wipe
@@ -3296,18 +3493,27 @@ class Component extends DCLogic {
     const sh = W && W >= 3 ? this.SHELLS.he127 : this.SHELLS.he105;
     this.boom(x, y, W || sh.W, { n: sh.n, Ef: sh.Ef });
   }
+  hostileCol() { return this.setP().cb ? '#ffb454' : '#ff5d6c'; }   // M7.1 high-vis palette — CVD-safe hostile reads
+  zombCol() { return this.setP().cb ? '#d9c15a' : '#8fcf5a'; }
   hurtZombie(z, dmg, fx, fy, owner, veh) {
     z.hp -= dmg;
     if (z.hp > 0) this.zAgitate(z);
     if (z.hp <= 0 && !z._dead) { z._dead = true;
-      if (owner != null) { const ku = this.S.units.find(u => u.id === owner && !u.dead); if (ku && ku.role !== 'gatherer') { ku.kills = (ku.kills || 0) + 1; const rk0 = this.rankOf(ku); ku.vet = (ku.vet || 0) + 8; if (this.rankOf(ku) !== rk0) { ku._stF = -1; this.S.floats.push({ x: ku.x, y: ku.y - 16, text: '★ ' + this.rankOf(ku), color: '#ffd56b', life: 1.8, t: 0 }); } } } const mult = 1 + Math.min(3, this.S.focus * this.focusCoef()); const rw = Math.ceil(z.reward * mult * this.incomeMult()); this.S.scrap += rw; this.S.totalEarned += rw; this.S.kills++; this.S.sectorKills = (this.S.sectorKills || 0) + 1; this.S.threatKills = (this.S.threatKills || 0) + 1; this.S.focus = Math.min(40, this.S.focus + 0.5); this.S.focusT = 2.6; this.S.floats.push({ x: z.x, y: z.y, text: '+' + rw, color: '#ffd56b', life: 0.9, t: 0 }); for (let i = 0; i < 4; i++) this.S.fx.push({ x: z.x, y: z.y, vx: (Math.random() - .5) * 90, vy: (Math.random() - .5) * 90, life: 0.4, t: 0, kind: 'gib' });
+      if (owner != null) { const ku = this.S.units.find(u => u.id === owner && !u.dead); if (ku && ku.role !== 'gatherer') { ku.kills = (ku.kills || 0) + 1; const rk0 = this.rankOf(ku); ku.vet = (ku.vet || 0) + 8; if (this.rankOf(ku) !== rk0) { ku._stF = -1; this.S.floats.push({ x: ku.x, y: ku.y - 16, text: '★ ' + this.rankOf(ku), color: '#ffd56b', life: 1.8, t: 0 }); this.ping(ku.x, ku.y, '#ffd56b'); this.milestone('★ ' + (ku.role === 'mech' ? 'MK-' : ku.role === 'runner' ? 'RN-' : 'OP-') + String(ku.id).padStart(2, '0') + ' PROMOTED — ' + this.rankOf(ku)); } } } const mult = 1 + Math.min(3, this.S.focus * this.focusCoef()); const rw = Math.ceil(z.reward * mult * this.incomeMult()); this.S.scrap += rw; this.S.totalEarned += rw; this.S.kills++; this.S.sectorKills = (this.S.sectorKills || 0) + 1; this.S.threatKills = (this.S.threatKills || 0) + 1; this.S.focus = Math.min(40, this.S.focus + 0.5); this.S.focusT = 2.6; this.S.floats.push({ x: z.x, y: z.y, text: '+' + rw, color: '#ffd56b', life: 0.9, t: 0 }); for (let i = 0; i < 4; i++) this.S.fx.push({ x: z.x, y: z.y, vx: (Math.random() - .5) * 90, vy: (Math.random() - .5) * 90, life: 0.4, t: 0, kind: 'gib' });
+      if (this.inView(z.x, z.y, 60)) {   // M6.2 — the big deaths land with WEIGHT (in-view only, gated, transient)
+        const ovk = dmg / Math.max(1, z.maxhp);
+        if (veh || ovk >= 1.5 || z.maxhp > 60) this.hitStop(veh ? 0.09 : 0.07);
+        this.sndTick();
+      }
       if (z._ash) { this.S.fx.push({ x: z.x, y: z.y, r: 8 + Math.random() * 4, life: 8, t: 0, kind: 'blood', red: false, ash: 1 }); }   // DISINTEGRATED — nothing left to fall
-      else this.spawnRagdoll(z.x, z.y, 10.5, '#8fcf5a', { dmg, maxhp: z.maxhp, fx, fy, fc: z._fc, zombie: true, veh }); this.dropLoot(z); }
+      else this.spawnRagdoll(z.x, z.y, 10.5, this.zombCol(), { dmg, maxhp: z.maxhp, fx, fy, fc: z._fc, zombie: true, veh }); this.dropLoot(z); }
   }
   dropLoot(z) {
     const S = this.S; const base = 0.012 + (this.isNight() ? 0.02 : 0) + S.threat * 0.001 + (z.maxhp > 60 ? 0.05 : 0);
     if (Math.random() > base * 0.22) return;   // SCAVENGING doctrine: corpses carry rare pocket finds — containers are THE source
-    const roll = Math.random(); const ri = roll > 0.97 ? 3 : roll > 0.85 ? 2 : roll > 0.55 ? 1 : 0;
+    // M5.3 — loot QUALITY rides the sector ladder (deeper fronts field better-kept hardware; feeds the M2 grade chase)
+    const sq = Math.min(4, ((S.sector || 1) - 1));
+    const roll = Math.random(); const ri = roll > 0.97 - sq * 0.02 ? 3 : roll > 0.85 - sq * 0.04 ? 2 : roll > 0.55 - sq * 0.06 ? 1 : 0;
     const rar = this.RARITY[ri]; const stat = this.GEARSTATS[Math.floor(Math.random() * this.GEARSTATS.length)];
     // VEHICLE PARTS (Diablo hook): once rigs roll, half the drops are parts that auto-fit the weakest vehicle
     const veh = S.units.filter(u => u.role === 'gatherer' && !u.dead && u.vehicle);
@@ -3330,13 +3536,13 @@ class Component extends DCLogic {
   }
   // ---- M5.2 WEAPON LOOT — physical affixes only: barrel (velocity→E), optics (CNS%), action (RPM), suppressor (noise)
   scoreW(w) { return this.gunDmg(w.cart, w.amm, w.barrel || 0) * (1 + (w.optic || 0) * 0.12) * (1 + (w.action || 0) * 0.08); }
-  rollWeapon(rar, ri, x, y) {
+  rollWeapon(rar, ri, x, y, forcePlat) {
     const S = this.S;
     const pool = [];
     for (const u of S.units) { if (u.dead) continue; if (u.role === 'runner') pool.push('rn'); else if (u.role === 'mech') pool.push('mech'); else if (u.cls === 'marksman') pool.push('mk'); else if (u.squad) pool.push('sq'); else if (u.role === 'operator' || u.role === 'technician') pool.push('op'); }
     if (!pool.length) pool.push('op');
-    let plat = pool[(Math.random() * pool.length) | 0];
-    if (ri === 3 && Math.random() < 0.4) plat = 'hero';   // the fabled .50 API rifle — legendary pool only
+    let plat = forcePlat || pool[(Math.random() * pool.length) | 0];
+    if (!forcePlat && ri === 3 && Math.random() < 0.4) plat = 'hero';   // the fabled .50 API rifle — legendary pool only
     const CART = { op: 'b556', sq: 'b762', mk: 'b338', rn: 'p9', mech: 'b50', hero: 'api50' };
     const BASE = { op: 'M4A1', sq: 'M14 EBR', mk: 'PSR', rn: 'MP5', mech: 'M2HB', hero: 'M82' };
     const AMS = { op: ['fmj', 'jhp', 'ap'], sq: ['fmj', 'ap'], mk: ['fmj', 'ap'], rn: ['jhp', 'fmj'], mech: ['ap'], hero: ['api'] };
@@ -3741,6 +3947,7 @@ class Component extends DCLogic {
   expCrateLabel(c) { return c.k === 'surv' ? 'SURVIVOR — ' + c.name : c.k === 'gear' ? this.RARITY[c.ri].name + ' GEAR' : '+' + c.n + ' ' + this.resName(c.k); }
   expWake(site) {
     if (site.woke) return; site.woke = true;
+    this.ping(site.x, site.y, '#ff5d6c');
     this.noiseAdd(site.x, site.y, 8);   // crowbars on steel — the neighborhood hears the sweep begin
     const S = this.S, lv = S.threat, m = this.dmul; let n = 0;
     for (let i = 0; i < site.nest && S.zombies.length < 196; i++) {
@@ -4023,7 +4230,7 @@ class Component extends DCLogic {
   // zoomed out. φ blends 50° → 0° over zoom 0.95 → 0.55 (smoothstep). At φ=0 the projection
   // degenerates to exact ortho (screen = C + world·zoom), the horizon leaves the screen, and the
   // mode-7 compositor collapses to ONE blit — the expensive machinery turns itself off at wide view.
-  pitchPhi() { const z = this.zoom || 0.82; const t = Math.max(0, Math.min(1, (z - 0.55) / 0.30)); const s = t * t * (3 - 2 * t); return 0.87266 * s; }
+  pitchPhi() { const z = this.zoom || 0.82; const t = Math.max(0, Math.min(1, (z - 0.55) / 0.30)); const s = t * t * (3 - 2 * t); return 0.87266 * s * (this.S && this.S.set ? (this.S.set.pitch || 1) : 1); }
   calcProj() {
     const z = this.zoom || 0.82, phi = this.pitchPhi(), L = 760;
     const sinp = Math.sin(phi), cosp = Math.cos(phi), rot = this.rot || 0;
@@ -4454,6 +4661,8 @@ class Component extends DCLogic {
     for (const f of S.fx) if (f.kind === 'strike') push(f.x, f.y, 95, 1, 2, 10);
     return out;
   }
+  // ---- M5.4 TACMAP v2: ping history — transient ring buffer, drawn as fading rings on the minimap
+  ping(x, y, color) { const P = this._pings || (this._pings = []); P.push({ x, y, color, t: 0 }); if (P.length > 24) P.shift(); }
   drawMinimap(ctx) {
     if (!this.cw || !this.ch) return;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -4468,15 +4677,43 @@ class Component extends DCLogic {
     if (this.ringTiles) { ctx.fillStyle = 'rgba(54,224,207,.5)'; const TS = this.TS; const pw = Math.max(1, TS * sx), ph = Math.max(1, TS * sy); for (const t of this.ringTiles) ctx.fillRect(mmX + t.c * TS * sx, mmY + t.r * TS * sy, pw, ph); }
     if (this.resNodes) { ctx.fillStyle = '#aecadb'; for (const n of this.resNodes) ctx.fillRect(mmX + n.x * sx - 2, mmY + n.y * sy - 2, 4, 4); }
     ctx.fillStyle = '#36e0cf'; ctx.fillRect(mmX + this.hq.x * sx - 3, mmY + this.hq.y * sy - 3, 6, 6);
-    if (this.hasBld('comms')) { ctx.fillStyle = '#ff5d6c'; for (const z of this.S.zombies) ctx.fillRect(mmX + z.x * sx - 1, mmY + z.y * sy - 1, 2, 2); }
+    if (this.hasBld('comms')) { ctx.fillStyle = this.hostileCol(); for (const z of this.S.zombies) ctx.fillRect(mmX + z.x * sx - 1, mmY + z.y * sy - 1, 2, 2); }
     if (this.hasBld('comms')) { ctx.fillStyle = '#ffd56b'; for (const c of this.caches || []) if (c.state === 1) ctx.fillRect(mmX + c.x * sx - 1, mmY + c.y * sy - 1, 2, 2); }   // stocked containers — comms intel
-    else { const vbz = this.viewBounds(0); ctx.fillStyle = '#ff5d6c'; for (const z of this.S.zombies) { if (z.x < vbz.l || z.x > vbz.r || z.y < vbz.t || z.y > vbz.b) continue; ctx.fillRect(mmX + z.x * sx - 1, mmY + z.y * sy - 1, 2, 2); } ctx.fillStyle = 'rgba(255,93,108,.6)'; ctx.font = "7px 'IBM Plex Mono'"; ctx.textAlign = 'right'; ctx.fillText('NO FEED · BUILD COMMS', mmX + mmW, mmY - 5); ctx.textAlign = 'left'; }
+    else { const vbz = this.viewBounds(0); ctx.fillStyle = this.hostileCol(); for (const z of this.S.zombies) { if (z.x < vbz.l || z.x > vbz.r || z.y < vbz.t || z.y > vbz.b) continue; ctx.fillRect(mmX + z.x * sx - 1, mmY + z.y * sy - 1, 2, 2); } ctx.fillStyle = 'rgba(255,93,108,.6)'; ctx.font = "7px 'IBM Plex Mono'"; ctx.textAlign = 'right'; ctx.fillText('NO FEED · BUILD COMMS', mmX + mmW, mmY - 5); ctx.textAlign = 'left'; }
     for (const u of this.S.units) { if (u.dead) continue; ctx.fillStyle = this.unitColor(u); ctx.fillRect(mmX + u.x * sx - 1.2, mmY + u.y * sy - 1.2, 2.4, 2.4); }
+    // M5.4 structure dots — the colony reads at a glance (turret type casts, gates gold, structures by kind)
+    for (const t of this.S.turrets) { ctx.fillStyle = ((this.turretDef(t.type) || {}).color) || '#9fb0ab'; ctx.fillRect(mmX + t.x * sx - 1, mmY + t.y * sy - 1, 2, 2); }
+    for (const b of (this.S.blds || [])) { const def = this.BLDS[b.kind]; if (def) { ctx.fillStyle = def.color; ctx.fillRect(mmX + b.x * sx - 1.2, mmY + b.y * sy - 1.2, 2.4, 2.4); } }
+    ctx.fillStyle = 'rgba(126,240,166,.75)'; for (const hm of (this.S.homes || [])) ctx.fillRect(mmX + hm.x * sx - 1, mmY + hm.y * sy - 1, 2, 2);
+    ctx.fillStyle = 'rgba(174,202,219,.8)'; for (const w of (this.S.warehouses || [])) ctx.fillRect(mmX + w.x * sx - 1, mmY + w.y * sy - 1, 2, 2);
+    ctx.fillStyle = '#ffd56b'; if (this.pads) for (const gt of (this.S.gates || [])) { const gp = this.pads[gt.pad]; if (gp) ctx.fillRect(mmX + gp.x * sx - 1.2, mmY + gp.y * sy - 1.2, 2.4, 2.4); }
+    // M5.4 ping history — breaches, promotions, executive calls, woken nests; 6s fade
+    if (this._pings && this._pings.length) {
+      const nowm = performance.now(); const dtp = Math.min(0.1, (nowm - (this._mmLast || nowm)) / 1000);
+      for (let i = this._pings.length - 1; i >= 0; i--) {
+        const p = this._pings[i]; p.t += dtp;
+        if (p.t > 6) { this._pings.splice(i, 1); continue; }
+        const a = Math.max(0, 1 - p.t / 6), ph = p.t % 1.4;
+        ctx.strokeStyle = p.color; ctx.globalAlpha = a * Math.max(0, 1 - ph / 1.4); ctx.lineWidth = 1.1;
+        ctx.beginPath(); ctx.arc(mmX + p.x * sx, mmY + p.y * sy, 2 + ph * 4.5, 0, 6.283); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+    this._mmLast = performance.now();
     for (const es of (this.expSites || [])) { if (es.swept) continue; ctx.save(); ctx.translate(mmX + es.x * sx, mmY + es.y * sy); ctx.rotate(Math.PI / 4); ctx.strokeStyle = '#ffd56b'; ctx.lineWidth = 1; ctx.strokeRect(-2.2, -2.2, 4.4, 4.4); ctx.restore(); }
     if (this.S.exped && this.S.exped.wagon) { const wgm = this.S.exped.wagon; ctx.fillStyle = '#9be0d8'; ctx.fillRect(mmX + wgm.x * sx - 2, mmY + wgm.y * sy - 2, 4, 4); }
     if (this.S.hero) { ctx.fillStyle = '#ffd56b'; ctx.beginPath(); ctx.arc(mmX + this.S.hero.x * sx, mmY + this.S.hero.y * sy, 2.6, 0, 6.283); ctx.fill(); }
-    const vb = this.viewBounds(0); const rl = Math.max(0, vb.l), rt = Math.max(0, vb.t), rr2 = Math.min(this.AW, vb.r), rb = Math.min(this.AH, vb.b);
-    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1; ctx.strokeRect(mmX + rl * sx, mmY + rt * sy, (rr2 - rl) * sx, (rb - rt) * sy);
+    // M5.4 TRUE VIEW QUAD — the camera sees a rotated perspective trapezoid, not an AABB; draw what it actually sees
+    const cor = [this.unproj(0, this.ch), this.unproj(this.cw, this.ch), this.unproj(this.cw, 0), this.unproj(0, 0)];
+    const cl = (p) => ({ x: Math.max(0, Math.min(this.AW, p.x)), y: Math.max(0, Math.min(this.AH, p.y)) });
+    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1; ctx.beginPath();
+    cor.map(cl).forEach((p, i) => { const px = mmX + p.x * sx, py = mmY + p.y * sy; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); });
+    ctx.closePath(); ctx.stroke();
+    if (this.cam) {   // facing tick — which way is screen-up in the world
+      const rot = this.rot || 0, fx2 = Math.sin(rot), fy2 = -Math.cos(rot);
+      const cx2 = mmX + this.cam.x * sx, cy2 = mmY + this.cam.y * sy;
+      ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.beginPath(); ctx.moveTo(cx2, cy2); ctx.lineTo(cx2 + fx2 * 7, cy2 + fy2 * 7); ctx.stroke();
+    }
   }
   // ---------------------------------------------------------------- spatial hash: zombies bucketed once per frame (160px cells); zNear visits only nearby buckets
   buildZGrid() { const g = this._zg || (this._zg = new Map()); g.clear(); for (const z of this.S.zombies) { const k = ((z.x / 160) | 0) * 4096 + ((z.y / 160) | 0); const a = g.get(k); if (a) a.push(z); else g.set(k, [z]); } }
@@ -4578,6 +4815,7 @@ class Component extends DCLogic {
     this.updateScav(dt);   // SCAVENGING — hero-mode loot stocking, committed searches, anti-camp recycle
     this.updatePowers(dt);   // M5 POWERS — cooldowns, screamer pumps, smoke decay, overclock + stand-to windows
     this.prezSupport(dt);   // PRESIDENT SUPPORT CALLS — weighted strategic gates over the powers roster
+    this.tutTick(dt);   // M7.2 — the guided chain observes, never gates
     this.wallRebuildTick(dt);   // BALLISTICS vs STRUCTURES — post-breach pathing/acoustics rebuild (throttled)
     // bullets
     for (const b of S.bullets) this.updateBullet(b, dt);
@@ -4922,6 +5160,9 @@ class Component extends DCLogic {
       if (b.crit) this.S.floats.push({ x: z.x, y: z.y - 6, text: '!', color: '#fff', life: 0.5, t: 0 });
       if (b.chain > 0) {
         z._stagT = Math.max(z._stagT || 0, 0.4);   // electric lock — muscles seize (tesla stagger)
+        // the deferred tesla splash-knockdown: neuromuscular collapse — dropped IN PLACE, never thrown (that's HE's job).
+        // 45% per arc so a tesla lane is crowd CONTROL, not a permanent floor; downed targets also lose turret priority — self-balancing.
+        if (z.hp > 0 && !(z.down > 0) && Math.random() < 0.45) { z.down = 0.9 + Math.random() * 0.5; z.dvx = 0; z.dvy = 0; z.tu = null; }
         let nx2 = null, nd = 90 * 90; this.zNear(z.x, z.y, 90, (z2) => { if (b.hit.has(z2.id)) return; const d2 = (z2.x - z.x) ** 2 + (z2.y - z.y) ** 2; if (d2 < nd) { nd = d2; nx2 = z2; } });
         if (nx2) { this.S.bullets.push({ x: z.x, y: z.y, a: Math.atan2(nx2.y - z.y, nx2.x - z.x), spd: 620, life: 0.3, dmg: b.dmg * 0.8, rt: 0, hs: 0, slow: b.slow, crit: false, splashR: 0, chain: b.chain - 1, ap: 0, overWall: true, hit: new Set([...b.hit]) }); }
         b.life = 0; return;
@@ -4999,9 +5240,43 @@ class Component extends DCLogic {
   // Outcomes run at EVERY zoom; only fidelity (jostle, ragdoll detail, shake) is view-gated.
   PXM = 24;
   MZ = 80;
-  phys() { const p = this.props || {}; return { down: p.physStability != null ? +p.physStability : 1.8, kill: p.physFatality != null ? +p.physFatality : 11, keRef: p.physLethality != null ? +p.physLethality : 900 }; }
+  lim(v, lo, hi, fb) { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : fb; }
+  physClean(p) {
+    if (!p || typeof p !== 'object') return null;
+    return { down: this.lim(p.down, 0.6, 4, 1.8), kill: this.lim(p.kill, 4, 20, 11), keRef: this.lim(p.keRef, 300, 3000, 900) };
+  }
+  phys() {
+    const s = this.setP();
+    if (s.phys) return (s.phys = this.physClean(s.phys) || null) || this.phys();
+    const p = this.props || {};
+    return { down: this.lim(p.physStability, 0.6, 4, 1.8), kill: this.lim(p.physFatality, 4, 20, 11), keRef: this.lim(p.physLethality, 300, 3000, 900) };
+  }
+  physSet(k, v) {
+    const R = { down: [0.6, 4, 1.8], kill: [4, 20, 11], keRef: [300, 3000, 900] }; if (!R[k]) return;
+    const s = this.setP(); const p = this.physClean(s.phys) || Object.assign({}, this.phys());
+    p[k] = this.lim(v, R[k][0], R[k][1], R[k][2]); s.phys = p; this.forceUpdate();
+  }
+  // M6.2 COMBAT FEEL — all three gated (DC tweaks now; the M7 settings menu takes these over)
+  // ---- M7.1 SETTINGS — the player surface. S.set persists; DC props remain the design-time SEED
+  // (setP() reads them once at creation). Physics dials live here per doctrine: players are the tuning instrument.
+  setP() {
+    const S = this.S; if (!S) return { amb: 1, sfx: 1, ui: 1, gore: true, shake: true, hitstop: true, ticks: true, pitch: 1, cb: false, phys: null };
+    if (!S.set) {
+      const p = this.props || {};
+      S.set = { amb: 1, sfx: 1, ui: 1, gore: true, shake: p.feelShake !== false, hitstop: p.feelHitstop !== false, ticks: p.feelKillTicks !== false, pitch: 1, cb: false, phys: null };
+    }
+    return S.set;
+  }
+  setSet(k, v) { const s = this.setP(); if (k === 'amb' || k === 'sfx' || k === 'ui') v = this.lim(v, 0, 1, 1); else if (k === 'pitch') v = this.lim(v, 0.5, 1.15, 1); s[k] = v; this.forceUpdate(); }
+  toggleSettings = () => { const S = this.S; S.setOpen = !S.setOpen; this.forceUpdate(); };
+  feel() { const s = this.setP(); return { shake: s.shake !== false, hitstop: s.hitstop !== false, ticks: s.ticks !== false }; }
+  hitStop(sec) {   // a heartbeat of frozen time — big kills only, throttled so a barrage never becomes a slideshow
+    if (!this.feel().hitstop) return;
+    const now = performance.now(); if (now - (this._hitGate || 0) < 350) return;
+    this._hitGate = now; this._hitT = Math.max(this._hitT || 0, sec);
+  }
   ramMass(e) { if (e === this.S.hero) return 90; if (e.role === 'tank') return 55000; if (e.role === 'mech') return 12000; const v = e.vehicle; return v === 'apc' ? 11000 : v === 'rig' ? 4500 : 2500; }
-  addShake(m) { this._shakeM = Math.min(6, (this._shakeM || 0) + m); }
+  addShake(m) { if (!this.feel().shake) return; this._shakeM = Math.min(6, (this._shakeM || 0) + m); }
   physPass(dt) {
     const S = this.S, P = this.phys(), PXM = this.PXM, MZ = this.MZ;
     this._shakeM = (this._shakeM || 0) * Math.exp(-8 * dt);   // a thud, not an earthquake
@@ -5247,7 +5522,8 @@ class Component extends DCLogic {
       this.ensureEls();
       const now = performance.now(); let dt = (now - this._last) / 1000; this._last = now; dt = Math.min(dt, 0.05);
       const S = this.S;
-      if (S && !S.paused && !S.gameOver) this.update(dt * S.speed);
+      if ((this._hitT || 0) > 0) this._hitT -= dt;   // M6.2 HIT-STOP — real-time window; sim crawls, never the app
+      if (S && !S.paused && !S.gameOver) this.update(dt * S.speed * ((this._hitT || 0) > 0 ? 0.12 : 1));
       this.updateCamera(dt);
       this.updateAudio(dt);   // M6.1 — ambience conductor runs on real time (even paused; hidden tabs hard-mute)
       if (!document.hidden) this.draw();   // sim advances while hidden; painting a hidden tab is pure waste
@@ -5260,7 +5536,7 @@ class Component extends DCLogic {
     if (this.cw !== this.container.clientWidth || this.ch !== this.container.clientHeight || this.canvas.width < 32) this.resize();
     this.zoom = this.zoom || 0.82; this.scale = this.zoom;
     if (!this.cam) this.cam = { x: this.AW / 2, y: this.AH / 2 };
-    const S = this.S, C = { cyan: '#36e0cf', amber: '#ffb454', green: '#7ef0a6', red: '#ff5d6c', purple: '#b79cff', zomb: '#8fcf5a' };
+    const S = this.S, C = { cyan: '#36e0cf', amber: '#ffb454', green: '#7ef0a6', red: this.hostileCol(), purple: '#b79cff', zomb: this.zombCol() };
     this.calcProj();                       // refresh perspective constants for this frame
     const G = this.groundCanvas();         // (re)size the offscreen mode-7 source
     const gctx = this._gctx;
@@ -6202,7 +6478,8 @@ class Component extends DCLogic {
     const links = L.map(([a, b]) => ({ a, b, len: Math.hypot(P[a][0] - P[b][0], P[a][1] - P[b][1]), cut: false }));
     // DISMEMBERMENT — each part rolls against a chance built from overkill + proximity
     const PARTS = { head: { link: 0, pts: [0] }, armL: { link: 6, pts: [7, 8] }, armR: { link: 8, pts: [9, 10] }, legL: { link: 2, pts: [3, 4] }, legR: { link: 4, pts: [5, 6] } };
-    const chance = Math.min(0.85, overkill * 0.5 + (hd < 90 ? 0.3 : hd < 200 ? 0.1 : 0));
+    const gore = this.setP().gore !== false;   // M7.1 gore gate — severing, squelch and stains all key off it (ragdolls stay: they're the death)
+    const chance = gore ? Math.min(0.85, overkill * 0.5 + (hd < 90 ? 0.3 : hd < 200 ? 0.1 : 0)) : 0;
     let severed = 0; const maxSever = 1 + (overkill > 1.6 ? 1 : 0) + (overkill > 3 ? 1 : 0);
     for (const nm of Object.keys(PARTS).sort(() => Math.random() - 0.5)) {
       if (severed >= maxSever || Math.random() > chance) continue;
@@ -6210,8 +6487,8 @@ class Component extends DCLogic {
       for (const pi of part.pts) { const p = pts[pi]; const j2 = 1.4 + Math.random(); p.px = p.x - Math.cos(sa) * spd * k * j2; p.py = p.y - (Math.sin(sa) * spd * 0.3 - 70 - Math.random() * 90) * k * j2; }
       this.S.fx.push({ x: wx + (Math.random() - 0.5) * 12, y: wy + (Math.random() - 0.5) * 12, r: 3 + Math.random() * 4, life: 7 + Math.random() * 4, t: 0, kind: 'blood', red: !o.zombie });
     }
-    if (severed > 0) this.sndSquelch(wx, wy);   // gore-gated by doctrine (gore is ON by default until M7 settings)
-    this.S.fx.push({ x: wx, y: wy, r: 4 + overkill * 3.5, life: 9, t: 0, kind: 'blood', red: !o.zombie });   // ground stain, fades in the warped ground pass
+    if (severed > 0) this.sndSquelch(wx, wy);   // gore-gated (chance is 0 with gore off — no severs, no squelch)
+    if (gore) this.S.fx.push({ x: wx, y: wy, r: 4 + overkill * 3.5, life: 9, t: 0, kind: 'blood', red: !o.zombie });   // ground stain, fades in the warped ground pass
     rags.push({ x: wx, y: wy, H, color, pts, links, t: 0, life: 5 + Math.random() * 1.5 });
   }
   updateRags(dt) {
@@ -7004,7 +7281,36 @@ class Component extends DCLogic {
       hqPct: Math.max(0, this.hq.hp / this.hq.maxhp * 100), hqStr: Math.ceil(this.hq.hp),
       focusStr: '×' + fmult.toFixed(1), focusColor: focusActive ? '#36e0cf' : '#4f6b67',
       focusBorder: focusActive ? 'rgba(54,224,207,.5)' : 'rgba(54,224,207,.15)', focusBg: focusActive ? 'rgba(54,224,207,.1)' : 'rgba(54,224,207,.02)',
+      // ---- M7.2 objective chain ----
+      ...(() => {
+        const t = this.tutP();
+        if (t.done || this.S.gameOver) return { tutShow: false, tutN: 0, tutPct: 0, tutTitle: '', tutDesc: '', tutHasAct: false, tutAct: null, tutActLabel: '', tutSkip: this.tutSkip };
+        const def = this.TUT()[t.i];
+        if (!def) return { tutShow: false, tutN: 0, tutPct: 0, tutTitle: '', tutDesc: '', tutHasAct: false, tutAct: null, tutActLabel: '', tutSkip: this.tutSkip };
+        return { tutShow: true, tutN: t.i + 1, tutPct: Math.round((t.i / 12) * 100), tutTitle: def.t, tutDesc: def.d, tutHasAct: !!def.act, tutAct: def.act || null, tutActLabel: def.al || '', tutSkip: this.tutSkip };
+      })(),
       pauseIcon: S.paused ? '▶' : '❚❚', speedLabel: S.speed + '×',
+      // ---- M7.1 settings overlay ----
+      setOpen: !!S.setOpen, toggleSettings: this.toggleSettings,
+      ...(() => {
+        if (!S.setOpen) return { setSliders: [], setToggles: [], setPhys: [], setPitchVal: 100, setPitchDisp: '', setPitch: null, setCbOn: null, setCbOff: null, setCbOnStyle: '', setCbOffStyle: '', setPhysReset: null };
+        const st = this.setP(), P = this.phys();
+        const sld = (label, key, val) => ({ label, val: Math.round(val * 100), disp: Math.round(val * 100) + '%', set: (e) => { const v = (+e.target.value) / 100; if (key === 'm') { const vv = this.S.vol || (this.S.vol = { m: 0.75 }); vv.m = v; this.audioInit(); if (this._ac && this._ac.state === 'suspended') { try { this._ac.resume(); } catch (er) {} } } else this.setSet(key, v); this.forceUpdate(); } });
+        const tgl = (label, key, desc) => { const on = st[key] !== false; return { label, desc, state: on ? '▣' : '□', toggle: () => this.setSet(key, !on), style: 'display:flex;flex-direction:column;gap:2px;padding:7px 10px;text-align:left;border:1px solid ' + (on ? 'rgba(54,224,207,.45)' : 'rgba(120,135,130,.2)') + ';background:' + (on ? 'rgba(54,224,207,.07)' : 'transparent') + ';color:' + (on ? '#9be0d8' : '#7c8a86') + ';cursor:pointer' }; };
+        const phr = (label, key, min, max, step, unit, tip) => ({ label, min: '' + min, max: '' + max, step: '' + step, val: '' + P[key], disp: P[key] + ' ' + unit, tip, set: (e) => this.physSet(key, e.target.value) });
+        const cbOn = !!st.cb;
+        const cbSty = (act) => 'padding:6px 12px;border:1px solid ' + (act ? 'rgba(255,180,84,.55)' : 'rgba(120,135,130,.25)') + ';background:' + (act ? 'rgba(255,180,84,.1)' : 'transparent') + ';color:' + (act ? '#ffd56b' : '#7c8a86') + ";font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1px;cursor:pointer";
+        return {
+          setSliders: [sld('MASTER', 'm', (this.S.vol && this.S.vol.m) || 0), sld('AMBIENCE', 'amb', st.amb == null ? 1 : st.amb), sld('EFFECTS', 'sfx', st.sfx == null ? 1 : st.sfx), sld('COMMAND NET', 'ui', st.ui == null ? 1 : st.ui)],
+          setToggles: [tgl('GORE', 'gore', 'severing · stains · the wet sounds'), tgl('SCREEN SHAKE', 'shake', 'impacts thud the camera — capped, always'), tgl('HIT-STOP', 'hitstop', 'a heartbeat of frozen time on big kills'), tgl('KILL TICKS', 'ticks', 'dry confirmation clicks · streak pitch')],
+          setPhys: [phr('STABILITY Δv', 'down', 0.6, 4, 0.1, 'm/s', 'impact speed that knocks a walker off its feet'), phr('FATALITY Δv', 'kill', 4, 20, 0.5, 'm/s', 'impact speed that kills outright'), phr('KE REFERENCE', 'keRef', 300, 3000, 50, 'J', 'kinetic energy that equals one full health bar')],
+          setPitchVal: Math.round((st.pitch || 1) * 100), setPitchDisp: Math.round(50 * (st.pitch || 1)) + '°',
+          setPitch: (e) => this.setSet('pitch', (+e.target.value) / 100),
+          setCbOn: () => this.setSet('cb', true), setCbOff: () => this.setSet('cb', false),
+          setCbOnStyle: cbSty(cbOn), setCbOffStyle: cbSty(!cbOn),
+          setPhysReset: () => { const s = this.setP(); s.phys = null; this.forceUpdate(); },
+        };
+      })(),
       togglePause: () => { S.paused = !S.paused; this.forceUpdate(); },
       cycleSpeed: () => { const o = [1, 2, 3]; S.speed = o[(o.indexOf(S.speed) + 1) % o.length]; this.forceUpdate(); },
       scanOpacity: this.props.scanlines === false ? 0 : 1,
@@ -7070,12 +7376,12 @@ class Component extends DCLogic {
       // ---- GEAR LOCKER (M5.2) ----
       // ---- M5 POWERS strip ----
       powers: this.powerList(),
-      gearOpen: !!S.gearOpen, toggleGear: this.toggleGear, gearEquipNone: this.gearUnequip,
+      gearOpen: !!S.gearOpen, toggleGear: this.toggleGear, gearEquipNone: this.gearUnequip, gearTransmute: this.gearTransmute,
       // ---- HERO / COMMANDER mode chip ----
       ...(() => { const hm = this.heroMode(); const stocked = (this.caches || []).reduce((a, c) => a + (c.state === 1 ? 1 : 0), 0); return { modeLabel: hm ? '⚔ HERO' + (stocked ? ' · ' + stocked + ' LOOT' : '') : '▦ COMMAND', modeColor: hm ? '#ffd56b' : '#9be0d8', modeBorder: hm ? 'rgba(255,213,107,.45)' : 'rgba(54,224,207,.25)' }; })(),
       ...(() => {
         const armN = (S.armory || []).length;
-        const out = { gearBtnSub: armN ? armN + ' STORED' : 'ISSUE ARMS', gearBtnSubColor: armN ? '#ffd56b' : '#9fb0ab', gearRoster: [], gearCard: [], gearArm: [], gearArmN: armN, gearSelName: '', gearSelWpn: '', gearSelLoot: false, gearArmNone: !armN };
+        const out = { gearBtnSub: armN ? armN + ' STORED' : 'ISSUE ARMS', gearBtnSubColor: armN ? '#ffd56b' : '#9fb0ab', gearRoster: [], gearCard: [], gearArm: [], gearArmN: armN, gearSelName: '', gearSelWpn: '', gearSelLoot: false, gearArmNone: !armN, gearSmithNote: '', gearSmithBtnLabel: '', gearSmithBtnStyle: 'display:none' };
         if (!S.gearOpen) return out;
         const h = S.hero;
         const roster = [{ key: 'hero', name: 'MAIN OPERATOR', wname: h.wpn ? h.wpn.name : this.heroGun(h.gun).name, color: h.wpn ? h.wpn.color : '#ffd56b', on: S.gearSel === 'hero', bd: S.gearSel === 'hero' ? 'rgba(54,224,207,.55)' : 'rgba(120,135,130,.16)', pick: () => { S.gearSel = 'hero'; this.forceUpdate(); } }];
@@ -7111,8 +7417,18 @@ class Component extends DCLogic {
         const selPlat = S.gearSel === 'hero' ? 'hero' : (() => { const u = S.units.find(x => x.id === S.gearSel); return u ? this.platDef(u).plat : null; })();
         out.gearArm = (S.armory || []).map((g, i) => ({ g, i })).sort((a, b) => ((b.g.plat === selPlat) - (a.g.plat === selPlat)) || (this.scoreW(b.g) - this.scoreW(a.g))).slice(0, 12).map(({ g, i }) => {
           const fit = g.plat === selPlat; const dS = this.scoreW(g) - curScore;
-          return { name: g.name, color: g.color, plat: g.plat.toUpperCase(), fit, delta: (dS >= 0 ? '+' : '') + dS.toFixed(1) + ' DMG', deltaColor: dS > 0 ? '#7ef0a6' : '#ff8a93', equip: (() => { const idx = i; return () => this.gearEquip(idx); })(), btnStyle: 'padding:4px 9px;border:1px solid ' + (fit ? 'rgba(54,224,207,.4)' : 'rgba(120,135,130,.2)') + ';background:' + (fit ? 'rgba(54,224,207,.06)' : 'transparent') + ';color:' + (fit ? '#9be0d8' : '#5b6e69') + ";font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1px;cursor:" + (fit ? 'pointer' : 'default') + ';white-space:nowrap' };
+          const mk = this._gearMarks && this._gearMarks.has(g);
+          return { name: g.name, color: g.color, plat: g.plat.toUpperCase(), fit, delta: (dS >= 0 ? '+' : '') + dS.toFixed(1) + ' DMG', deltaColor: dS > 0 ? '#7ef0a6' : '#ff8a93', equip: (() => { const idx = i; return () => this.gearEquip(idx); })(), btnStyle: 'padding:4px 9px;border:1px solid ' + (fit ? 'rgba(54,224,207,.4)' : 'rgba(120,135,130,.2)') + ';background:' + (fit ? 'rgba(54,224,207,.06)' : 'transparent') + ';color:' + (fit ? '#9be0d8' : '#5b6e69') + ";font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1px;cursor:" + (fit ? 'pointer' : 'default') + ';white-space:nowrap',
+            mark: (() => { const it = g; return () => this.gearMark(it); })(), markGlyph: mk ? '◆' : '◇',
+            markStyle: 'width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:1px solid ' + (mk ? 'rgba(183,156,255,.65)' : 'rgba(120,135,130,.25)') + ';background:' + (mk ? 'rgba(183,156,255,.14)' : 'transparent') + ';color:' + (mk ? '#cdb8ff' : '#5b6e69') + ';font-size:9px;cursor:pointer;padding:0',
+            rowBorder: mk ? 'rgba(183,156,255,.4)' : 'rgba(120,135,130,.14)' };
         });
+        const mkN = this._gearMarks ? [...this._gearMarks].filter(it => (S.armory || []).includes(it)).length : 0;
+        const hasWk = this.hasBld('workshop');
+        out.gearSmithNote = !hasWk ? 'Requires a WORKSHOP — the bench does the stripping.' : 'Mark 3 donors ◇ — stripped for parts, rebuilt into ONE better weapon on a donor pattern (best grade, 45% a cut above).';
+        out.gearSmithBtnLabel = !hasWk ? 'NO WORKSHOP' : '⚒ REBUILD ' + mkN + '/3';
+        const smithOn = hasWk && mkN === 3;
+        out.gearSmithBtnStyle = 'padding:5px 12px;border:1px solid ' + (smithOn ? 'rgba(183,156,255,.6)' : 'rgba(120,135,130,.25)') + ';background:' + (smithOn ? 'rgba(183,156,255,.12)' : 'transparent') + ';color:' + (smithOn ? '#cdb8ff' : '#5b6e69') + ";font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1.5px;cursor:" + (smithOn ? 'pointer' : 'default') + ';white-space:nowrap';
         return out;
       })(),
       jumpBarracks: () => { const b = (S.blds || []).find(x => x.kind === 'barracks'); if (!b) { this.milestone('BUILD A BARRACKS TO RECRUIT'); return; } S.sel = { type: 'bld', id: b.id }; this.centerOn(b.x, b.y); this.forceUpdate(); },
@@ -7282,6 +7598,7 @@ class Component extends DCLogic {
       perimeterOpen: (S.panels ? S.panels.perimeter : true) !== false, perimeterChev: ((S.panels ? S.panels.perimeter : true) !== false) ? '▾' : '▸', togglePerimeter: () => this.togglePanel('perimeter'),
       tip: S.tool === 'power' ? 'COMMAND POWER ARMED — click the map to call it in · click the button again to cancel' : S.tool === 'bld' ? 'Click a ⚒ INDUSTRY PLOT to stake the site — civilians haul the materiel to raise it · ESC to cancel' : S.tool === 'turret' ? 'Click a ◎ TURRET PAD (interior plot or wall slot) to stake the turret · ESC to cancel' : S.tool === 'barricade' ? 'Click to drop a 3-tile barricade · R rotates · ESC to cancel' : S.tool === 'warehouse' ? 'Click a ▦ STORAGE PLOT to stake the warehouse · then pick its resource + cap · ESC to cancel' : S.tool === 'medbay' ? 'Click a ✚ SUPPORT PAD to stake the Med Bay · ESC to cancel' : (S.sel ? 'Tap empty ground to deselect · WASD move the Main Operator' : 'WASD move · HOLD LEFT-CLICK to fire the Main Operator at your cursor'),
       toastShow: !!S.toast, toast: S.toast,
+      toastTop: (() => { const t = S.tut; return (t && !t.done && !S.gameOver) ? '186px' : '74px'; })(),   // objective card owns 60-175px — the toast lane yields below it during orientation
       gameOver: S.gameOver, paused: S.paused, restart: () => this.resetGame(false),
       restartGame: () => this.resetGame(true),
     };

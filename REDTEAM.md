@@ -30,6 +30,20 @@ with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
 
 ## CLEARED AUDIT HISTORY
 
+- 2026-07-06: v0.3.1-v0.3.4 package pass: combat feel, tesla knockdown, M5 closeout
+  (gunsmith 3->1, sector loot, TACMAP v2), settings/pause v2, onboarding, session-owner
+  save lock, and toast-lane fix. Candidate payload SHA-256
+  `D616F9EF0E4C59D9A3FCF63B363CE1AAF2519D557444496893A3789B975F14A7`; portable exe
+  SHA-256 `A8AF7771216D18762C75DA92D4015692C765E579B8C6DBC9F4A3817B72E8282E`;
+  signed manifest SHA-256 `4BA305DB727B2DBD5EB05068C3F36EB8C2913F28F006AEE8F6395567522FBE63`.
+  Verdict: green after Codex fixed the offline font/title drift, bumped package metadata to
+  `0.3.4`, synced the stale upload/package mirrors, clamped persisted settings/physics dials,
+  reclaimed save ownership on restart, and normalized fresh hero/unit gear fields. Checks:
+  payload parse, `npm run validate:payload`, source smoke, old-save probe, `npm run pack:win`,
+  portable/unpacked/staged smoke receipts, `npm run release:assets`, manifest SHA/signature
+  verification, tracked secret scan, and anonymous update-feed repo/tag check. Follow-up:
+  publish/tag `v0.3.4`; M7.3 balance harness, 500-zombie perf gate, save export/import, and
+  vendored fonts remain the next batch.
 - 2026-07-05/06: Distribution updater hardening, signed payload staging, and live updater loop.
   Verdict: closed after v0.2.2 wrapper release and v0.2.3 content-only proof. Follow-up added:
   GitHub asset URLs may originate at `github.com` before redirecting to the asset CDN; Step 4

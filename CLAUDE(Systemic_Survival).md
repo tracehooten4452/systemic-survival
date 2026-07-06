@@ -18,9 +18,13 @@ current routing map before making changes.
   Windows icon.
 - Windows wrapper: `electron/main.js`
 - Game-update transplant: `electron/sync-game.js` (payload-only sync + offline scrub; see PACKAGING.md)
-- Sendable build: `dist/Systemic-Survival-0.1.0-portable.exe`
-- Fallback build: `dist/Systemic-Survival-0.1.0-win-unpacked.zip`
+- Sendable build: `dist/Systemic-Survival-0.3.4-portable.exe`
+- Fallback build: `dist/win-unpacked/`
 - Save key: `ss_outpost_v6`
+- Current audited payload: GAME_VER `0.3.4`, SHA-256
+  `D616F9EF0E4C59D9A3FCF63B363CE1AAF2519D557444496893A3789B975F14A7`.
+- Signed update assets: `dist/game-payload.html` + `dist/payload-manifest.json`,
+  tag `v0.3.4`, wrapperMin `0.3.0`.
 - Current architecture: one exported Design Component HTML file plus generated DC runtime,
   with an Electron shell for offline/no-server play.
 
@@ -36,11 +40,12 @@ current routing map before making changes.
 - Defense/combat: Main Operator, operators, gatherers, runners, technicians, squads,
   specialists, mechs, tanks, branches, vehicles, helicopters, A-10 runs, turrets, gates,
   towers, barricades, med bays, and Command Council automation.
-- Latest packages: raised TOWER PLATFORMS T1-T5 with occupant perks; AIRFIELD (HANGAR gates the
-  A-10, AVIONICS SHOP discounts helis 30% and unlocks the APACHE); NAVY naval bombardment;
-  NAT. GUARD barricade corps; per-vehicle loot parts (engine/plating/gun, auto-fit, persisted);
-  RAGDOLLS + DISMEMBERMENT (verlet stick-skeletons on kills, overkill/range-based severing,
-  ground blood stains — zombies + civilians; units keep DOWN state).
+- Latest packages through `0.3.4`: combat feel (hit-stop, kill ticks, gated shake) + tesla
+  knockdown; M5 closeout (gunsmith 3->1, sector loot, TACMAP v2); settings + pause v2 with
+  player-facing physics dials; onboarding chain + session-owner save lock + toast-lane fix.
+- Earlier milestone packages remain live: tower platforms T1-T5, airfield, Navy/NG branches,
+  per-vehicle loot parts, ragdolls + dismemberment, sector scaling pressure, efficiency rating,
+  turret targeting modes, heatmap, and siege telegraph.
 - Rendering foundation: stick figures + death ragdolls/dismemberment are in; remaining polish is
   living-unit limb detail and entity↔building occlusion.
 
@@ -56,8 +61,8 @@ current routing map before making changes.
   and remaining roughness from the horizon camera.
 - Diablo hooks: per-vehicle parts are DONE (engine/plating/gun auto-fit from loot); deeper loot
   progression (set bonuses, rarity depth, vehicle part UI) still open.
-- Offline fonts: drop Chakra Petch + IBM Plex Mono .woff2 into `vendor/fonts/` with a `fonts.css`;
-  `electron/sync-game.js` auto-wires them into the helmet on the next sync.
+- Offline fonts: still deferred. Until `vendor/fonts/fonts.css` exists, shipped HTML must have
+  zero external font links; `npm run validate:payload` is the gate.
 - Combat visuals: DONE for the queued scope — death ragdolls + severing landed (see DONE section);
   living-unit jointed limbs and occlusion remain future polish.
 - Balance pass: preserve the doctrine that capped systems use reachable polynomial costs and
@@ -80,6 +85,50 @@ current routing map before making changes.
   unlocks, and vehicle parts all have later `DONE` sections.
 - Still-current rough edges: horizon-camera polish, occlusion/readability, and deeper
   MATERIEL -> ALLOY -> factory/bay logistics.
+
+### Codex REDTEAM - 2026-07-06 v0.3.4
+
+Status: green for a payload-only 0.3.4 merge after Codex fixes. Save schema remains
+`ss_outpost_v6`; all fields added in 0.3.1-0.3.4 are additive.
+
+Fixes Codex made in this pass:
+- Removed reintroduced Google Fonts links and restored the local title/icon head lines so the
+  source, upload mirror, packaged resource, and signed payload all pass the offline contract.
+- Bumped `package.json` and lockfile self-version to `0.3.4`; kept `wrapperMin` at `0.3.0`
+  because no wrapper/runtime files changed.
+- Hardened settings load/set: audio mix, camera pitch, and experimental physics dials now clamp
+  on old/corrupt saves and on UI writes.
+- Restart now stamps the current session owner before wiping/saving, preventing an old owner key
+  from blocking the clean save.
+- Tutorial skip/completion saves immediately, and fresh hero/unit gear fields now match the
+  loaded-save shape (`wpn: null`, unit gear/scav fields present).
+- Mirrored `Systemic Survival v2.dc.html` into `Systemic Survival/uploads/Systemic Survival/`
+  and rebuilt Electron output so every payload copy hashes to
+  `D616F9EF0E4C59D9A3FCF63B363CE1AAF2519D557444496893A3789B975F14A7`.
+
+Checks Codex ran:
+- DC script parse via `new Function`, GAME_VER `0.3.4`, zero external URLs.
+- `npm run validate:payload`.
+- Source Electron smoke: ok, `blockedRequests: []`, React/root/canvas present, raw `<x-dc>`
+  removed.
+- Old-save probe against `ss_outpost_v6`: old progress skips onboarding, workshop/barracks
+  bootstrap, session owner stamps, bad settings clamp to legal values, no blocked requests.
+- `npm run pack:win`; portable, unpacked, and `--smoke-staged` receipts all green with
+  `blockedRequests: []`.
+- `npm run release:assets`; manifest SHA and signature verified against `electron/release-pubkey.json`.
+- Anonymous `git ls-remote` reached `tracehooten4452/systemic-survival-updates`; latest tag seen
+  there was `v0.3.0`, so `v0.3.4` is a valid bump.
+
+Adversarial notes for Claude:
+- The fresh DC export can reintroduce remote font links and strip wrapper-owned title/icon lines.
+  Run `npm run validate:payload` after every transplant, not just after packaging.
+- Treat `Systemic Survival v2.dc.html`, the upload mirror, `dist/win-unpacked/resources/app/`,
+  and `dist/game-payload.html` as a four-way hash check before calling a candidate current.
+- Keep old saves as first-class probes for every additive `ss_outpost_v6` change; malformed
+  persisted settings should never escape the UI ranges.
+- The 0.3.0-era queue is cleared. Do not re-open it unless a fresh regression reproduces.
+- Still out of scope for this merge: M7.3 balance harness, 500-zombie perf gate, save
+  export/import, and vendored fonts.
 
 ## Vision (north star)
 One game blending: Tower Defense (Bloons), resource management (Anno 1800),
