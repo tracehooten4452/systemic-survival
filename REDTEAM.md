@@ -1,5 +1,11 @@
 # REDTEAM.md — pre-merge audit protocol for Systemic Survival
 
+## Standing order
+
+Codex reads this file before every merge gate, release gate, and payload-only publish gate.
+Nothing merges, ships, or gets called green until REDTEAM passes. Payload-only releases are
+not exempt: installed exes auto-apply signed payloads, so payload bugs ship themselves.
+
 You are the red team. A candidate update is NOT mergeable until every gate below passes.
 Players run this game offline on machines we never see, and installed exes auto-apply signed
 payload updates — a bad merge ships itself. Bias toward **No**.
@@ -13,6 +19,63 @@ Candidate fingerprint: <git SHA or zip SHA-256> · package.json <version> · pay
 **Also Fix** (non-blocking risks)
 **Checks Run** (every command + receipt, pass/fail)
 ```
+
+## AUDIT QUEUE — pending package surfaces
+
+Every package drop must add an entry here before merge. A REDTEAM pass works every open queue
+entry plus the standing gates below. When an entry passes, move it to CLEARED AUDIT HISTORY
+with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
+
+### Pending: SCAVENGER AUTOMATION
+
+Surface:
+- Squads on HUNT can crack hero-stocked caches during quiet stretches.
+- Cache claim system prevents dogpiles.
+- Gatherers can take SCAVENGER duty from inspector after comms tower.
+- Scavengers circuit stocked caches, carry up to three finds, deposit at HQ steps, and stage
+  by the gate when the world is picked clean.
+- Save persistence covers new scavenger/claim/cache state.
+
+Required probes:
+- Old-save merge: load a pre-scavenger save and confirm new research/duty/cache keys default
+  safely without wiping colony state.
+- Squad cache contention: multiple HUNT squads target the same hero-stocked cache; exactly one
+  claim wins, no dogpile, no duplicate payout.
+- Quiet-window behavior: squad crack happens only during intended quiet stretches and does not
+  create wall-clock economy bypasses.
+- Gatherer duty gating: SCAVENGER duty is unavailable before comms tower and available after.
+- Full scavenger loop: search -> carry up to three finds -> deposit at HQ steps -> return/retask.
+- Picked-clean behavior: scavenger stages by the gate without thrashing or burning sim time.
+- Save/load persistence: cache claims, carried finds, duty, and deposits survive reload.
+- Perf sanity: scavenger/caching work remains negligible under horde load.
+
+### Pending: M5 POWERS
+
+Surface:
+- Powers wheel and spend paths.
+- New research/save keys.
+- Overclock and magazine interactions.
+- Smoke-curtain behavior.
+
+Required probes:
+- Old-save merge: load a pre-M5 save and confirm new research/power keys default safely.
+- Spend-path race: rapid open/close/click/hotkey around the powers UI cannot double-spend,
+  unlock the wrong power, or desync HUD state.
+- Resource validation: every spend path checks current resources at execution, not stale render
+  state.
+- Overclock x magazine interaction: stacking does not create runaway fire rate, ammo underflow,
+  reload lock, or permanent buff leakage.
+- Smoke-curtain permanence exploit: smoke expires, does not permanently suppress targeting,
+  pathing, threat, breach, or projectile logic.
+- Save/load persistence: unlocked powers, cooldowns, and active/expired effects reload cleanly.
+- Fresh colony: powers UI starts locked/empty as designed and does not throw console errors.
+
+## CLEARED AUDIT HISTORY
+
+- 2026-07-05/06: Distribution updater hardening, signed payload staging, and live updater loop.
+  Verdict: closed after v0.2.2 wrapper release and v0.2.3 content-only proof. Follow-up added:
+  GitHub asset URLs may originate at `github.com` before redirecting to the asset CDN; Step 4
+  now preserves that allowlist probe.
 
 ## Step 0 — CONFIRM THE CANDIDATE (stale-artifact guard)
 

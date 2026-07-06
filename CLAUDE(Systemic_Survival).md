@@ -541,6 +541,12 @@ update must keep (smoke-test hooks): canvas id `#ss-canvas`; visible 'SYSTEMIC' 
 bump the save key (ss_outpost_vN) on breaking save-schema changes. This package's support.js carries
 the red-team local-first React loader (SRI on ./vendor files) — never regress it on runtime syncs.
 
+## REDTEAM DOCTRINE
+Build -> add/refresh the REDTEAM.md AUDIT QUEUE entry -> Codex REDTEAM pass across every open
+queue entry plus standing gates -> fix findings -> only then merge or publish. Payload-only
+releases are included because installed exes auto-apply signed payloads. Every package summary
+must name the queue entry it added alongside the exe mirror so the next pass has a sharp target.
+
 ## DONE this package (RAGDOLLS + DISMEMBERMENT — the last queued bible track)
 Verlet stick-skeleton ragdolls in billboard-local space (origin = death anchor, ground at +H/2,
 gravity 540, damp .985, 2 constraint iters, ground friction). spawnRagdoll(wx,wy,H,color,{dmg,
