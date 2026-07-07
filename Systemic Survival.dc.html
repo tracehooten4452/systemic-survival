@@ -10,7 +10,6 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="./vendor/fonts/fonts.css">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;background:#070b0c;overflow:hidden}
@@ -1305,7 +1304,7 @@ class Component extends DCLogic {
     this.spawnUnit('operator');
     this.spawnUnit('gatherer');
     if (!this._wipe) this.loadSave();
-    if (!this.S.factions || !this.S.factions.length) this.seedFactions();   // FACTIONS exist before genMap so it can clear their compounds
+    { const fs = this.S.factions; const okFac = Array.isArray(fs) && fs.length === this.FACTIONS.length && this.FACTIONS.every((d, i) => fs.some(f => f.id === i && f.key === d.key)); if (!okFac) this.seedFactions(); }   // FACTIONS exist before genMap so it can clear their compounds; a partial/corrupt roster reseeds cleanly (all 8 valid ids/keys or reseed)
     this.genMap();
     this.unstick();
     if (!this.S.homes || this.S.homes.length === 0) this.seedHomes();
@@ -1341,7 +1340,7 @@ class Component extends DCLogic {
         groups: S.groups || {}, heat: !!S.heat, dashFilter: S.dashFilter || 'all', dashOpen: S.dashOpen !== false, panels: S.panels || { barracks: true, research: true, perimeter: true }, attackSquad: S.attackSquad || { ids: [], mode: 'idle' }, zoom: this.zoom || 0.82, padTiers: S.padTiers || {}, effBest: S.effBest || null, lockdown: !!S.lockdown, lockAuto: S.lockAuto !== false,
         exped: S.exped ? { state: S.exped.state, ids: S.exped.ids, crates: S.exped.crates, tier: S.exped.tier, name: S.exped.name, wagon: S.exped.wagon ? { x: Math.round(S.exped.wagon.x), y: Math.round(S.exped.wagon.y), hp: Math.round(S.exped.wagon.hp) } : null } : null,
         prez: S.prez ? { on: !!S.prez.on, floor: S.prez.floor || 0, bud: S.prez.bud || { defense: 2, economy: 2, hiring: 1 } } : null,
-        factions: (S.factions || []).map(f => ({ id: f.id, key: f.key, x: Math.round(f.x), y: Math.round(f.y), hp: Math.round(f.hp), maxhp: f.maxhp, rep: Math.round(f.rep), pop: Math.round(f.pop), str: f.str, alive: f.alive !== false, pact: f.pact || null, claims: (f.claims || []).slice(0, 12), raidCd: Math.max(0, Math.min(999, isFinite(+f.raidCd) ? +f.raidCd : 0)) })),
+        factions: (S.factions || []).map(f => ({ id: f.id, key: f.key, x: Math.round(f.x), y: Math.round(f.y), hp: Math.round(f.hp), maxhp: f.maxhp, rep: Math.round(f.rep), pop: Math.round(f.pop), str: f.str, alive: f.alive !== false, pact: f.pact || null, claims: (f.claims || []).slice(0, 12), raidCd: Math.max(0, Math.round(f.raidCd || 0)) })),
         diplo: S.diplo ? { id: S.diplo.id, intent: S.diplo.intent } : null,
         vol: S.vol ? { m: +S.vol.m || 0 } : null,
         set: S.set || null,
@@ -1403,11 +1402,8 @@ class Component extends DCLogic {
         S.prez = { on: !!d.prez.on, floor: Math.max(0, Math.min(3000, Math.floor(+d.prez.floor) || 0)), bud: { defense: bv(db.defense, 2), economy: bv(db.economy, 2), hiring: bv(db.hiring, 1), support: bv(db.support, 2) }, orders: 0 };
         if (S.prez.on && S.hero) S.hero.patrol = true;   // the President always defends when hostiles close in
       }
-      const lf = Array.isArray(d.factions) ? d.factions.filter(f => { const id = f && (f.id | 0); return f && id === +f.id && this.FACTIONS[id] && this.FACTIONS[id].key === f.key; }).map(f => { const id = f.id | 0, def = this.FACTIONS[id], mh = 600 + def.str * 60; return { id, key: f.key, x: +f.x || Math.round(this.AW * def.fx), y: +f.y || Math.round(this.AH * def.fy), hp: Math.max(0, +f.hp || 0), maxhp: +f.maxhp || mh, rep: Math.max(-100, Math.min(100, +f.rep || 0)), pop: Math.max(0, Math.min(999, +f.pop || 0)), str: +f.str || def.str, alive: f.alive !== false, pact: (f.pact === 'ally' || f.pact === 'war') ? f.pact : null, claims: Array.isArray(f.claims) ? f.claims.slice(0, 12) : [], raidCd: isFinite(+f.raidCd) ? Math.max(0, Math.min(999, +f.raidCd)) : 45 + Math.random() * 60 }; }) : null;
-      const lfIds = lf ? new Set(lf.map(f => f.id)) : null;
-      S.factions = (lf && lf.length === this.FACTIONS.length && lfIds.size === this.FACTIONS.length) ? lf.sort((a, b) => a.id - b.id) : null;
-      if (d.diplo && typeof d.diplo === 'object') { const di = d.diplo.id | 0, intents = ['gift', 'alliance', 'peace', 'demand']; S.diplo = (di === +d.diplo.id && this.FACTIONS[di] && intents.includes(d.diplo.intent)) ? { id: di, intent: d.diplo.intent } : null; }
-      else S.diplo = null;
+      S.factions = Array.isArray(d.factions) ? d.factions.filter(f => f && this.FACTIONS[f.id] && this.FACTIONS[f.id].key === f.key).map(f => ({ id: f.id | 0, key: f.key, x: +f.x || 0, y: +f.y || 0, hp: Math.max(0, +f.hp || 0), maxhp: +f.maxhp || (600 + this.FACTIONS[f.id].str * 60), rep: Math.max(-100, Math.min(100, +f.rep || 0)), pop: Math.max(0, Math.min(999, +f.pop || 0)), str: +f.str || this.FACTIONS[f.id].str, alive: f.alive !== false, pact: (f.pact === 'ally' || f.pact === 'war') ? f.pact : null, claims: Array.isArray(f.claims) ? f.claims.slice(0, 12) : [], raidCd: (f.raidCd != null && isFinite(f.raidCd)) ? Math.max(0, +f.raidCd) : 45 + Math.random() * 60 })) : null;
+      S.diplo = (d.diplo && typeof d.diplo === 'object' && this.FACTIONS[d.diplo.id]) ? { id: d.diplo.id | 0, intent: ['gift', 'alliance', 'peace', 'demand'].includes(d.diplo.intent) ? d.diplo.intent : 'gift' } : null;
       S.exped = null;
       if (d.exped && Array.isArray(d.exped.ids) && d.exped.ids.length && d.exped.wagon) {
         S.exped = { state: 'return', si: -1, sx: null, sy: null, ids: d.exped.ids.slice(0, 24), crates: Array.isArray(d.exped.crates) ? d.exped.crates.slice(0, 40) : [], tier: [1, 2, 3].includes(d.exped.tier) ? d.exped.tier : 1, name: String(d.exped.name || 'THE SITE').slice(0, 28), wagon: { x: +d.exped.wagon.x || this.hq.x, y: +d.exped.wagon.y || this.hq.y, hp: Math.max(60, Math.min(420, +d.exped.wagon.hp || 420)), maxhp: 420 } };
@@ -1782,11 +1778,15 @@ class Component extends DCLogic {
   // ---- FACTIONS diplomacy (Slice C2): the President physically travels to a base and parleys — the walk IS the timer ----
   setDiplo = (id, intent) => {
     const S = this.S; const f = (S.factions || []).find(x => x.id === id);
-    if (!['gift', 'alliance', 'peace', 'demand'].includes(intent)) return;
     if (!f || f.alive === false) return;
+    if (!['gift', 'alliance', 'peace', 'demand'].includes(intent)) return;   // reject bad intents at the source (matches loadSave validation)
     if (S.diplo && S.diplo.id === id && S.diplo.intent === intent) { S.diplo = null; this.milestone('⌘ DIPLOMATIC MISSION RECALLED'); this.forceUpdate(); return; }
+    const def = this.facDef(f);
+    const pc = this.parleyCost(intent);
+    if ((pc.s && S.scrap < pc.s) || (pc.m && S.materials < pc.m)) { this.milestone('⌘ CANNOT AFFORD — NEED ' + pc.s + ' SCRAP + ' + pc.m + ' MAT'); this.forceUpdate(); return; }   // preflight cost BEFORE the long walk (Codex v0.4.0)
+    if (intent === 'alliance' && f.rep < 30 && f.pact !== 'ally') { this.milestone('⌘ ' + def.name + ' WON’T ALLY YET — RAISE REP TO 30+'); this.forceUpdate(); return; }   // preflight the rep gate too (don't dispatch for a guaranteed refusal)
     S.diplo = { id, intent }; this._diploField = null; this._dfTile = null; this._diploStuck = 0;
-    const def = this.facDef(f), lbl = intent === 'gift' ? 'BEARING GIFTS' : intent === 'alliance' ? 'TO PROPOSE ALLIANCE' : intent === 'peace' ? 'TO SUE FOR PEACE' : 'TO MAKE DEMANDS';
+    const lbl = intent === 'gift' ? 'BEARING GIFTS' : intent === 'alliance' ? 'TO PROPOSE ALLIANCE' : intent === 'peace' ? 'TO SUE FOR PEACE' : 'TO MAKE DEMANDS';
     this.milestone('⌘ THE PRESIDENT SETS OUT FOR ' + def.name + ' — ' + lbl); this.ping(f.x, f.y, this.facStateCol(f)); this.forceUpdate();
   };
   parleyCost(intent) { return intent === 'alliance' ? { s: 80, m: 60 } : intent === 'gift' ? { s: 40, m: 30 } : intent === 'peace' ? { s: 30, m: 20 } : { s: 0, m: 0 }; }
@@ -2731,6 +2731,7 @@ class Component extends DCLogic {
     const nH = live.filter(f => this.facState(f) === 'hostile').length, nA = live.filter(f => this.facState(f) === 'allied').length;
     const btn = (bg, bc, tc) => `padding:4px 9px;border:1px solid ${bc};background:${bg};color:${tc};font-family:'IBM Plex Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:.5px;cursor:pointer`;
     const dis = `padding:4px 9px;border:1px solid rgba(120,130,135,.2);background:rgba(120,130,135,.04);color:#5a6a70;font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.5px`;
+    const canAff = (it) => { const c = this.parleyCost(it); return (!c.s || S.scrap >= c.s) && (!c.m || S.materials >= c.m); };   // diplomacy affordability (Codex v0.4.0): grey unaffordable actions
     const dp = S.diplo, dpf = dp ? this.facDef((facs.find(x => x.id === dp.id) || facs[0])) : null;
     const rows = facs.map(f => {
       const def = this.facDef(f), st = this.facState(f), scol = this.facStateCol(f), dead = st === 'gone', canAlly = f.rep >= 30 || f.pact === 'ally';
@@ -2743,9 +2744,9 @@ class Component extends DCLogic {
         offerCol: st === 'allied' ? '#7ef0a6' : st === 'hostile' ? '#ff8a93' : '#c08a4f',
         rowStyle: `padding:9px 11px;border:1px solid ${dead ? 'rgba(107,122,128,.2)' : this.hexA(def.col, 0.28)};background:${dead ? 'rgba(107,122,128,.04)' : this.hexA(def.col, 0.05)};opacity:${dead ? 0.55 : 1}`,
         jump: () => this.jumpFaction(f.id), jumpStyle: btn('rgba(54,224,207,.08)', 'rgba(54,224,207,.4)', '#9be0d8'),
-        gift: dead ? (() => { }) : () => this.setDiplo(f.id, 'gift'), giftStyle: dead ? dis : btn('rgba(126,240,166,.06)', 'rgba(126,240,166,.35)', '#7ef0a6'),
-        ally: (dead || !canAlly) ? (() => { }) : () => this.setDiplo(f.id, 'alliance'), allyStyle: (dead || !canAlly) ? dis : btn('rgba(126,240,166,.06)', 'rgba(126,240,166,.4)', '#9df0be'),
-        peace: dead ? (() => { }) : () => this.setDiplo(f.id, 'peace'), peaceStyle: dead ? dis : btn('rgba(255,213,107,.06)', 'rgba(255,213,107,.35)', '#ffd56b'),
+        gift: (dead || !canAff('gift')) ? (() => { }) : () => this.setDiplo(f.id, 'gift'), giftStyle: (dead || !canAff('gift')) ? dis : btn('rgba(126,240,166,.06)', 'rgba(126,240,166,.35)', '#7ef0a6'),
+        ally: (dead || !canAlly || !canAff('alliance')) ? (() => { }) : () => this.setDiplo(f.id, 'alliance'), allyStyle: (dead || !canAlly || !canAff('alliance')) ? dis : btn('rgba(126,240,166,.06)', 'rgba(126,240,166,.4)', '#9df0be'),
+        peace: (dead || !canAff('peace')) ? (() => { }) : () => this.setDiplo(f.id, 'peace'), peaceStyle: (dead || !canAff('peace')) ? dis : btn('rgba(255,213,107,.06)', 'rgba(255,213,107,.35)', '#ffd56b'),
         demand: dead ? (() => { }) : () => this.setDiplo(f.id, 'demand'), demandStyle: dead ? dis : btn('rgba(255,93,108,.06)', 'rgba(255,93,108,.35)', '#ff8a93'),
       };
     });
@@ -3634,6 +3635,12 @@ class Component extends DCLogic {
     const c = this.gateCost(g.lvl + 1); if (!this.spendMat(c)) return;
     g.lvl++; g.maxhp = this.gateHp(g.lvl); g.hp = g.maxhp; this.forceUpdate();
   };
+  nearestEmptyTurretPad(x, y) {   // shared by the armed turret tool + its hover ghost (Codex v0.4.0 tool contract)
+    if (!this.pads || !this.S.turretUnlocked) return -1;
+    let bi = -1, bd = (this.TS * 0.5) ** 2;
+    for (let i = 0; i < this.pads.length; i++) { const p = this.pads[i]; if (this.gateOnPad(i)) continue; if (this.S.turrets.some(t => Math.hypot(t.x - p.x, t.y - p.y) < 20)) continue; const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < bd) { bd = d; bi = i; } }
+    return bi;
+  }
   buildTurretPad = (idx, type) => {
     const S = this.S; const p = this.pads && this.pads[idx]; if (!p) return;
     if (!S.turretUnlocked) return; if (this.gateOnPad(idx)) return;
@@ -3658,6 +3665,8 @@ class Component extends DCLogic {
   upgradeHQ = () => { if (!this.canUpgradeHQ()) return; this.spendMat(this.hqUpgradeCost()); this.S.hqLevel++; this.hq.maxhp = 600 * this.fortMult() * (1 + (this.S.hqLevel - 1) * 0.5); this.hq.hp = this.hq.maxhp; this.milestone('HQ UPGRADED — GATE Lv6-10 · TURRET + SUPPORT PADS REVEALED'); this.forceUpdate(); };
   buildTurret(x, y) {
     const S = this.S;
+    // TOOL CONTRACT (Codex v0.4.0): the armed turret tool builds on a WALL SLOT when the click lands on a valid empty pad, else an interior TURRET PAD ◎. Wall pads build instantly (fortification slots); interior spots stake a hauled site.
+    { const bi = this.nearestEmptyTurretPad(x, y); if (bi >= 0) { const c = this.turretCost(); if (S.materials < c) { this.milestone('STOCK ' + c + ' MATERIEL FIRST'); S.tool = null; return; } this.buildTurretPad(bi, 'gun'); return; } }
     const sp = this.nearestFreeSpot('turret', x, y, 40); if (!sp) { this.milestone('BUILD ON A TURRET PAD ◎ (or a wall slot)'); return; }
     const c = this.turretCost(); if (S.materials < c) { this.milestone('STOCK ' + c + ' MATERIEL FIRST'); S.tool = null; return; }
     this.makeSite('turret', null, sp.x, sp.y, c); this.forceUpdate();
@@ -3710,7 +3719,7 @@ class Component extends DCLogic {
   };
   // ---- game version: baked payload tag; a STAGED auto-update payload (payload-vX.Y.Z.html) reports its
   // release tag instead, so the top-left always tells the truth about what's actually running.
-  GAME_VER = '0.4.0';
+  GAME_VER = '0.4.1';
   gameVer() {
     if (this._gv) return this._gv;
     let v = this.GAME_VER;
@@ -3788,7 +3797,8 @@ class Component extends DCLogic {
     rd.onload = () => {
       try {
         const d = JSON.parse(rd.result);
-        if (!d || typeof d !== 'object' || (d.kills == null && !Array.isArray(d.units))) throw new Error('shape');
+        const okNum = v => typeof v === 'number' && isFinite(v);
+        if (!d || typeof d !== 'object' || Array.isArray(d) || !Array.isArray(d.units) || !okNum(d.kills) || !okNum(d.threat) || !okNum(d.hqLevel) || !okNum(d.sector) || !okNum(d.expand)) throw new Error('v7 schema');   // strict v7 shape (Codex v0.4.0) — was a loose kills||units[] check
         if (!confirm('IMPORT SAVE? Current progress is replaced.')) return;
         if (this._bootId) localStorage.setItem(this.SAVE + '_owner', this._bootId);
         localStorage.setItem(this.SAVE, JSON.stringify(d));
@@ -5103,7 +5113,20 @@ class Component extends DCLogic {
     const S = this.S; S.tick += dt; S.ramp += dt; S.dayT = (S.dayT || 0) + dt;
     this._frame = (this._frame || 0) + 1; this.buildZGrid();
     // hard population caps (performance budget + runaway safety)
-    if (S.zombies.length > this.zCap()) S.zombies.splice(this.zCap());
+    { const cap = this.zCap();
+      if (S.zombies.length > cap) {
+        if (!S.zombies.some(z => z.raider)) { S.zombies.splice(cap); }   // fast path: pure horde — tail trim is fine
+        else {   // FACTION RAID ACTIVE (Codex v0.4.0): preserve raiders (event attackers) — drop dead non-raiders first, then ambient walkers farthest from HQ
+          const hx = this.hq.x, hy = this.hq.y, cand = [];
+          for (let i = 0; i < S.zombies.length; i++) { if (!S.zombies[i].raider) cand.push(i); }
+          cand.sort((a, b) => { const za = S.zombies[a], zb = S.zombies[b]; const sa = (za.hp <= 0 ? 1e12 : 0) + (za.x - hx) ** 2 + (za.y - hy) ** 2, sb = (zb.hp <= 0 ? 1e12 : 0) + (zb.x - hx) ** 2 + (zb.y - hy) ** 2; return sb - sa; });
+          let over = S.zombies.length - cap; const cut = new Set();
+          for (let k = 0; k < cand.length && over > 0; k++) { cut.add(cand[k]); over--; }
+          if (cut.size) S.zombies = S.zombies.filter((z, i) => !cut.has(i));
+          if (S.zombies.length > cap) S.zombies.splice(cap);   // extreme fallback: raiders alone exceed cap
+        }
+      }
+    }
     if (S.bullets.length > 360) S.bullets.splice(0, S.bullets.length - 360);
     if (S.fx.length > 280) S.fx.splice(0, S.fx.length - 280);
     if (S.floats.length > 120) S.floats.splice(0, S.floats.length - 120);
@@ -6795,7 +6818,7 @@ class Component extends DCLogic {
   // build-tool ghost previews (flat on the ground)
   drawGhosts(ctx, C, S) {
     if (S.tool === 'power' && this._mouse && this._powerKey) { const m = this._mouse; ctx.strokeStyle = 'rgba(255,213,107,.85)'; ctx.lineWidth = 1.5 / this.scale; ctx.setLineDash([5 / this.scale, 5 / this.scale]); ctx.beginPath(); ctx.arc(m.x, m.y, this._powerKey === 'fire' ? 63 : this._powerKey === 'smoke' ? 170 : this._powerKey === 'beacon' ? 160 : this._powerKey === 'standto' ? 90 : 40, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); }
-    if (S.tool === 'turret' && this._mouse) { const sp = this.nearestFreeSpot('turret', this._mouse.x, this._mouse.y, 40); const gx = sp ? sp.x : this._mouse.x, gy = sp ? sp.y : this._mouse.y; ctx.strokeStyle = sp ? 'rgba(54,224,207,.85)' : 'rgba(255,93,108,.6)'; ctx.lineWidth = 1.5 / this.scale; ctx.beginPath(); ctx.arc(gx, gy, 18, 0, 6.283); ctx.stroke(); }
+    if (S.tool === 'turret' && this._mouse) { let sp = this.nearestFreeSpot('turret', this._mouse.x, this._mouse.y, 40); let gx, gy, ok; if (sp) { gx = sp.x; gy = sp.y; ok = true; } else { const pi = this.nearestEmptyTurretPad(this._mouse.x, this._mouse.y); if (pi >= 0) { gx = this.pads[pi].x; gy = this.pads[pi].y; ok = true; } else { gx = this._mouse.x; gy = this._mouse.y; ok = false; } } ctx.strokeStyle = ok ? 'rgba(54,224,207,.85)' : 'rgba(255,93,108,.6)'; ctx.lineWidth = 1.5 / this.scale; ctx.beginPath(); ctx.arc(gx, gy, 18, 0, 6.283); ctx.stroke(); }
     if (S.tool === 'barricade' && this._mouse) { const o = this._barOrient || 'h', SQ = 22; const blocked = S.barricades.length >= this.barricadeCap() || Math.hypot(this._mouse.x - this.hq.x, this._mouse.y - this.hq.y) < 46 || this.barrierFootprintBlocked(this._mouse.x, this._mouse.y, o); ctx.strokeStyle = blocked ? 'rgba(255,93,108,.75)' : 'rgba(126,240,166,.75)'; ctx.fillStyle = blocked ? 'rgba(255,93,108,.14)' : 'rgba(126,240,166,.14)'; ctx.lineWidth = 1.5 / this.scale; for (let i = -1; i <= 1; i++) { const cx = this._mouse.x + (o === 'h' ? i * SQ : 0), cy = this._mouse.y + (o === 'v' ? i * SQ : 0); ctx.fillRect(cx - SQ / 2, cy - SQ / 2, SQ, SQ); ctx.strokeRect(cx - SQ / 2, cy - SQ / 2, SQ, SQ); } }
     if (S.tool === 'warehouse' && this._mouse) { const R = 16; const sp = this.nearestFreeSpot('storage', this._mouse.x, this._mouse.y, 40); const gx = sp ? sp.x : this._mouse.x, gy = sp ? sp.y : this._mouse.y; const blocked = !sp || S.warehouses.length >= this.WCAP(); ctx.strokeStyle = blocked ? 'rgba(255,93,108,.8)' : 'rgba(143,179,201,.85)'; ctx.fillStyle = blocked ? 'rgba(255,93,108,.14)' : 'rgba(143,179,201,.14)'; ctx.lineWidth = 1.5 / this.scale; ctx.fillRect(gx - R, gy - R, 2 * R, 2 * R); ctx.strokeRect(gx - R, gy - R, 2 * R, 2 * R); }
     if (S.tool === 'home' && this._mouse) { const R = 13; const sp = this.nearestFreeSpot('home', this._mouse.x, this._mouse.y, 40); const gx = sp ? sp.x : this._mouse.x, gy = sp ? sp.y : this._mouse.y; const blocked = !sp || (S.homes || []).length >= this.HOMES_MAX; ctx.strokeStyle = blocked ? 'rgba(255,93,108,.7)' : 'rgba(154,208,107,.8)'; ctx.fillStyle = blocked ? 'rgba(255,93,108,.12)' : 'rgba(154,208,107,.14)'; ctx.lineWidth = 1.5 / this.scale; ctx.fillRect(gx - R, gy - R * 0.7, R * 2, R * 1.7); ctx.strokeRect(gx - R, gy - R * 0.7, R * 2, R * 1.7); }

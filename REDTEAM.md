@@ -26,7 +26,28 @@ Every package drop must add an entry here before merge. A REDTEAM pass works eve
 entry plus the standing gates below. When an entry passes, move it to CLEARED AUDIT HISTORY
 with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
 
-### No pending entries
+### Pending: Codex v0.4.0 beta pass (FIXED in 0.4.1 — regression checklist)
+
+> Codex ran a read-only offline beta pass on shipped v0.4.0. Verdict: playable beta product; two
+> player-expectation breaks + minor hardening. All code findings FIXED in 0.4.1 (save stays v7);
+> probes below are the regression checklist. Recommended (repo-side): promote the temp beta harness
+> into a repeatable smoke (boot offline · move · kill · recruit · save slot · open pause/settings/
+> factions · spawn raid · conquer faction · 200/500 perf).
+
+- RAID VANISH AT CAP [was MustFix]: fill S.zombies to zCap(), spawn a hostile raid, run ONE update()
+  → ALL raiders must survive (priority trim drops dead/ambient-farthest, never raiders). Probe green:
+  cap 200 + 9 raiders → 9 survive, len 200.
+- TURRET TOOL CONTRACT [was MustFix]: with the turret tool armed, a click on a valid empty WALL PAD
+  must build a turret there (routes to buildTurretPad via nearestEmptyTurretPad); interior clicks
+  still stake a hauled site; hover ghost snaps to pads. Probe green: builds 1 on a pad (was 0).
+- DIPLOMACY PREFLIGHT: setDiplo must refuse (no President walk) when the intent's cost is unaffordable
+  OR alliance rep<30; board greys unaffordable buttons. Probe green.
+- SAVE-IMPORT SCHEMA: importSave must reject non-v7 shapes ({kills:5}, arrays, random objects) and
+  accept a real save. Probe green.
+- BOOT TEMPLATE WARNINGS: the ~35 unresolved-{{}} warnings are expected FIRST-RENDER holes (resolve on
+  mount; DOM clean). Source is support.js (managed runtime — do NOT modify). Known-benign, not a bug.
+- PERF: Codex GPU pass update p95 0.9–1.0ms / draw 6.5–6.7ms / total ≤7.7ms @ 200 & 500 zombies. Keep
+  the automated 500-zombie gate (one visual pass can eat the budget).
 
 ## CLEARED AUDIT HISTORY
 

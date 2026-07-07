@@ -761,3 +761,33 @@ node-ownership territory VISUAL; faction military-aid during your sieges; roamin
 SHIP (H): GAME_VER 0.4.0; Electron payload mirror updated, repo red-team fixes applied
 (`raidCd` persistence + load-schema hardening), and source/staged smokes passed. v7 is an
 intentional fresh-save break because world coordinates changed.
+
+## DONE this package (CODEX v0.4.0 BETA PASS — bug fixes) · GAME_VER 0.4.1 · save stays v7 (no schema break)
+Codex ran a read-only offline beta pass on shipped v0.4.0 and filed real player-expectation breaks.
+All code findings fixed + verified via reload-first manual probe; ONE Electron mirror. Fixes:
+1. RAID VANISH AT CAP [MustFix] — update()'s blunt `S.zombies.splice(zCap())` trimmed the array TAIL,
+   and spawnRaid appends raiders to the tail → at cap 500 a fresh 9-raider raid was deleted on the
+   next update. Now: fast path (no raiders) keeps the tail splice; when a raid is active, a priority
+   trim PRESERVES raiders and drops dead non-raiders first, then ambient walkers farthest from HQ.
+   Probe: cap 200 + 9 raiders (len 209) → one update → 9 raiders survive, len 200.
+2. TURRET TOOL CONTRACT [MustFix] — the armed BUILD TURRET tool only called buildTurret() (interior
+   typed spots); clicking a wall slot did nothing though the tooltip said pads/wall slots work. New
+   shared nearestEmptyTurretPad(x,y): buildTurret now routes a click that lands on a valid empty wall
+   pad to buildTurretPad() (instant fortification build), else the interior hauled-site path. The
+   hover ghost also snaps green to a wall pad so the contract is visible. Probe: tool click near a
+   pad builds 1 turret on it (was 0).
+3. DIPLOMACY AFFORDABILITY PREFLIGHT — setDiplo dispatched the President before checking gift/peace/
+   alliance cost; failure surfaced only after the long walk. Now setDiplo preflights cost AND the
+   alliance rep≥30 gate (refuses + toasts, no walk); the Factions board greys unaffordable GIFT/
+   ALLIANCE/PEACE buttons (canAff). resolveParley keeps its own cost guard as a backstop.
+4. STRICT SAVE-IMPORT SCHEMA — importSave accepted any object with kills||units[] (so {kills:5}
+   passed). Now a strict v7 shape check: object (not array) + units[] + finite kills/threat/hqLevel/
+   sector/expand, else reject. Probe: rejects {kills:5}/array/random, accepts a real save.
+5. BOOT TEMPLATE WARNINGS (Codex 'Also Fix') — the ~35 unresolved-{{}} warnings are FIRST-RENDER
+   holes that resolve on mount (renderVals returns 268 keys, DOM clean). They originate in support.js
+   (the DC runtime — a managed file I must not modify), so documented as known-benign in REDTEAM
+   rather than patched. NOT a bug.
+Codex perf table (their GPU Electron pass): update p95 0.9–1.0ms, draw p95 6.5–6.7ms, total ≤7.7ms
+at 200/500 zombies — healthy; the automated 500-zombie gate stays. Mirrored to the Electron package
+(transplant + font scrub, invariants + all four fix markers confirmed). REDTEAM: 'Codex v0.4.0 beta
+pass' logged; recommended the temp beta harness be promoted to a repeatable smoke (repo-side).
