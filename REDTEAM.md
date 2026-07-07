@@ -56,8 +56,11 @@ with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
   source smoke, staged-payload smoke, `npm run pack:win`, unpacked and portable smokes, perf
   probe with 200 walkers + 9 raiders (`updateFactions` p95 ~0.1ms; full update avg ~0.59ms),
   four-way payload hash parity, `npm run release:assets`, and payload + wrapper manifest
-  SHA/signature verification. Follow-up release notes must say `v0.4.0` is a fresh-save world
-  reset and fixed v0.3.7+ launchers auto-download the corrected exe.
+  SHA/signature verification. Live 0.3.7 -> 0.4.0 wrapper probe passed: copied old portable
+  logged `wrapper-required`, downloaded/verified SHA-256 `456C5916...`, staged the new portable
+  beside the old exe, spawned it, closed the gate, and the new 0.4.0 launcher reported
+  up-to-date. Follow-up release notes must say `v0.4.0` is a fresh-save world reset and fixed
+  v0.3.7+ launchers auto-download the corrected exe.
 - 2026-07-06: v0.3.7 launch gate readability/logging repair and updater self-swap fix.
   Drop-kit launch HTML SHA-256
   `EA59379E25841FB35F0454E84408501BEF92D87F445831421A44ABCEEAA43FE6`;

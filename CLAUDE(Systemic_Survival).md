@@ -122,6 +122,10 @@ Checks run so far:
   the manifest contains the signed wrapper block used by the launch gate's exe self-swap path.
 - Correction note: the first repo publish accidentally left `wrapperMin` at `0.3.7`, which would
   have staged only the payload. The corrected feed requires and verifies the `0.4.0` portable.
+- Live proof: a copied `Systemic-Survival-0.3.7-portable.exe` hit `wrapper-required`, downloaded
+  `Systemic-Survival-0.4.0-portable.exe`, verified SHA-256 `456C5916...`, staged it beside the
+  old portable, spawned it, closed the gate, and the new `0.4.0` launcher then checked the feed
+  as up-to-date.
 
 ### Codex REDTEAM - 2026-07-06 v0.3.7 / launch gate repair
 
