@@ -19,20 +19,19 @@ current routing map before making changes.
   Windows icon.
 - Windows wrapper: `electron/main.js`
 - Game-update transplant: `electron/sync-game.js` (payload-only sync + offline scrub; see PACKAGING.md)
-- Sendable build: `dist/Systemic-Survival-0.3.7-portable.exe`
+- Sendable build: `dist/Systemic-Survival-0.4.0-portable.exe`
 - Fallback build: `dist/win-unpacked/`
-- Save key: `ss_outpost_v6`
-- Current audited payload: GAME_VER `0.3.6`, SHA-256
-  `7DF06A4A1D2177DD1D96CE3F0C2370EFAE71D3269C10F1311B859266AB285552`.
-- Player wrapper metadata: package `0.3.7`, wrapperMin `0.3.7`.
-- Live update feed: compatibility `v0.3.6` payload manifest, wrapperMin `0.3.5`, so
-  already-shipped 0.3.5/0.3.6 wrappers can stage current game content. Install the 0.3.7
-  player exe once to get durable gate logging and repaired full-wrapper swaps.
+- Save key: `ss_outpost_v7` (v6 colonies intentionally restart because world coords doubled).
+- Current audited payload: GAME_VER `0.4.0`, SHA-256
+  `39AE3C1C8D630A9E1B0B38373E8D896C69A6FB928A6F0E546BD045259BD89405`.
+- Player wrapper metadata: package `0.4.0`, wrapperMin `0.3.7`.
+- Live update feed: `v0.4.0` payload manifest, wrapperMin `0.3.7`, so players need the
+  one-time 0.3.7+ launcher before this payload can auto-stage.
 - Current architecture: one exported Design Component HTML file plus generated DC runtime,
   with an Electron shell for offline/no-server play.
 
 ### Current build state
-- Playable horizon-camera outpost survival sim with a 24000 x 13500 world, canvas rendering,
+- Playable horizon-camera outpost survival sim with a 48000 x 27000 world, canvas rendering,
   perspective/mode-7 ground, 3D extruded buildings, billboarded entities, and tower platforms.
 - Core loop: defend HQ, gather RAW, refine RAW to MATERIEL through WORKSHOP/cultivators,
   grow civilians, build on typed plots, expand/reclaim sectors, and manually raise threat.
@@ -43,10 +42,11 @@ current routing map before making changes.
 - Defense/combat: Main Operator, operators, gatherers, runners, technicians, squads,
   specialists, mechs, tanks, branches, vehicles, helicopters, A-10 runs, turrets, gates,
   towers, barricades, med bays, and Command Council automation.
-- Latest packages through `0.3.7`: launch gate readability/logging repair, updater
-  full-wrapper swap fixes, renamed stable payload
-  `Systemic Survival.dc.html`, M7.3 field saves/export/import, threat-scaled 500-zombie siege
-  cap, balance harness, and vendored offline brand fonts.
+- Latest packages through `0.4.0`: factions + political layer (8 rival towns, embodied
+  diplomacy, hostile raids, ally production satellites, conquest), launch gate readability/logging
+  repair, updater full-wrapper swap fixes, renamed stable payload `Systemic Survival.dc.html`,
+  M7.3 field saves/export/import, threat-scaled 500-zombie siege cap, balance harness, and
+  vendored offline brand fonts.
 - Earlier milestone packages remain live: tower platforms T1-T5, airfield, Navy/NG branches,
   per-vehicle loot parts, ragdolls + dismemberment, sector scaling pressure, efficiency rating,
   turret targeting modes, heatmap, and siege telegraph.
@@ -72,6 +72,8 @@ current routing map before making changes.
 - Balance harness: `await __SS.balanceHarness({hours, profile:'idle'|'active'})` is available
   as a console-only dev tool for doctrine runs. Preserve reachable polynomial costs and
   player-gated threat/sector difficulty.
+- Faction polish: physical ally supply caravans, ranged/vehicle raid parties, territory visuals,
+  faction military aid, and raid/ally/siege balance tuning remain queued.
 
 ### Current doctrine
 - No timers for core construction. The walk is the timer: civilians physically haul resources.
@@ -90,6 +92,33 @@ current routing map before making changes.
   unlocks, and vehicle parts all have later `DONE` sections.
 - Still-current rough edges: horizon-camera polish, occlusion/readability, and deeper
   MATERIEL -> ALLOY -> factory/bay logistics.
+
+### Codex REDTEAM - 2026-07-06 v0.4.0 / factions + political layer
+
+Status: green after repo-side schema fixes. Candidate payload now hashes to
+`39AE3C1C8D630A9E1B0B38373E8D896C69A6FB928A6F0E546BD045259BD89405`.
+Signed manifest SHA-256:
+`DC3F2D62B86207ACCDD072737D62B1FF31EB1AE0C361D93A5364309121F22428`.
+Portable exe SHA-256:
+`3F863CD1DFC1D6B34ED86B9A759A62A81B118781C3CD87CC61EF4BAD3E02D018`.
+
+Codex fixes applied on top of the drop kit:
+- Persisted `raidCd` in `S.factions[]`; loader now preserves/clamps it instead of randomizing
+  every load.
+- Hardened loaded factions: bad ids/keys are rejected, and a partial faction array reseeds all
+  eight expected factions instead of leaving the world half-populated.
+- Invalid diplomacy intents are rejected on load and by `setDiplo`.
+
+Checks run so far:
+- `npm run validate:payload`
+- Custom Electron v0.4.0 probe: v6 save ignored, corrupt v7 faction array reseeds, bad diplo
+  intent rejected, `raidCd` save/reload, alliance gate, ally food cap, capped shootable raids,
+  conquest cleanup, no external requests.
+- Source smoke and staged-payload smoke both passed with `blockedRequests: []`.
+- `npm run pack:win`; unpacked and portable smokes passed with `blockedRequests: []`.
+- Perf probe with 200 walkers + 9 raiders: `updateFactions` p95 ~0.1ms, full update avg ~0.59ms.
+- `npm run release:assets`; payload/manifest signature verified, wrapperMin `0.3.7`, no wrapper
+  block in the payload manifest.
 
 ### Codex REDTEAM - 2026-07-06 v0.3.7 / launch gate repair
 
@@ -669,3 +698,59 @@ deaths (zombie contact) both spawn ragdolls; units keep DOWN state. Transient (t
 - Debug handle: temporarily add `window.__ss = this;` in componentDidMount for eval_js tests; REMOVE before delivery.
 - str_replace edits to logic need a show_html reload (no hot-reload); dc_* edits hot-reload.
 - After edits: reset save via `localStorage.setItem('ss_outpost_v3','null'); __ss.init(); __ss.save()`.
+
+## DONE this package (FACTIONS + POLITICAL LAYER — the north-star build; FULL SYSTEM, Slices A→H) · GAME_VER 0.4.0
+SAVE KEY BUMPED v6→v7 (coords changed). All slices verified via reload-first manual-tick probes.
+A — MAP SCALE-UP: AW/AH 24000×13500→48000×27000, TS 80→160 (tile count IDENTICAL 300×168=50,400
+⇒ flow-field cost unchanged — the established discipline). Corner-from-center 27,536px = 9.98min on
+foot (the 10-min-to-a-rival headline). genMap 75ms one-time (rare event, fine). Nearly everything
+keyed off ringR·TS or AW/AH so it auto-scaled — the change was 3 numbers + the key bump.
+B — 8 FACTIONS: this.FACTIONS doctrine table (nuclear ATOM COVENANT ☢ / meridian MERIDIAN GRID ◈ /
+ash ASH COLUMN ▲ / ironclad IRONCLAD LEGION ⬢ / changed THE CHANGED ✷ / bulwark IRON BULWARK ♜ /
+deluge THE DELUGE ≈ / rust RUST KINGS ⚙; each col/col2/fx/fy/pop/str/aggr/offer/blurb/raid).
+seedFactions rings them: 4 corners ≈8.9min, E/W edges ≈8min, N/S edges ≈4.4min (the close
+neighbors). S.factions[] {id,key,x,y,hp,maxhp,rep,pop,str,alive,pact,claims,raidCd} persisted
+(save+load, additive to v7). genMap clears a 3-tile compound around each base + adds faction tiles
+as carve sources (always reachable from HQ). drawFactionBase = doctrine massing (cooling towers /
+hex tech keep / crenellated stone / gantry / organic lumps / water tower / camo / scrap) in the
+faction palette via exTR/extrudeTexCirc/extrudeTexPoly, viewport-culled; billboarded icon+name+
+state+POP+rep bar+hp bar. Minimap: always-visible palette square + state-colored core (conquered=gray).
+C — POLITICAL LAYER: REPHOSTILE −30 / REPALLIED +55. rep is the emergent informal layer; a formal
+PACT ('ally'|'war') is STICKY (facState reads pact first, then rep bands). factionRep(id,δ) +
+onFactionStateChange (toasts + ping; 'gone' guarded) + updateFactions(dt) (hooked after
+wallRebuildTick): abstracted off-screen survival sim (pop drifts to a doctrine target, allied 1.9×/
+hostile 0.85×; towns slowly repair hp) + rep fade toward neutral (pacts exempt) + state transitions.
+factionEncroach() on ADVANCE THE FRONT: nearest/most-aggressive neutrals lose rep (allies skip).
+EMBODIED PARLEY (C2): setDiplo(id,intent) → the hero/President physically travels (updateDiplo, top
+of updateHero, flow-field via field()+fieldMove at mspd=168−slowV, yields to WASD/breach/lockdown) →
+resolveParley on arrival ≤72px: gift(40s+30m→+22rep) · alliance(rep≥30 gate, 80s+60m→pact ally) ·
+peace(clear war, +14rep) · demand(extort scrap, −26rep). S.diplo persisted. The walk IS the timer.
+D — HOSTILE RAIDS: raiders are faction-colored ARMED 'zombies' (spawnRaid → S.zombies with
+raider/fac/col flags) so they inherit bullets/turrets/physics/ragdoll/spatial-grid FOR FREE;
+updateRaider = dedicated flowHQ-field march to HQ + assault (clawing gates/barricades en route),
+drawZombie renders them as operator-kind figures in the faction color. Hostile towns muster a wave
+when raidCd expires (the long cross-map march is the cooldown); one wave out at a time (medium
+stakes). Verified: 9 spawn, march 475px/10s toward HQ, shootable/rammable.
+E — ALLY = PRODUCTION SATELLITE (the user's key answer): an allied town grows itself, then
+allyDeliver()s its doctrine OFFER (alloy/food/ammo/materials/scrap by faction) + a chance of a
+SETTLER (spawnCivilian, housing-gated) to HQ; allyGiveInterval scales with distance (the road is
+the clock). Verified +51 food delivered, capped correctly.
+F — CONQUEST: an embodied army parked ≤300px of a non-allied base sieges it (fp = Σ dmg·rof of
+hero+combat units); the base defends back (damages attackers); hitting a NEUTRAL base is an act of
+war (rep −). hp→0 → conquerFaction: annex survivors (settlers migrate, housing-gated) + spoils
+(scrap+mat) + its raiders removed; alive=false (renders as rubble, minimap gray), persists. Verified
++10 settlers, +480 scrap, raiders cleared, save round-trip.
+G — UI: ⚑ FACTIONS top-bar button (chip shows N HOSTILE/ALLIED/NEUTRAL, color-coded) + full
+DIPLOMACY overlay (ledger pattern): per-faction row = icon/name/state badge/distance/pop/blurb/
+offer-or-raid detail/rep bar + buttons JUMP (center camera, jump-only) · GIFT · ALLIANCE (greyed
+until rep≥30) · PEACE · DEMAND (dispatch the President). Active-mission banner. factionVals() spread
+into renderVals. Verified board renders across hostile/neutral/allied/conquered + active mission.
+DOCTRINE HELD: no core timers (marches/parley walks are the clocks); President embodied-only (board
+is jump-only, actions dispatch him physically); polynomial-friendly; sim stays 2D. STILL QUEUED
+(follow-ups, non-blocking): physical ally supply-caravan (reuse M1.3 convoy) vs the current abstract
+delivery; ranged raider fire + faction VEHICLES in raid parties (currently infantry-model raiders);
+node-ownership territory VISUAL; faction military-aid during your sieges; roaming trader groups
+(BOTH covered by bases; roamers deferred); balance pass on raid cadence + siege TTK + ally yields.
+SHIP (H): GAME_VER 0.4.0; Electron payload mirror updated, repo red-team fixes applied
+(`raidCd` persistence + load-schema hardening), and source/staged smokes passed. v7 is an
+intentional fresh-save break because world coordinates changed.

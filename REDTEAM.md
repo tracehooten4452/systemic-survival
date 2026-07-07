@@ -30,6 +30,30 @@ with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
 
 ## CLEARED AUDIT HISTORY
 
+- 2026-07-06: v0.4.0 factions + political layer, SAVE KEY BUMP v6 -> v7.
+  Drop-kit zip SHA-256
+  `5A96801AD14E17B42B43F2952C01C42A614DC73DF16C499FCFC12FDBCAC6279A`;
+  final payload SHA-256
+  `39AE3C1C8D630A9E1B0B38373E8D896C69A6FB928A6F0E546BD045259BD89405`;
+  signed manifest SHA-256
+  `DC3F2D62B86207ACCDD072737D62B1FF31EB1AE0C361D93A5364309121F22428`;
+  portable exe SHA-256
+  `3F863CD1DFC1D6B34ED86B9A759A62A81B118781C3CD87CC61EF4BAD3E02D018`.
+  Verdict: green after the north-star factions package landed 8 rival bases, embodied
+  diplomacy, hostile raids, ally production satellites, conquest, minimap/board UI, and the
+  48000 x 27000 world with TS 160 preserving the 50,400-tile flow-field budget. Save key moved
+  to `ss_outpost_v7`; old v6 colonies intentionally restart because coordinates changed.
+  Codex repo-side fixes: `raidCd` now persists and reloads instead of randomizing every boot,
+  loaded faction arrays must contain all 8 valid ids/keys or they reseed, and bad diplomacy
+  intents are rejected on load and by `setDiplo`.
+  Checks: kit SHA verification, `npm run validate:payload`, custom Electron v0.4.0 probe
+  (v6 ignored, corrupt v7 faction array reseeds, bad diplo rejected, `raidCd` save/reload,
+  alliance gate, ally food cap, capped shootable raids, conquest cleanup, `blockedRequests: []`),
+  source smoke, staged-payload smoke, `npm run pack:win`, unpacked and portable smokes, perf
+  probe with 200 walkers + 9 raiders (`updateFactions` p95 ~0.1ms; full update avg ~0.59ms),
+  four-way payload hash parity, `npm run release:assets`, and manifest SHA/signature
+  verification. Follow-up release notes must say `v0.4.0` is a fresh-save world reset and
+  requires a 0.3.7+ launcher to auto-stage.
 - 2026-07-06: v0.3.7 launch gate readability/logging repair and updater self-swap fix.
   Drop-kit launch HTML SHA-256
   `EA59379E25841FB35F0454E84408501BEF92D87F445831421A44ABCEEAA43FE6`;

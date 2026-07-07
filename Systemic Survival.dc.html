@@ -106,6 +106,10 @@
         <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:2px;color:#4f9b94">⛨ GEAR</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;color:{{ gearBtnSubColor }};line-height:1.2">{{ gearBtnSub }}</div>
       </button>
+      <button onClick="{{ toggleFactions }}" title="FACTIONS — 8 rival powers: reputation, raids, alliances. Diplomacy is EMBODIED — the President walks to a base to parley." style="display:flex;flex-direction:column;justify-content:center;gap:1px;padding:0 10px;height:34px;text-align:left;flex:none;border:1px solid {{ facBtnBorder }};background:rgba(10,16,18,.5);cursor:pointer">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:2px;color:#4f9b94">⚑ FACTIONS</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;color:{{ facBtnColor }};line-height:1.2">{{ facBtnSub }}</div>
+      </button>
     </div>
 
     <div style="flex:1"></div>
@@ -704,6 +708,58 @@
       </div>
     </sc-if>
 
+    <sc-if value="{{ factionsOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:rgba(4,8,10,.8);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:8" onClick="{{ toggleFactions }}">
+        <div onClick="{{ stopClick }}" style="width:880px;max-width:calc(100% - 40px);max-height:calc(100% - 56px);overflow:auto;background:linear-gradient(180deg,rgba(10,16,18,.97),rgba(7,11,13,.95));border:1px solid rgba(54,224,207,.35);box-shadow:0 20px 60px rgba(0,0,0,.6)">
+          <div style="padding:11px 14px;border-bottom:1px solid rgba(54,224,207,.2);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:rgba(9,14,16,.98);z-index:2">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:15px;color:#36e0cf">⚑</span>
+              <span style="font-size:14px;font-weight:700;letter-spacing:2px;color:#eafffb">FACTIONS &amp; DIPLOMACY</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#4f9b94">DIPLOMACY IS EMBODIED — THE PRESIDENT WALKS TO PARLEY</span>
+              <button onClick="{{ toggleFactions }}" style="border:1px solid rgba(255,93,108,.3);background:rgba(255,93,108,.06);color:#ff8a93;font-size:11px;width:24px;height:22px;line-height:1">✕</button>
+            </div>
+          </div>
+          <sc-if value="{{ diploActive }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:7px 14px;background:rgba(255,213,107,.08);border-bottom:1px solid rgba(255,213,107,.22);font-family:'IBM Plex Mono',monospace;font-size:9px;color:#ffd56b">⌘ {{ diploStatus }}</div>
+          </sc-if>
+          <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ factionRows }}" as="fr" hint-placeholder-count="8">
+              <div style="{{ fr.rowStyle }}">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-size:18px;color:{{ fr.col }};width:22px;text-align:center;flex:none">{{ fr.icon }}</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+                      <span style="font-size:12px;font-weight:700;letter-spacing:1px;color:#eafffb">{{ fr.name }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;letter-spacing:1px;padding:1px 6px;border:1px solid {{ fr.stateCol }};color:{{ fr.stateCol }}">{{ fr.stateLabel }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#6f817c">{{ fr.dist }} · POP {{ fr.pop }}</span>
+                    </div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#8fb3c9;margin-top:2px">{{ fr.blurb }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:{{ fr.offerCol }};margin-top:2px">{{ fr.detail }}</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+                  <div style="flex:1;height:6px;background:rgba(0,0,0,.4);border:1px solid rgba(143,179,201,.2);position:relative">
+                    <div style="position:absolute;left:50%;top:-1px;width:1px;height:8px;background:rgba(255,255,255,.4)"></div>
+                    <div style="height:100%;background:{{ fr.stateCol }};width:{{ fr.repPct }}%"></div>
+                  </div>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:{{ fr.stateCol }};min-width:56px;text-align:right">REP {{ fr.rep }}</span>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap">
+                  <button onClick="{{ fr.jump }}" style="{{ fr.jumpStyle }}">▸ JUMP</button>
+                  <button onClick="{{ fr.gift }}" style="{{ fr.giftStyle }}">⌘ GIFT</button>
+                  <button onClick="{{ fr.ally }}" style="{{ fr.allyStyle }}">⌘ ALLIANCE</button>
+                  <button onClick="{{ fr.peace }}" style="{{ fr.peaceStyle }}">⌘ PEACE</button>
+                  <button onClick="{{ fr.demand }}" style="{{ fr.demandStyle }}">⌘ DEMAND</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
     <sc-if value="{{ ledgerOpen }}" hint-placeholder-val="{{ false }}">
       <div style="position:absolute;inset:0;background:rgba(4,8,10,.8);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:8" onClick="{{ toggleLedger }}">
         <div onClick="{{ stopClick }}" style="width:790px;max-width:calc(100% - 40px);background:linear-gradient(180deg,rgba(10,16,18,.97),rgba(7,11,13,.95));border:1px solid rgba(54,224,207,.35);box-shadow:0 0 40px rgba(54,224,207,.14)">
@@ -1100,7 +1156,7 @@ class Component extends DCLogic {
   // ---------------------------------------------------------------- init
   init() {
     if (this._zg) this._zg.clear();   // drop stale spatial buckets from a previous run
-    this.AW = 24000; this.AH = 13500; this.SAVE = 'ss_outpost_v6';   // massive open world; tile COUNT held ~constant (TS scaled) so flow-field cost is unchanged
+    this.AW = 48000; this.AH = 27000; this.SAVE = 'ss_outpost_v7';   // FACTIONS map: 2× linear — corner≈center is 27,540px ≈ 10min on foot to a rival base. tile COUNT held constant (TS 80→160) so flow-field cost is unchanged. v7: coords changed
     this.WSIZES = [250, 1000, 2500, 5000, 7500];      // warehouse capacity tiers
     this.STORABLE = ['raw', 'materials', 'alloy', 'food', 'wool', 'clothing', 'milk', 'meat', 'dairy', 'ammo'];    // resources that obey storage caps (more added as they're coded in)
     this.RESBASE = { raw: 400, materials: 1000, alloy: 200, food: 200, wool: 100, clothing: 120, milk: 100, meat: 120, dairy: 120, ammo: 150 };    // base cap held at HQ before any warehouse
@@ -1139,6 +1195,20 @@ class Component extends DCLogic {
     this.BLDS_MAX = 24;
     this.HOME_TIERS = [{ cap: 2, name: 'TENTS' }, { cap: 3, name: 'CABINS' }, { cap: 5, name: 'BARRACKS' }, { cap: 8, name: 'APARTMENTS' }];   // homes house pop; 4 tiers
     this.HOMES_MAX = 30;
+    // ============================================================ FACTIONS — 8 doctrinal rival groups (north-star build)
+    // Each rings the outer map (fx/fy = fraction of AW/AH); corners ≈8-9min on foot, N/S edges ≈4.5min (the close neighbors).
+    // col = base palette · str = military weight · aggr = raid appetite · offer = what an ALLY satellite feeds you.
+    this.FACTIONS = [
+      { key: 'nuclear', name: 'ATOM COVENANT', icon: '☢', col: '#b6e34a', col2: '#eef4b0', fx: 0.05, fy: 0.06, pop: 14, str: 8, aggr: 0.70, offer: 'alloy', blurb: 'Reactor zealots who irradiate the earth and worship the glow.', raid: 'irradiated heavies + dirty bombs' },
+      { key: 'meridian', name: 'MERIDIAN GRID', icon: '◈', col: '#4fd8e8', col2: '#e0f7fb', fx: 0.95, fy: 0.06, pop: 11, str: 7, aggr: 0.40, offer: 'tech', blurb: 'Solar technocrats — lasers, drones, and cold logic.', raid: 'laser infantry + drones' },
+      { key: 'ash', name: 'ASH COLUMN', icon: '▲', col: '#8a9a52', col2: '#cad49c', fx: 0.50, fy: 0.05, pop: 9, str: 5, aggr: 0.55, offer: 'intel', blurb: 'Guerrillas in the treeline; they see you first.', raid: 'hit-and-run ambushers' },
+      { key: 'ironclad', name: 'IRONCLAD LEGION', icon: '⬢', col: '#d0904e', col2: '#f2c790', fx: 0.96, fy: 0.50, pop: 10, str: 9, aggr: 0.60, offer: 'military', blurb: 'Exosuit foundry — cyborgs and walking steel.', raid: 'exosuits + cyborg heavies' },
+      { key: 'changed', name: 'THE CHANGED', icon: '✷', col: '#c05a9a', col2: '#f0a8d0', fx: 0.95, fy: 0.94, pop: 18, str: 6, aggr: 0.75, offer: 'pop', blurb: 'Mutants who embraced the plague — they breed and they hunger.', raid: 'mutant swarms' },
+      { key: 'bulwark', name: 'IRON BULWARK', icon: '♜', col: '#bd9552', col2: '#e8ce8c', fx: 0.50, fy: 0.95, pop: 13, str: 6, aggr: 0.35, offer: 'food', blurb: 'Medieval holdouts — stone walls, steel, and honor.', raid: 'men-at-arms + siege engines' },
+      { key: 'deluge', name: 'THE DELUGE', icon: '≈', col: '#4a90d8', col2: '#aed2f2', fx: 0.05, fy: 0.94, pop: 10, str: 6, aggr: 0.45, offer: 'trade', blurb: 'Hydro-engineers — pressure cannons and deep moats.', raid: 'water-cannon technicals' },
+      { key: 'rust', name: 'RUST KINGS', icon: '⚙', col: '#c87a3a', col2: '#f0b070', fx: 0.04, fy: 0.50, pop: 12, str: 5, aggr: 0.65, offer: 'scrap', blurb: 'Scrapyard warlords — anything is a weapon thrown hard enough.', raid: 'improvised bombs + technicals' },
+    ];
+    this.REPHOSTILE = -30; this.REPALLIED = 55;   // relationship thresholds (blend: emergent rep + explicit offers)
     const diff = this.props.difficulty || 'Standard';
     this.dmul = diff === 'Calm' ? 0.72 : diff === 'Brutal' ? 1.5 : 1;
     this.CLASSES = {
@@ -1235,6 +1305,7 @@ class Component extends DCLogic {
     this.spawnUnit('operator');
     this.spawnUnit('gatherer');
     if (!this._wipe) this.loadSave();
+    if (!this.S.factions || !this.S.factions.length) this.seedFactions();   // FACTIONS exist before genMap so it can clear their compounds
     this.genMap();
     this.unstick();
     if (!this.S.homes || this.S.homes.length === 0) this.seedHomes();
@@ -1270,6 +1341,8 @@ class Component extends DCLogic {
         groups: S.groups || {}, heat: !!S.heat, dashFilter: S.dashFilter || 'all', dashOpen: S.dashOpen !== false, panels: S.panels || { barracks: true, research: true, perimeter: true }, attackSquad: S.attackSquad || { ids: [], mode: 'idle' }, zoom: this.zoom || 0.82, padTiers: S.padTiers || {}, effBest: S.effBest || null, lockdown: !!S.lockdown, lockAuto: S.lockAuto !== false,
         exped: S.exped ? { state: S.exped.state, ids: S.exped.ids, crates: S.exped.crates, tier: S.exped.tier, name: S.exped.name, wagon: S.exped.wagon ? { x: Math.round(S.exped.wagon.x), y: Math.round(S.exped.wagon.y), hp: Math.round(S.exped.wagon.hp) } : null } : null,
         prez: S.prez ? { on: !!S.prez.on, floor: S.prez.floor || 0, bud: S.prez.bud || { defense: 2, economy: 2, hiring: 1 } } : null,
+        factions: (S.factions || []).map(f => ({ id: f.id, key: f.key, x: Math.round(f.x), y: Math.round(f.y), hp: Math.round(f.hp), maxhp: f.maxhp, rep: Math.round(f.rep), pop: Math.round(f.pop), str: f.str, alive: f.alive !== false, pact: f.pact || null, claims: (f.claims || []).slice(0, 12), raidCd: Math.max(0, Math.min(999, isFinite(+f.raidCd) ? +f.raidCd : 0)) })),
+        diplo: S.diplo ? { id: S.diplo.id, intent: S.diplo.intent } : null,
         vol: S.vol ? { m: +S.vol.m || 0 } : null,
         set: S.set || null,
         tut: S.tut ? { i: S.tut.i | 0, done: !!S.tut.done } : null,
@@ -1330,6 +1403,11 @@ class Component extends DCLogic {
         S.prez = { on: !!d.prez.on, floor: Math.max(0, Math.min(3000, Math.floor(+d.prez.floor) || 0)), bud: { defense: bv(db.defense, 2), economy: bv(db.economy, 2), hiring: bv(db.hiring, 1), support: bv(db.support, 2) }, orders: 0 };
         if (S.prez.on && S.hero) S.hero.patrol = true;   // the President always defends when hostiles close in
       }
+      const lf = Array.isArray(d.factions) ? d.factions.filter(f => { const id = f && (f.id | 0); return f && id === +f.id && this.FACTIONS[id] && this.FACTIONS[id].key === f.key; }).map(f => { const id = f.id | 0, def = this.FACTIONS[id], mh = 600 + def.str * 60; return { id, key: f.key, x: +f.x || Math.round(this.AW * def.fx), y: +f.y || Math.round(this.AH * def.fy), hp: Math.max(0, +f.hp || 0), maxhp: +f.maxhp || mh, rep: Math.max(-100, Math.min(100, +f.rep || 0)), pop: Math.max(0, Math.min(999, +f.pop || 0)), str: +f.str || def.str, alive: f.alive !== false, pact: (f.pact === 'ally' || f.pact === 'war') ? f.pact : null, claims: Array.isArray(f.claims) ? f.claims.slice(0, 12) : [], raidCd: isFinite(+f.raidCd) ? Math.max(0, Math.min(999, +f.raidCd)) : 45 + Math.random() * 60 }; }) : null;
+      const lfIds = lf ? new Set(lf.map(f => f.id)) : null;
+      S.factions = (lf && lf.length === this.FACTIONS.length && lfIds.size === this.FACTIONS.length) ? lf.sort((a, b) => a.id - b.id) : null;
+      if (d.diplo && typeof d.diplo === 'object') { const di = d.diplo.id | 0, intents = ['gift', 'alliance', 'peace', 'demand']; S.diplo = (di === +d.diplo.id && this.FACTIONS[di] && intents.includes(d.diplo.intent)) ? { id: di, intent: d.diplo.intent } : null; }
+      else S.diplo = null;
       S.exped = null;
       if (d.exped && Array.isArray(d.exped.ids) && d.exped.ids.length && d.exped.wagon) {
         S.exped = { state: 'return', si: -1, sx: null, sy: null, ids: d.exped.ids.slice(0, 24), crates: Array.isArray(d.exped.crates) ? d.exped.crates.slice(0, 40) : [], tier: [1, 2, 3].includes(d.exped.tier) ? d.exped.tier : 1, name: String(d.exped.name || 'THE SITE').slice(0, 28), wagon: { x: +d.exped.wagon.x || this.hq.x, y: +d.exped.wagon.y || this.hq.y, hp: Math.max(60, Math.min(420, +d.exped.wagon.hp || 420)), maxhp: 420 } };
@@ -1471,6 +1549,7 @@ class Component extends DCLogic {
   updateHero(dt) {
     const h = this.S.hero; if (!h) return;
     const st = this.heroStat(); h.maxhp = st.maxhp; if (h.hp > h.maxhp) h.hp = h.maxhp;
+    if (this.updateDiplo(h, dt, st)) return;   // FACTIONS — embodied parley travel (yields to WASD/breach/lockdown)
     if (h.muzzle > 0) h.muzzle -= dt;
     if (h.mcd == null) h.mcd = 0; if (h.mcd > 0) h.mcd -= dt;
     if (h.down) { h.reviveT -= dt; if (h.reviveT <= 0) { h.down = false; h.hp = h.maxhp; h.x = this.hq.x; h.y = this.hq.y - 70; } return; }
@@ -1674,6 +1753,157 @@ class Component extends DCLogic {
   spendMat(n) { if (this.S.materials >= n) { this.S.materials -= n; return true; } return false; }
   hireGatCost() { return Math.floor(14 * Math.pow(1.5, this.S.units.filter(u => u.role === 'gatherer').length) * this.hireDisc()); }
   rebuildNodes() { const n = Math.min(this.nodePool.length, 3 + (this.S.sector - 1)); this.resNodes = this.nodePool.slice(0, n).map(p => ({ x: p.x, y: p.y, r: p.r })); }
+  // ---- FACTIONS helpers ----
+  facDef(f) { return this.FACTIONS[f.id] || this.FACTIONS[0]; }
+  facState(f) { if (!f || f.alive === false) return 'gone'; if (f.pact === 'ally') return 'allied'; if (f.pact === 'war') return 'hostile'; return f.rep <= this.REPHOSTILE ? 'hostile' : f.rep >= this.REPALLIED ? 'allied' : 'neutral'; }
+  facStateCol(f) { const s = this.facState(f); return s === 'hostile' ? '#ff5d6c' : s === 'allied' ? '#7ef0a6' : s === 'gone' ? '#6b7a80' : '#ffd56b'; }
+  liveFactions() { return (this.S.factions || []).filter(f => f.alive !== false); }
+  // ---- FACTIONS political layer (Slice C): rep is the emergent informal layer; a formal PACT (ally/war) is sticky ----
+  factionRep(id, delta) {
+    const f = (this.S.factions || []).find(x => x.id === id); if (!f || f.alive === false || !delta) return 0;
+    const before = f.rep; f.rep = Math.max(-100, Math.min(100, f.rep + delta));
+    const ns = this.facState(f);
+    if (f._lastState !== undefined && f._lastState !== ns) this.onFactionStateChange(f, f._lastState, ns);
+    f._lastState = ns; return f.rep - before;
+  }
+  onFactionStateChange(f, from, to) {
+    if (to === 'gone') return;   // conquest announces itself (conquerFaction); no state-change toast
+    const def = this.facDef(f);
+    const msg = to === 'hostile' ? '⚔ ' + def.name + ' TURNS HOSTILE' : to === 'allied' ? '✦ ' + def.name + ' — ALLIANCE FORGED' : (from === 'hostile' ? '◈ ' + def.name + ' STANDS DOWN — NEUTRAL' : '◈ ' + def.name + ' — NEUTRAL');
+    this.milestone(msg); this.ping(f.x, f.y, this.facStateCol(f));
+    if (to === 'hostile' && !f.pact) f.raidCd = Math.min(f.raidCd || 1e9, 30 + Math.random() * 30);   // freshly hostile: a raid is coming
+  }
+  factionEncroach() {   // ADVANCE THE FRONT pushes into faction turf — the nearest bristle (aggressive ones most)
+    const live = this.liveFactions().slice().sort((a, b) => Math.hypot(a.x - this.hq.x, a.y - this.hq.y) - Math.hypot(b.x - this.hq.x, b.y - this.hq.y));
+    let any = false;
+    for (let i = 0; i < live.length; i++) { const f = live[i]; if (f.pact === 'ally') continue; const base = i < 2 ? 16 : i < 4 ? 8 : 3; if (this.factionRep(f.id, -base * this.facDef(f).aggr)) any = true; }
+    if (any) this.milestone('⚠ THE FRONT ADVANCES — NEIGHBORING FACTIONS TAKE NOTE');
+  }
+  // ---- FACTIONS diplomacy (Slice C2): the President physically travels to a base and parleys — the walk IS the timer ----
+  setDiplo = (id, intent) => {
+    const S = this.S; const f = (S.factions || []).find(x => x.id === id);
+    if (!['gift', 'alliance', 'peace', 'demand'].includes(intent)) return;
+    if (!f || f.alive === false) return;
+    if (S.diplo && S.diplo.id === id && S.diplo.intent === intent) { S.diplo = null; this.milestone('⌘ DIPLOMATIC MISSION RECALLED'); this.forceUpdate(); return; }
+    S.diplo = { id, intent }; this._diploField = null; this._dfTile = null; this._diploStuck = 0;
+    const def = this.facDef(f), lbl = intent === 'gift' ? 'BEARING GIFTS' : intent === 'alliance' ? 'TO PROPOSE ALLIANCE' : intent === 'peace' ? 'TO SUE FOR PEACE' : 'TO MAKE DEMANDS';
+    this.milestone('⌘ THE PRESIDENT SETS OUT FOR ' + def.name + ' — ' + lbl); this.ping(f.x, f.y, this.facStateCol(f)); this.forceUpdate();
+  };
+  parleyCost(intent) { return intent === 'alliance' ? { s: 80, m: 60 } : intent === 'gift' ? { s: 40, m: 30 } : intent === 'peace' ? { s: 30, m: 20 } : { s: 0, m: 0 }; }
+  resolveParley(f, intent) {
+    const S = this.S, def = this.facDef(f), c = this.parleyCost(intent);
+    const say = (t, col) => { S.floats.push({ x: f.x, y: f.y - 22, text: t, color: col || '#e8f4f2', life: 2.2, t: 0 }); this.milestone(t); };
+    if (intent === 'alliance' && f.rep < 30 && f.pact !== 'ally') { say('⌘ ' + def.name + ' REFUSES — EARN THEIR TRUST FIRST', '#ffb454'); }
+    else if ((c.s && S.scrap < c.s) || (c.m && S.materials < c.m)) { say('⌘ NOT ENOUGH TO OFFER — NEED ' + c.s + ' SCR + ' + c.m + ' MAT', '#ffb454'); }
+    else if (intent === 'gift') { S.scrap -= c.s; S.materials -= c.m; this.factionRep(f.id, 22); say('⌘ ' + def.name + ' ACCEPTS THE GIFT', '#7ef0a6'); }
+    else if (intent === 'alliance') { S.scrap -= c.s; S.materials -= c.m; f.pact = 'ally'; f.rep = Math.max(f.rep, this.REPALLIED); say('✦ ' + def.name + ' — ALLIANCE FORGED', '#7ef0a6'); }
+    else if (intent === 'peace') { S.scrap -= c.s; S.materials -= c.m; f.pact = null; if (f.rep < -8) f.rep = -8; this.factionRep(f.id, 14); say('◈ ' + def.name + ' — CEASEFIRE', '#ffd56b'); }
+    else if (intent === 'demand') { const gain = Math.round(50 + f.pop * 3); S.scrap += gain; S.totalEarned += gain; f.pact = null; this.factionRep(f.id, -26); say('⌘ EXTORTED ' + gain + ' SCRAP FROM ' + def.name, '#ff5d6c'); }
+    f._lastState = this.facState(f); this.ping(f.x, f.y, this.facStateCol(f));
+  }
+  updateDiplo(h, dt, st) {
+    const S = this.S, dp = S.diplo; if (!dp) return false;
+    const f = (S.factions || []).find(x => x.id === dp.id);
+    if (!f || f.alive === false) { S.diplo = null; return false; }
+    const kk = this._keys || {}; if (kk.w || kk.a || kk.s || kk.d) { this._diploManT = 3; return false; }
+    if ((this._diploManT || 0) > 0) { this._diploManT -= dt; return false; }
+    if (S.lockdown) return false;
+    const wallR = (this.ringR || 4) * this.TS; let breach = false;
+    this.zNear(this.hq.x, this.hq.y, wallR + 240, (z) => { if (!breach && Math.max(Math.abs(z.x - this.hq.x), Math.abs(z.y - this.hq.y)) < wallR + 240) breach = true; });
+    if (breach) return false;   // defend home before diplomacy
+    h.seated = false; h.hp = Math.min(h.maxhp, h.hp + dt * 10);
+    const d = Math.hypot(f.x - h.x, f.y - h.y);
+    if (d <= 72) { this.resolveParley(f, dp.intent); S.diplo = null; this._diploField = null; this._dfTile = null; return true; }
+    const tc = this.tileOf(f.x, f.y);
+    if (!this._diploField || !this._dfTile || this._dfTile.c !== tc.c || this._dfTile.r !== tc.r) { this._dfTile = tc; this._diploField = this.field(tc); }
+    const ox = h.x, oy = h.y, mspd = Math.max(56, 168 - (h._slowV || 0)); this.fieldMove(h, this._diploField, mspd, dt, false, f.x, f.y);
+    if (Math.abs(h.x - ox) + Math.abs(h.y - oy) < 0.3) { this._diploStuck = (this._diploStuck || 0) + dt; if (this._diploStuck > 4) { this.unstickLocal(h); this._diploStuck = 0; } } else this._diploStuck = 0;
+    return true;
+  }
+  // ---- FACTIONS conquest (Slice F): crush a base with an embodied army → annex survivors + spoils + free its territory ----
+  conquerFaction(f) {
+    const S = this.S, def = this.facDef(f);
+    f.alive = false; f.hp = 0; f.pact = null; f._assaultT = 0; f._lastState = 'gone';
+    const migr = Math.min(Math.round(f.pop * 0.5), Math.max(0, (this.popCap() || 0) - S.civs.length));
+    for (let i = 0; i < migr; i++) this.spawnCivilian();
+    const spoil = Math.round(120 + f.str * 40 + f.pop * 6); S.scrap += spoil; S.totalEarned += spoil;
+    const mat = Math.round(60 + f.str * 20); S.materials = Math.min(this.resCap('materials'), (S.materials || 0) + mat);
+    S.zombies = S.zombies.filter(z => !(z.raider && z.fac === f.id));   // their war dies with the base
+    this.milestone('☠ ' + def.name + ' CONQUERED — +' + migr + ' SETTLERS · +' + spoil + ' SCRAP · +' + mat + ' MAT'); this.ping(f.x, f.y, '#ffd56b');
+  }
+  // ---- FACTIONS allied (Slice E): an allied town grows itself, then SENDS production resources + settlers to HQ (the road is the clock) ----
+  allyGiveInterval(f) { return 45 + Math.hypot(f.x - this.hq.x, f.y - this.hq.y) / 120; }   // farther allies deliver less often — distance matters
+  allyDeliver(f) {
+    const S = this.S, def = this.facDef(f);
+    const OFR = { alloy: 'alloy', tech: 'alloy', food: 'food', scrap: 'scrap', trade: 'materials', military: 'ammo', intel: 'scrap', pop: 'food' };
+    const res = OFR[def.offer] || 'scrap';
+    let gain = Math.round(4 + f.pop * 0.35 + f.str), txt;
+    if (res === 'scrap') { S.scrap += gain; S.totalEarned += gain; txt = '+' + gain + ' SCRAP'; }
+    else { const cap = this.resCap(res), before = S[res] || 0; S[res] = Math.min(cap, before + gain); gain = Math.round(S[res] - before); txt = '+' + gain + ' ' + this.resName(res).toUpperCase(); }
+    let settler = false;
+    if ((def.offer === 'pop' ? Math.random() < 0.7 : Math.random() < 0.3) && S.civs.length < (this.popCap() || 0)) { this.spawnCivilian(); settler = true; }
+    S.floats.push({ x: this.hq.x, y: this.hq.y - 30, text: '⚑ ' + def.name + ' → ' + txt + (settler ? ' + 1 SETTLER' : ''), color: '#7ef0a6', life: 2.4, t: 0 });
+    this.ping(this.hq.x, this.hq.y, '#7ef0a6');
+  }
+  // ---- FACTIONS hostile (Slice D): raid parties are faction-colored armed 'zombies' — they inherit bullets/turrets/physics/ragdoll ----
+  spawnRaid(f) {
+    const S = this.S, def = this.facDef(f);
+    if (S.zombies.filter(z => z.raider && z.fac === f.id).length > 4) { f.raidCd = 40 + Math.random() * 40; return; }   // one wave out at a time (medium stakes)
+    const n = 4 + Math.round(f.str * 0.6 + (S.sector || 1) * 0.4), thr = S.threat || 1;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.283, rr = 40 + Math.random() * 120;
+      const x = Math.max(20, Math.min(this.AW - 20, f.x + Math.cos(a) * rr)), y = Math.max(20, Math.min(this.AH - 20, f.y + Math.sin(a) * rr));
+      const hp = (55 + f.str * 12) * (1 + thr * 0.06) * this.dmul;
+      S.zombies.push({ id: S.nextId++, x, y, hp, maxhp: hp, spd: 38 + f.str * 1.5, dmg: (9 + f.str * 1.4) * (1 + thr * 0.1) * this.dmul, reward: 6 + f.str, cd: Math.random() * 0.7, wob: Math.random() * 6.28, st: 2, herd: -1, hd: 0, scanT: 0, raider: true, fac: f.id, col: def.col });
+    }
+    this.milestone('⚔ ' + def.name + ' RAID — ' + n + ' HOSTILES MARCH ON THE WALL'); this.ping(f.x, f.y, '#ff5d6c'); if (this.sndRadio) this.sndRadio('alert');
+    f.raidCd = 110 + Math.random() * 120 + f.str * 8;   // next wave — the long march across the map IS the cooldown
+  }
+  updateRaider(z, spd, dt) {
+    const hq = this.hq, dHQ = Math.hypot(hq.x - z.x, hq.y - z.y);
+    if (dHQ <= hq.r + 24) { z.cd -= dt; if (z.cd <= 0) { z.cd = 0.7; hq.hp -= z.dmg; } z.wob += dt * 3; return; }   // at the HQ: assault it
+    let dx = hq.x - z.x, dy = hq.y - z.y;
+    const dir = this.flowHQ ? this.dirField(this.flowHQ, z.x, z.y) : null; if (dir) { dx = dir.x; dy = dir.y; }
+    z.wob += dt * 3; const lurch = 1 + 0.1 * Math.sin(z.wob * 4);
+    this.zNav(z, dx, dy, spd * lurch, dt, true);   // claw through gates/barricades on the way in
+  }
+  updateFactions(dt) {
+    const S = this.S; if (!S.factions || !S.factions.length) return;
+    for (const f of S.factions) { if (f.alive === false) continue; if (f.hp < f.maxhp) f.hp = Math.min(f.maxhp, f.hp + dt * 2); }   // towns slowly repair
+    this._facT = (this._facT || 0) + dt; if (this._facT < 1.5) return; this._facT = 0;
+    for (const f of S.factions) {
+      if (f.alive === false) continue;
+      const def = this.facDef(f), st = this.facState(f);
+      if (f._lastState === undefined) f._lastState = st;
+      // ABSTRACTED off-screen survival sim (they defend lightly; the zombie world nibbles): pop drifts to a doctrine target
+      const target = def.pop * (st === 'allied' ? 1.9 : st === 'hostile' ? 0.85 : 1.25);
+      const growth = st === 'allied' ? 0.16 : 0.09;
+      f.pop += (target - f.pop) * growth * 0.14 + (Math.random() - 0.53) * 0.14;
+      f.pop = Math.max(0, Math.min(999, f.pop));
+      if (!f.pact && Math.abs(f.rep) > 0.4) f.rep += (f.rep > 0 ? -1 : 1) * 0.06;   // informal rep fades toward neutral; pacts don't
+      if (st === 'hostile' && f.pop > 2) { f.raidCd = (f.raidCd || 90) - 1.5; if (f.raidCd <= 0) this.spawnRaid(f); } else if ((f.raidCd || 0) < 40) f.raidCd = 60 + Math.random() * 40;   // hostile towns muster raids; the MARCH is the timer
+      if (st === 'allied') { f._giveT = (f._giveT == null ? this.allyGiveInterval(f) : f._giveT) - 1.5; if (f._giveT <= 0) { this.allyDeliver(f); f._giveT = this.allyGiveInterval(f); } }   // allied town feeds the colony
+      // PLAYER ASSAULT (Slice F): an embodied army parked at a non-allied base sieges it; the base defends back
+      if (st !== 'allied' && f.alive !== false) {
+        let fp = 0; const atk = [], h = S.hero;
+        if (h && !h.down && Math.hypot(h.x - f.x, h.y - f.y) < 300) { const hs = this.heroStat(); fp += (hs.dmg || 10) * (hs.rof || 1.5); atk.push(h); }
+        for (const u of S.units) { if (u.dead || u.role === 'gatherer' || u.role === 'runner' || u.role === 'technician') continue; if (Math.hypot(u.x - f.x, u.y - f.y) < 300) { const us = this.stat(u); fp += (us.dmg || 0) * (us.rof || 1); atk.push(u); } }
+        if (fp > 0) {
+          f.hp -= fp * 0.9; if (st === 'neutral') this.factionRep(f.id, -12);   // hitting a neutral base is an act of war
+          const back = 6 + f.str * 2;
+          for (const a of atk) { if (Math.random() < 0.45) { a.hp -= back; if (a.hp <= 0) { if (a === h) { h.down = true; h.reviveT = 5; } else { a.dead = true; a.reviveT = a.squad ? 4 : 7; } } } }
+          if (f.hp <= 0) this.conquerFaction(f);
+          else if (!f._assaultT || (S.tick - f._assaultT) > 6) { f._assaultT = S.tick; this.milestone('⚔ ASSAULTING ' + this.facDef(f).name + ' — ' + Math.round(100 * f.hp / f.maxhp) + '%'); }
+        }
+      }
+      const ns = this.facState(f);
+      if (f._lastState !== ns) { this.onFactionStateChange(f, f._lastState, ns); f._lastState = ns; }
+    }
+  }
+  seedFactions() {
+    const S = this.S;
+    S.factions = this.FACTIONS.map((f, i) => { const mh = 600 + f.str * 60; return { id: i, key: f.key, x: Math.round(this.AW * f.fx), y: Math.round(this.AH * f.fy), hp: mh, maxhp: mh, rep: 0, pop: f.pop, str: f.str, alive: true, claims: [], raidCd: 60 + Math.random() * 90 }; });
+  }
 
   // ---------------------------------------------------------------- tower-defense map (random walls + flow-field paths)
   tileOf(x, y) { return { c: Math.max(0, Math.min(this.cols - 1, Math.floor(x / this.TS))), r: Math.max(0, Math.min(this.rows - 1, Math.floor(y / this.TS))) }; }
@@ -1770,7 +2000,7 @@ class Component extends DCLogic {
     const a = Math.atan2(tcy - y, tcx - x); return { x: Math.cos(a), y: Math.sin(a) };
   }
   genMap() {
-    const TS = this.TS = 80;
+    const TS = this.TS = 160;   // FACTIONS 2× map: TS scaled with AW/AH so tile count (300×168≈50,400) — and flow-field cost — is unchanged
     const cols = this.cols = Math.floor(this.AW / TS);
     const rows = this.rows = Math.floor(this.AH / TS);
     const g = this.wall = Array.from({ length: rows }, () => new Array(cols).fill(false));
@@ -1793,12 +2023,14 @@ class Component extends DCLogic {
     const hqc = this.tileOf(this.hq.x, this.hq.y); clear(hqc.c, hqc.r, 2);
     const bk = this.tileOf(this.bunker.x, this.bunker.y); clear(bk.c, bk.r, 1);
     for (const nd of this.resNodes) { const t = this.tileOf(nd.x, nd.y); clear(t.c, t.r, 1); }
+    for (const f of (this.S.factions || [])) { if (f.alive === false) continue; const t = this.tileOf(f.x, f.y); clear(t.c, t.r, 3); }   // FACTIONS: open a compound around each base
     // open the outer ring so enemies spawn & enter from every edge
     for (let c = 0; c < cols; c++) { g[0][c] = false; g[rows - 1][c] = false; }
     for (let r = 0; r < rows; r++) { g[r][0] = false; g[r][cols - 1] = false; }
     // first connectivity pass (maze only) — carve guaranteed routes BEFORE the ring
     const edgeMids = [{ c: (cols >> 1), r: 1 }, { c: (cols >> 1), r: rows - 2 }, { c: 1, r: (rows >> 1) }, { c: cols - 2, r: (rows >> 1) }];
-    const sources = this.resNodes.map(nd => this.tileOf(nd.x, nd.y)).concat(edgeMids);
+    const facSrc = (this.S.factions || []).filter(f => f.alive !== false).map(f => this.tileOf(f.x, f.y));   // FACTIONS stay reachable from HQ (carve if the maze seals a base off)
+    const sources = this.resNodes.map(nd => this.tileOf(nd.x, nd.y)).concat(edgeMids).concat(facSrc);
     for (const s of sources) { if (!this.reachable(s, hqc)) this.carve(s, hqc); }
     // snapshot the bare maze (pre-ring) so EXPANDING the wall regrows only the ring — never regenerates the environment
     this.baseWall = this.wall.map(row => row.slice());
@@ -1834,7 +2066,7 @@ class Component extends DCLogic {
     const hqc = this.tileOf(this.hq.x, this.hq.y);
     this.stampPerimeter();
     const edgeMids = [{ c: (this.cols >> 1), r: 1 }, { c: (this.cols >> 1), r: this.rows - 2 }, { c: 1, r: (this.rows >> 1) }, { c: this.cols - 2, r: (this.rows >> 1) }];
-    const sources = this.resNodes.map(nd => this.tileOf(nd.x, nd.y)).concat(edgeMids);
+    const sources = this.resNodes.map(nd => this.tileOf(nd.x, nd.y)).concat(edgeMids).concat((this.S.factions || []).filter(f => f.alive !== false).map(f => this.tileOf(f.x, f.y)));
     for (let pass = 0; pass < 3; pass++) { let ok = true; for (const s of sources) { if (!this.reachable(s, hqc)) { this.carve(s, hqc); ok = false; } } if (ok) break; }
     this.flowHQ = this.field(hqc);
     this.flowNode = this.resNodes.map(nd => this.field(this.tileOf(nd.x, nd.y)));
@@ -2492,6 +2724,39 @@ class Component extends DCLogic {
     if (this.sndRadio) this.sndRadio('prez');
   }
   toggleLedger = () => { this.S.ledgerOpen = !this.S.ledgerOpen; if (this.S.ledgerOpen) this._tutLed = true; this.forceUpdate(); };
+  toggleFactions = () => { this.S.factionsOpen = !this.S.factionsOpen; this.forceUpdate(); };
+  jumpFaction(id) { const f = (this.S.factions || []).find(x => x.id === id); if (!f) return; this._followMode = 'off'; this.cam.x = f.x; this.cam.y = f.y; this.S.factionsOpen = false; this.forceUpdate(); }   // JUMP-ONLY: center the base; act via diplomacy buttons / the President
+  factionVals() {
+    const S = this.S, facs = S.factions || [], live = facs.filter(f => f.alive !== false);
+    const nH = live.filter(f => this.facState(f) === 'hostile').length, nA = live.filter(f => this.facState(f) === 'allied').length;
+    const btn = (bg, bc, tc) => `padding:4px 9px;border:1px solid ${bc};background:${bg};color:${tc};font-family:'IBM Plex Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:.5px;cursor:pointer`;
+    const dis = `padding:4px 9px;border:1px solid rgba(120,130,135,.2);background:rgba(120,130,135,.04);color:#5a6a70;font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.5px`;
+    const dp = S.diplo, dpf = dp ? this.facDef((facs.find(x => x.id === dp.id) || facs[0])) : null;
+    const rows = facs.map(f => {
+      const def = this.facDef(f), st = this.facState(f), scol = this.facStateCol(f), dead = st === 'gone', canAlly = f.rep >= 30 || f.pact === 'ally';
+      return {
+        id: f.id, icon: def.icon, col: def.col, name: def.name, blurb: def.blurb,
+        stateLabel: dead ? 'CONQUERED' : st.toUpperCase(), stateCol: dead ? '#6b7a80' : scol,
+        rep: Math.round(f.rep), repPct: Math.max(0, Math.min(100, (f.rep + 100) / 2)), pop: Math.round(f.pop),
+        dist: dead ? '—' : Math.round(Math.hypot(f.x - this.hq.x, f.y - this.hq.y) / this.TS) + ' TILES',
+        detail: dead ? 'CONQUERED — a ruin now' : st === 'allied' ? ('ALLY — sends ' + (def.offer || '').toUpperCase() + ' + settlers') : st === 'hostile' ? ('HOSTILE — ' + def.raid) : ('NEUTRAL — would offer ' + (def.offer || '').toUpperCase()),
+        offerCol: st === 'allied' ? '#7ef0a6' : st === 'hostile' ? '#ff8a93' : '#c08a4f',
+        rowStyle: `padding:9px 11px;border:1px solid ${dead ? 'rgba(107,122,128,.2)' : this.hexA(def.col, 0.28)};background:${dead ? 'rgba(107,122,128,.04)' : this.hexA(def.col, 0.05)};opacity:${dead ? 0.55 : 1}`,
+        jump: () => this.jumpFaction(f.id), jumpStyle: btn('rgba(54,224,207,.08)', 'rgba(54,224,207,.4)', '#9be0d8'),
+        gift: dead ? (() => { }) : () => this.setDiplo(f.id, 'gift'), giftStyle: dead ? dis : btn('rgba(126,240,166,.06)', 'rgba(126,240,166,.35)', '#7ef0a6'),
+        ally: (dead || !canAlly) ? (() => { }) : () => this.setDiplo(f.id, 'alliance'), allyStyle: (dead || !canAlly) ? dis : btn('rgba(126,240,166,.06)', 'rgba(126,240,166,.4)', '#9df0be'),
+        peace: dead ? (() => { }) : () => this.setDiplo(f.id, 'peace'), peaceStyle: dead ? dis : btn('rgba(255,213,107,.06)', 'rgba(255,213,107,.35)', '#ffd56b'),
+        demand: dead ? (() => { }) : () => this.setDiplo(f.id, 'demand'), demandStyle: dead ? dis : btn('rgba(255,93,108,.06)', 'rgba(255,93,108,.35)', '#ff8a93'),
+      };
+    });
+    return {
+      factionsOpen: !!S.factionsOpen, toggleFactions: this.toggleFactions, factionRows: rows,
+      facBtnSub: nH ? nH + ' HOSTILE' : nA ? nA + ' ALLIED' : live.length + ' NEUTRAL',
+      facBtnColor: nH ? '#ff8a93' : nA ? '#7ef0a6' : '#ffd56b',
+      facBtnBorder: nH ? 'rgba(255,93,108,.4)' : nA ? 'rgba(126,240,166,.4)' : 'rgba(54,224,207,.3)',
+      diploActive: !!dp, diploStatus: (dp && dpf) ? ('EN ROUTE TO ' + dpf.name + ' — ' + dp.intent.toUpperCase()) : '',
+    };
+  }
   stopClick = (e) => e.stopPropagation();
   LEDGER_RES() { return ['raw', 'materials', 'alloy', 'food', 'wool', 'clothing', 'milk', 'meat', 'dairy', 'ammo', 'scrap']; }
   sampleFlows() {
@@ -2895,6 +3160,7 @@ class Component extends DCLogic {
     const S = this.S; if (!this.canAdvance()) return;
     this.spendMat(this.advanceCost());
     S.sector++; this.rebuildNodes(); this.genMap(); this.unstick(); this.ejectZombiesFromWalls();
+    this.factionEncroach();   // FACTIONS — expanding the front pushes into their turf
     S.threat = this.sectorBaseThreat(S.sector); S.ramp = 0; S.sectorKills = 0;
     this.hq.maxhp = 600 * this.fortMult(); this.hq.hp = this.hq.maxhp; // fortify reward
     S.spawnGap = Math.max(0.4, S.spawnGap * 0.94);
@@ -3444,7 +3710,7 @@ class Component extends DCLogic {
   };
   // ---- game version: baked payload tag; a STAGED auto-update payload (payload-vX.Y.Z.html) reports its
   // release tag instead, so the top-left always tells the truth about what's actually running.
-  GAME_VER = '0.3.6';
+  GAME_VER = '0.4.0';
   gameVer() {
     if (this._gv) return this._gv;
     let v = this.GAME_VER;
@@ -4612,6 +4878,26 @@ class Component extends DCLogic {
     if (k === 'stable') { for (const [fx, fy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) this.exTR(ctx, b.x + fx * (R + 6) - 1, b.y + fy * (R + 6) - 1, b.x + fx * (R + 6) + 1, b.y + fy * (R + 6) + 1, 0, 7, 'tex_wood', { flat: '#584735', grime: 0, lodPx: 30, lodSide: '#4a3e2f' }); }
     if (k === 'avionics') { this.mast(ctx, b.x, b.y, BH, 14, '#6b7a80'); }
   }
+  drawFactionBase(ctx, f, Z, C) {
+    const def = this.facDef(f), x = f.x, y = f.y, col = def.col, elw = Math.max(0.7, 1.2 * Z);
+    const eg = this.hexA(col, 0.42), dead = f.alive === false;
+    // compound platform
+    this.exTR(ctx, x - 42, y - 34, x + 42, y + 34, 0, 3, 'tex_concrete', { flat: dead ? '#37332e' : '#4a4a45', edge: eg, lw: elw, lodPx: 9 });
+    if (dead) { this.exTR(ctx, x - 11, y - 9, x + 9, y + 10, 0, 10, 'tex_rock', { flat: '#4a4640', edge: 'rgba(120,120,120,.2)', lw: elw, lodPx: 7 }); return; }   // conquered: rubble stub
+    const k = def.key, keepH = 30 + def.str * 2;
+    // satellite huts (the town around the keep, palette-tinted)
+    for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + f.id * 1.3; const sx = x + Math.cos(a) * 28, sy = y + Math.sin(a) * 21, sh = 7 + (i % 3) * 4; this.exTR(ctx, sx - 5, sy - 4, sx + 5, sy + 4, 0, sh, 'tex_metal', { flat: col, edge: eg, lw: elw, lodPx: 6 }); }
+    // central KEEP — doctrine massing
+    if (k === 'nuclear') { this.extrudeTexCirc(ctx, x, y, 15, 0, keepH, 'tex_concrete', { flat: '#5a6b3a', tint: this.hexA(col, .18), edge: col, lw: elw, lodPx: 8 }); this.extrudeTexCirc(ctx, x - 9, y + 5, 6, 0, keepH * 0.7, 'tex_concrete', { flat: '#5a6b3a', edge: col, lw: elw, lodPx: 6 }); }
+    else if (k === 'deluge') { this.extrudeTexCirc(ctx, x, y, 12, 0, keepH + 6, 'tex_metal', { flat: '#3a5a78', tint: this.hexA(col, .2), edge: col, lw: elw, lodPx: 8 }); }
+    else if (k === 'meridian') { const pts = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i; pts.push([x + Math.cos(a) * 15, y + Math.sin(a) * 12]); } this.extrudeTexPoly(ctx, pts, 0, keepH, 'tex_metal', { flat: '#2e5a66', tint: this.hexA(col, .22), edge: col, lw: elw, lodPx: 8 }); }
+    else if (k === 'bulwark') { this.exTR(ctx, x - 15, y - 12, x + 15, y + 12, 0, keepH, 'tex_rock', { flat: '#6b5a3e', edge: col, lw: elw, lodPx: 8 }); for (let i = -1; i <= 1; i++) this.exTR(ctx, x + i * 10 - 3, y - 12, x + i * 10 + 3, y - 8, keepH, keepH + 5, 'tex_rock', { flat: '#6b5a3e', edge: col, lw: elw, lodPx: 6 }); }
+    else if (k === 'ironclad') { this.exTR(ctx, x - 13, y - 11, x + 13, y + 11, 0, keepH + 8, 'tex_metal', { flat: '#5a4a3a', tint: this.hexA(col, .18), edge: col, lw: elw, lodPx: 8 }); this.mast(ctx, x + 10, y, keepH, 16, col); }
+    else if (k === 'changed') { this.extrudeTexCirc(ctx, x, y, 14, 0, keepH * 0.8, 'tex_rust', { flat: '#5a3a52', tint: this.hexA(col, .25), edge: col, lw: elw, lodPx: 8 }); this.extrudeTexCirc(ctx, x + 7, y - 5, 7, 0, keepH * 0.55, 'tex_rust', { flat: '#5a3a52', edge: col, lw: elw, lodPx: 6 }); }
+    else if (k === 'ash') { this.exTR(ctx, x - 12, y - 9, x + 12, y + 9, 0, keepH * 0.5, 'tex_tarp', { flat: '#4a5232', edge: eg, lw: elw, lodPx: 8 }); }
+    else { this.exTR(ctx, x - 13, y - 11, x + 13, y + 11, 0, keepH, 'tex_scrap', { flat: '#5a4636', tint: this.hexA(col, .18), edge: col, lw: elw, lodPx: 8 }); }
+    this.mast(ctx, x - 13, y + 9, keepH * 0.55, 12, col);   // faction banner
+  }
   drawHQ(ctx, hq, pts, Z, C) {
     const inner = pts.map(p => [hq.x + (p[0] - hq.x) * 0.62, hq.y + (p[1] - hq.y) * 0.62]);
     this.extrudeTexPoly(ctx, pts, 0, 32, 'tex_concrete', { flat: '#4c5a55', door: { w: 8, h: 13, frame: 'rgba(54,224,207,.45)' }, win: [{ u: 0.28, w: 5, f0: 0.52, f1: 0.74 }, { u: 0.72, w: 5, f0: 0.52, f1: 0.74 }], roofTint: 'rgba(4,18,18,.4)', edge: 'rgba(54,224,207,.55)', lw: Math.max(0.9, 1.6 * Z), tint: 'rgba(20,70,66,.14)', lodSide: '#3b4a45', lodRoof: '#0e3a37' });
@@ -4769,6 +5055,7 @@ class Component extends DCLogic {
     if (this.ringTiles) { ctx.fillStyle = 'rgba(54,224,207,.5)'; const TS = this.TS; const pw = Math.max(1, TS * sx), ph = Math.max(1, TS * sy); for (const t of this.ringTiles) ctx.fillRect(mmX + t.c * TS * sx, mmY + t.r * TS * sy, pw, ph); }
     if (this.resNodes) { ctx.fillStyle = '#aecadb'; for (const n of this.resNodes) ctx.fillRect(mmX + n.x * sx - 2, mmY + n.y * sy - 2, 4, 4); }
     ctx.fillStyle = '#36e0cf'; ctx.fillRect(mmX + this.hq.x * sx - 3, mmY + this.hq.y * sy - 3, 6, 6);
+    if (this.S.factions) { for (const f of this.S.factions) { const fx2 = mmX + f.x * sx, fy2 = mmY + f.y * sy; const st = this.facState(f); if (st === 'gone') { ctx.fillStyle = 'rgba(107,122,128,.55)'; ctx.fillRect(fx2 - 2, fy2 - 2, 4, 4); continue; } ctx.fillStyle = this.facDef(f).col; ctx.fillRect(fx2 - 3, fy2 - 3, 6, 6); ctx.fillStyle = this.facStateCol(f); ctx.fillRect(fx2 - 1.5, fy2 - 1.5, 3, 3); } }   // FACTIONS: always-visible base markers (palette square + state-colored core)
     if (this.hasBld('comms')) { ctx.fillStyle = this.hostileCol(); for (const z of this.S.zombies) ctx.fillRect(mmX + z.x * sx - 1, mmY + z.y * sy - 1, 2, 2); }
     if (this.hasBld('comms')) { ctx.fillStyle = '#ffd56b'; for (const c of this.caches || []) if (c.state === 1) ctx.fillRect(mmX + c.x * sx - 1, mmY + c.y * sy - 1, 2, 2); }   // stocked containers — comms intel
     else { const vbz = this.viewBounds(0); ctx.fillStyle = this.hostileCol(); for (const z of this.S.zombies) { if (z.x < vbz.l || z.x > vbz.r || z.y < vbz.t || z.y > vbz.b) continue; ctx.fillRect(mmX + z.x * sx - 1, mmY + z.y * sy - 1, 2, 2); } ctx.fillStyle = 'rgba(255,93,108,.6)'; ctx.font = "7px 'IBM Plex Mono'"; ctx.textAlign = 'right'; ctx.fillText('NO FEED · BUILD COMMS', mmX + mmW, mmY - 5); ctx.textAlign = 'left'; }
@@ -4909,6 +5196,7 @@ class Component extends DCLogic {
     this.prezSupport(dt);   // PRESIDENT SUPPORT CALLS — weighted strategic gates over the powers roster
     this.tutTick(dt);   // M7.2 — the guided chain observes, never gates
     this.wallRebuildTick(dt);   // BALLISTICS vs STRUCTURES — post-breach pathing/acoustics rebuild (throttled)
+    this.updateFactions(dt);   // FACTIONS — political sim: town pop drift, rep fade, relationship-state transitions
     // bullets
     for (const b of S.bullets) this.updateBullet(b, dt);
     S.bullets = S.bullets.filter(b => b.life > 0);
@@ -5473,6 +5761,7 @@ class Component extends DCLogic {
     // physics: apply knockback impulse with decay, blocked by walls
     if (z.kx || z.ky) { const nx = z.x + z.kx * dt, ny = z.y + z.ky * dt; if (!this.isWallPx(nx, ny)) { z.x = nx; z.y = ny; } const dcy = Math.max(0, 1 - dt * 6); z.kx *= dcy; z.ky *= dcy; if (Math.abs(z.kx) < 2) z.kx = 0; if (Math.abs(z.ky) < 2) z.ky = 0; }
     if ((z._stagT || 0) > 0) { z._stagT -= dt; z.wob += dt; return; }   // staggered / rising — a beat of helpless footwork
+    if (z.raider) { this.updateRaider(z, spd, dt); return; }   // FACTIONS raid party: flow-field march to HQ + assault (still shootable/rammable/ragdollable — it lives in S.zombies)
     // DUMB HORDE — no omniscience: a staggered sense pass (sight + noise gradient), then the state machine.
     z.scanT = (z.scanT == null ? Math.random() * 0.35 : z.scanT) - dt;
     if (z.scanT <= 0) { z.scanT = 0.3 + Math.random() * 0.15; this.zSense(z); }
@@ -6451,6 +6740,23 @@ class Component extends DCLogic {
     if (S.prez) { const cc = this.prezChair(); P(cc.x, cc.y, () => { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.exTR(ctx, cc.x - 5, cc.y - 4, cc.x + 5, cc.y + 4, 0, 5, 'tex_metal', { flat: '#3f4e52', grime: 0, lodPx: 6, edge: S.prez.on ? 'rgba(255,213,107,.5)' : 'rgba(120,135,130,.3)', lw: 0.8 }); this.billboard(ctx, cc.x, cc.y, 10); ctx.fillStyle = S.prez.on ? '#ffd56b' : '#7c8a86'; ctx.font = "7px 'IBM Plex Mono'"; ctx.textAlign = 'center'; ctx.fillText('⌘', cc.x, cc.y); }); }
     // bunker
     { const bk = this.bunker; P(bk.x, bk.y, () => { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.drawBunker(ctx, bk, Z, C); this.billboard(ctx, bk.x, bk.y, 14); ctx.fillStyle = C.green; ctx.font = "7px 'IBM Plex Mono'"; ctx.textAlign = 'center'; ctx.fillText('BUNKER', bk.x, bk.y + 3); }); }
+    // FACTIONS — rival bases ringing the outer map (viewport-culled; usually 0–1 on screen)
+    for (const f of (S.factions || [])) {
+      if (f.x < vb.l - 130 || f.x > vb.r + 130 || f.y < vb.t - 130 || f.y > vb.b + 130) continue;
+      const def = this.facDef(f), fx = f.x, fy = f.y;
+      P(fx, fy, () => { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.drawFactionBase(ctx, f, Z, C);
+        const keepH = f.alive === false ? 14 : 34 + def.str * 2; this.billboard(ctx, fx, fy, keepH + 12);
+        const st = this.facState(f), scol = this.facStateCol(f); ctx.textAlign = 'center';
+        ctx.fillStyle = def.col; ctx.font = "bold 13px 'IBM Plex Mono'"; ctx.fillText(def.icon, fx, fy - 12);
+        ctx.fillStyle = st === 'gone' ? 'rgba(150,160,165,.8)' : '#e8f4f2'; ctx.font = "bold 8px 'IBM Plex Mono'"; ctx.fillText(def.name, fx, fy - 2);
+        if (st === 'gone') { ctx.fillStyle = 'rgba(150,160,165,.7)'; ctx.font = "7px 'IBM Plex Mono'"; ctx.fillText('CONQUERED', fx, fy + 7); return; }
+        ctx.fillStyle = scol; ctx.font = "7px 'IBM Plex Mono'"; ctx.fillText(st.toUpperCase() + ' · POP ' + Math.round(f.pop), fx, fy + 7);
+        const bw = 44, bx = fx - bw / 2, by = fy + 11; ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(bx, by, bw, 3);
+        const rp = Math.max(0, Math.min(1, (f.rep + 100) / 200)); ctx.fillStyle = scol; ctx.fillRect(bx, by, bw * rp, 3);
+        ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(bx + bw / 2 - 0.5, by - 1, 1, 5);
+        if (f.hp < f.maxhp) { const hf = Math.max(0, f.hp / f.maxhp); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(bx, by + 4, bw, 2); ctx.fillStyle = hf > 0.4 ? '#7ef0a6' : '#ff5d6c'; ctx.fillRect(bx, by + 4, bw * hf, 2); }
+      });
+    }
     // HQ hex tower
     { const hq = this.hq; const pts = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i - Math.PI / 6; pts.push([hq.x + Math.cos(a) * hq.r, hq.y + Math.sin(a) * hq.r]); }
       P(hq.x, hq.y, () => { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); this.drawHQ(ctx, hq, pts, Z, C); this.billboard(ctx, hq.x, hq.y, 44); ctx.shadowColor = C.cyan; ctx.shadowBlur = 14; ctx.fillStyle = C.cyan; ctx.font = "bold 15px 'Chakra Petch'"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('HQ', hq.x, hq.y + 1); ctx.shadowBlur = 0; ctx.textBaseline = 'alphabetic'; }); }
@@ -6998,16 +7304,17 @@ class Component extends DCLogic {
   }
   drawZombie(ctx, C, z) {
     const r = 5.5, H = 10.5, p = this.stickPose(z, H);
+    const rKind = z.raider ? 'operator' : 'zombie', rCol = z.raider ? (z.col || '#ff5d6c') : C.zomb, rIsZ = !z.raider;   // FACTIONS raiders read as armed faction fighters, not walkers
     if (z.down > 0) {   // REAL PHYSICS — knocked flat: swung about the feet onto the ground plane, rising as the timer runs out
       const pvx = z.x, pvy = z.y + H * 0.5;
       const lie = (p.fc || 1) * (Math.min(1.45, 0.8 + z.down * 0.5) + Math.sin(z.wob * 5 + (z.id || 0)) * 0.06);
       ctx.save(); ctx.translate(pvx, pvy); ctx.rotate(lie); ctx.scale(1, 0.94); ctx.translate(-pvx, -pvy);
-      this.drawChar(ctx, { x: z.x, y: z.y, h: H, kind: 'zombie', color: C.zomb, ph: p.ph * 0.5, mv: 0.3, fc: p.fc, zombie: true, zst: 0 });
+      this.drawChar(ctx, { x: z.x, y: z.y, h: H, kind: rKind, color: rCol, ph: p.ph * 0.5, mv: 0.3, fc: p.fc, zombie: rIsZ, zst: 0 });
       ctx.restore();
       const hfd = z.hp / z.maxhp; if (hfd < 1) { ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(z.x - r, z.y - 2, r * 2, 2.2); ctx.fillStyle = C.red; ctx.fillRect(z.x - r, z.y - 2, r * 2 * hfd, 2.2); }
       return;
     }
-    this.drawChar(ctx, { x: z.x, y: z.y, h: H, kind: 'zombie', color: C.zomb, ph: p.ph, mv: Math.max(0.35, p.mv), fc: p.fc, zombie: true, zst: z.st });   // EXCITED state gets its own lurch row
+    this.drawChar(ctx, { x: z.x, y: z.y, h: H, kind: rKind, color: rCol, ph: p.ph, mv: Math.max(0.35, p.mv), fc: p.fc, zombie: rIsZ, zst: z.st });   // EXCITED state gets its own lurch row
     const hf = z.hp / z.maxhp; if (hf < 1) { ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(z.x - r, z.y - r - 5, r * 2, 2.2); ctx.fillStyle = C.red; ctx.fillRect(z.x - r, z.y - r - 5, r * 2 * hf, 2.2); }
   }
 
@@ -7463,6 +7770,7 @@ class Component extends DCLogic {
       rsStyle: `display:flex;flex-direction:column;gap:2px;text-align:left;padding:9px 10px;border:1px solid ${S.scrap >= this.rsProtocol().cost ? 'rgba(54,224,207,.5)' : 'rgba(54,224,207,.18)'};background:${S.scrap >= this.rsProtocol().cost ? 'rgba(54,224,207,.08)' : 'rgba(54,224,207,.03)'}`,
       // ---- M1.2 colony ledger ----
       ledgerOpen: !!S.ledgerOpen, toggleLedger: this.toggleLedger, stopClick: this.stopClick,
+      ...this.factionVals(),
       // ---- UPGRADE BOARD (entity-specific doctrine: jump-only) ----
       upOpen: !!S.upOpen, toggleUp: this.toggleUpBoard,
       // ---- GEAR LOCKER (M5.2) ----
