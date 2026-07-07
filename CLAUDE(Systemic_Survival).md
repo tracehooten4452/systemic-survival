@@ -24,9 +24,10 @@ current routing map before making changes.
 - Save key: `ss_outpost_v7` (v6 colonies intentionally restart because world coords doubled).
 - Current audited payload: GAME_VER `0.4.0`, SHA-256
   `39AE3C1C8D630A9E1B0B38373E8D896C69A6FB928A6F0E546BD045259BD89405`.
-- Player wrapper metadata: package `0.4.0`, wrapperMin `0.3.7`.
-- Live update feed: `v0.4.0` payload manifest, wrapperMin `0.3.7`, so players need the
-  one-time 0.3.7+ launcher before this payload can auto-stage.
+- Player wrapper metadata: package `0.4.0`, wrapperMin `0.4.0`.
+- Live update feed: `v0.4.0` full-wrapper manifest, wrapperMin `0.4.0`, with a signed
+  `manifest.wrapper` block. Fixed 0.3.7+ launchers download, verify, spawn, and switch to the
+  new portable exe before the game boots.
 - Current architecture: one exported Design Component HTML file plus generated DC runtime,
   with an Electron shell for offline/no-server play.
 
@@ -98,9 +99,9 @@ current routing map before making changes.
 Status: green after repo-side schema fixes. Candidate payload now hashes to
 `39AE3C1C8D630A9E1B0B38373E8D896C69A6FB928A6F0E546BD045259BD89405`.
 Signed manifest SHA-256:
-`DC3F2D62B86207ACCDD072737D62B1FF31EB1AE0C361D93A5364309121F22428`.
+`683F86EC773DEA78D7DEF435F8FE1A30280E4141EBA70042DDB70F8D8F9DDBA0`.
 Portable exe SHA-256:
-`3F863CD1DFC1D6B34ED86B9A759A62A81B118781C3CD87CC61EF4BAD3E02D018`.
+`456C5916640F07FF48669B25587A814D527D5C1EAB6D8F68CF0A2B41DAAB06BF`.
 
 Codex fixes applied on top of the drop kit:
 - Persisted `raidCd` in `S.factions[]`; loader now preserves/clamps it instead of randomizing
@@ -117,8 +118,10 @@ Checks run so far:
 - Source smoke and staged-payload smoke both passed with `blockedRequests: []`.
 - `npm run pack:win`; unpacked and portable smokes passed with `blockedRequests: []`.
 - Perf probe with 200 walkers + 9 raiders: `updateFactions` p95 ~0.1ms, full update avg ~0.59ms.
-- `npm run release:assets`; payload/manifest signature verified, wrapperMin `0.3.7`, no wrapper
-  block in the payload manifest.
+- `npm run release:assets`; payload + wrapper signatures verified, wrapperMin `0.4.0`, and
+  the manifest contains the signed wrapper block used by the launch gate's exe self-swap path.
+- Correction note: the first repo publish accidentally left `wrapperMin` at `0.3.7`, which would
+  have staged only the payload. The corrected feed requires and verifies the `0.4.0` portable.
 
 ### Codex REDTEAM - 2026-07-06 v0.3.7 / launch gate repair
 

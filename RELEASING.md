@@ -190,9 +190,11 @@ installed exes update THEMSELVES — you publish just the payload, no exe rebuil
    Do not create a player-facing release for content-only updates. Players skip instructions;
    the public download page stays dummy-proof by showing only the exe when an exe is needed.
 
-When the WRAPPER changed (anything in `electron/`, Electron version, build config): run the
-FULL flow above, set `"wrapperMin"` in package.json to the new version, and say "grab the new
-exe" in the notes — installed copies show that message instead of auto-updating.
+When the WRAPPER changed (anything in `electron/`, Electron version, build config, packaged docs,
+or any release where you want the installed launcher to self-swap to a fresh portable): run the
+FULL flow above and set `"wrapperMin"` in package.json to the new version. That makes
+`make-release-assets.js` add a signed `manifest.wrapper` block, so v0.3.7+ installed launchers
+download the new portable exe, verify it, spawn it, and quit before the game boots.
 
 **Legacy updater caveat:** v0.3.5/v0.3.6 wrappers cannot reliably auto-swap to a new portable:
 their launch gate applied the 5s cap to the whole exe download, and wrote the replacement next

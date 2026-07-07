@@ -6,7 +6,7 @@
   "main": "electron/main.js",
   "private": true,
   "updateRepo": "tracehooten4452/systemic-survival-updates",
-  "wrapperMin": "0.3.7",
+  "wrapperMin": "0.4.0",
   "scripts": {
     "start": "electron .",
     "validate:payload": "node electron/validate-payload.js",

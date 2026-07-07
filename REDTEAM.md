@@ -36,9 +36,9 @@ with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
   final payload SHA-256
   `39AE3C1C8D630A9E1B0B38373E8D896C69A6FB928A6F0E546BD045259BD89405`;
   signed manifest SHA-256
-  `DC3F2D62B86207ACCDD072737D62B1FF31EB1AE0C361D93A5364309121F22428`;
+  `683F86EC773DEA78D7DEF435F8FE1A30280E4141EBA70042DDB70F8D8F9DDBA0`;
   portable exe SHA-256
-  `3F863CD1DFC1D6B34ED86B9A759A62A81B118781C3CD87CC61EF4BAD3E02D018`.
+  `456C5916640F07FF48669B25587A814D527D5C1EAB6D8F68CF0A2B41DAAB06BF`.
   Verdict: green after the north-star factions package landed 8 rival bases, embodied
   diplomacy, hostile raids, ally production satellites, conquest, minimap/board UI, and the
   48000 x 27000 world with TS 160 preserving the 50,400-tile flow-field budget. Save key moved
@@ -46,14 +46,18 @@ with date, candidate fingerprint, verdict, and any follow-up release/tag notes.
   Codex repo-side fixes: `raidCd` now persists and reloads instead of randomizing every boot,
   loaded faction arrays must contain all 8 valid ids/keys or they reseed, and bad diplomacy
   intents are rejected on load and by `setDiplo`.
+  Wrapper correction: this release must self-swap the portable exe, not merely stage the payload.
+  The corrected manifest uses `wrapperMin 0.4.0` and includes a signed `manifest.wrapper` block
+  for `tracehooten4452/systemic-survival` / `Systemic-Survival-0.4.0-portable.exe`, so v0.3.7+
+  launchers enter the `wrapper-required` path, verify the exe, spawn it, and quit before game boot.
   Checks: kit SHA verification, `npm run validate:payload`, custom Electron v0.4.0 probe
   (v6 ignored, corrupt v7 faction array reseeds, bad diplo rejected, `raidCd` save/reload,
   alliance gate, ally food cap, capped shootable raids, conquest cleanup, `blockedRequests: []`),
   source smoke, staged-payload smoke, `npm run pack:win`, unpacked and portable smokes, perf
   probe with 200 walkers + 9 raiders (`updateFactions` p95 ~0.1ms; full update avg ~0.59ms),
-  four-way payload hash parity, `npm run release:assets`, and manifest SHA/signature
-  verification. Follow-up release notes must say `v0.4.0` is a fresh-save world reset and
-  requires a 0.3.7+ launcher to auto-stage.
+  four-way payload hash parity, `npm run release:assets`, and payload + wrapper manifest
+  SHA/signature verification. Follow-up release notes must say `v0.4.0` is a fresh-save world
+  reset and fixed v0.3.7+ launchers auto-download the corrected exe.
 - 2026-07-06: v0.3.7 launch gate readability/logging repair and updater self-swap fix.
   Drop-kit launch HTML SHA-256
   `EA59379E25841FB35F0454E84408501BEF92D87F445831421A44ABCEEAA43FE6`;
