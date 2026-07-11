@@ -1,6 +1,6 @@
 {
   "name": "systemic-survival",
-  "version": "0.4.1",
+  "version": "0.4.4",
   "description": "Offline Windows package for Systemic Survival.",
   "author": "Trace",
   "main": "electron/main.js",
@@ -23,8 +23,7 @@
       "support.js",
       "assets/**/*",
       "vendor/**/*",
-      "electron/**/*",
-      "CLAUDE(Systemic_Survival).md"
+      "electron/**/*"
     ],
     "win": {
       "icon": "assets/systemic-survival-icon.ico",

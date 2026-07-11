@@ -10,6 +10,7 @@
 <body>
 <x-dc>
 <helmet>
+<link rel="stylesheet" href="./vendor/fonts/fonts.css">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;background:#070b0c;overflow:hidden}
@@ -1403,7 +1404,7 @@ class Component extends DCLogic {
         if (S.prez.on && S.hero) S.hero.patrol = true;   // the President always defends when hostiles close in
       }
       S.factions = Array.isArray(d.factions) ? d.factions.filter(f => f && this.FACTIONS[f.id] && this.FACTIONS[f.id].key === f.key).map(f => ({ id: f.id | 0, key: f.key, x: +f.x || 0, y: +f.y || 0, hp: Math.max(0, +f.hp || 0), maxhp: +f.maxhp || (600 + this.FACTIONS[f.id].str * 60), rep: Math.max(-100, Math.min(100, +f.rep || 0)), pop: Math.max(0, Math.min(999, +f.pop || 0)), str: +f.str || this.FACTIONS[f.id].str, alive: f.alive !== false, pact: (f.pact === 'ally' || f.pact === 'war') ? f.pact : null, claims: Array.isArray(f.claims) ? f.claims.slice(0, 12) : [], raidCd: (f.raidCd != null && isFinite(f.raidCd)) ? Math.max(0, +f.raidCd) : 45 + Math.random() * 60 })) : null;
-      S.diplo = (d.diplo && typeof d.diplo === 'object' && this.FACTIONS[d.diplo.id]) ? { id: d.diplo.id | 0, intent: ['gift', 'alliance', 'peace', 'demand'].includes(d.diplo.intent) ? d.diplo.intent : 'gift' } : null;
+      S.diplo = (d.diplo && typeof d.diplo === 'object' && this.FACTIONS[d.diplo.id] && ['gift', 'alliance', 'peace', 'demand'].includes(d.diplo.intent)) ? { id: d.diplo.id | 0, intent: d.diplo.intent } : null;   // invalid/corrupt intent → NULL the mission (Codex v0.4.2), never coerce to 'gift'
       S.exped = null;
       if (d.exped && Array.isArray(d.exped.ids) && d.exped.ids.length && d.exped.wagon) {
         S.exped = { state: 'return', si: -1, sx: null, sy: null, ids: d.exped.ids.slice(0, 24), crates: Array.isArray(d.exped.crates) ? d.exped.crates.slice(0, 40) : [], tier: [1, 2, 3].includes(d.exped.tier) ? d.exped.tier : 1, name: String(d.exped.name || 'THE SITE').slice(0, 28), wagon: { x: +d.exped.wagon.x || this.hq.x, y: +d.exped.wagon.y || this.hq.y, hp: Math.max(60, Math.min(420, +d.exped.wagon.hp || 420)), maxhp: 420 } };
@@ -1645,7 +1646,7 @@ class Component extends DCLogic {
     if (h.cd > 0) h.cd -= dt;
     if (!adj && h.cd <= 0 && this._firing && this._mouse) { if (this.S.lockdown) { if ((this._wsT || 0) <= 0) { this._wsT = 1.6; this.S.floats.push({ x: h.x, y: h.y - 16, text: '◼ WEAPONS SAFE — LOCKDOWN', color: '#ffb454', life: 1.2, t: 0 }); } } else { this.fireHero(h.aim, st, this.heroGun(h.gun)); h.cd = 1 / st.rof; } }   // melee stays live — a blade is quiet
   }
-  hireCost() { return Math.floor(20 * Math.pow(1.55, this.S.units.filter(u => u.role !== 'gatherer').length) * this.hireDisc()); }   // BARRACKS drill programs cut hire costs
+  hireCost() { return Math.floor(20 * Math.pow(1.55, this.S.units.filter(u => u.role === 'operator' || u.role === 'technician').length) * this.hireDisc()); }   // per-ROLE (was role!=='gatherer', which let runners/mechs/tanks/gatherers inflate the operator price); technicians count = they're reassigned operators. BARRACKS drill programs cut hire costs
   coreMult() { return 1 + this.S.cores * 0.1; }
   sectorMult() { return 1 + (this.S.sector - 1) * 0.22; }
   // M2.3 SCALING PRESSURE: each reclaimed sector raises the colony's per-head demands (food, goods,
@@ -1846,26 +1847,89 @@ class Component extends DCLogic {
     this.ping(this.hq.x, this.hq.y, '#7ef0a6');
   }
   // ---- FACTIONS hostile (Slice D): raid parties are faction-colored armed 'zombies' — they inherit bullets/turrets/physics/ragdoll ----
+  rclass(k) { return ({
+    assault:    { hpX: 1.0,  spdX: 1.0,  dmgX: 1.0, dr: 0,    tgt: 'hq',   desc: 'HOSTILES' },
+    skirmisher: { hpX: 0.55, spdX: 1.5,  dmgX: 0.7, dr: 0,    tgt: 'econ', desc: 'SKIRMISHERS — YOUR FIELD IS THE TARGET' },
+    breaker:    { hpX: 2.4,  spdX: 0.68, dmgX: 1.5, dr: 0.45, tgt: 'hq',   desc: 'ARMORED BREAKERS' },
+  })[k] || null; }
+  raidComp(f, n) {   // DOCTRINE lives HERE (beta-test proved comp was uniform). Prototypes: ash + ironclad; the other 6 stay uniform 'assault' until built.
+    const k = this.facDef(f).key, out = [];
+    if (k === 'ash') { for (let i = 0; i < n; i++) out.push('skirmisher'); }
+    else if (k === 'ironclad') { const nb = Math.max(1, Math.round(n * 0.45)); for (let i = 0; i < n; i++) out.push(i < nb ? 'breaker' : 'assault'); }
+    else { for (let i = 0; i < n; i++) out.push('assault'); }
+    return out;
+  }
   spawnRaid(f) {
     const S = this.S, def = this.facDef(f);
-    if (S.zombies.filter(z => z.raider && z.fac === f.id).length > 4) { f.raidCd = 40 + Math.random() * 40; return; }   // one wave out at a time (medium stakes)
-    const n = 4 + Math.round(f.str * 0.6 + (S.sector || 1) * 0.4), thr = S.threat || 1;
-    for (let i = 0; i < n; i++) {
+    if (S.zombies.some(z => z.raider && z.fac === f.id && z.hp > 0 && z.rtgt !== 'home')) { f.raidCd = 40 + Math.random() * 40; return; }   // one wave out at a time (medium stakes): ANY live fighter afield blocks; withdrawn homers don't hold the war hostage
+    const comp = this.raidComp(f, 4 + Math.round(f.str * 0.6 + (S.sector || 1) * 0.4)), thr = S.threat || 1;
+    let lead = 'assault';
+    for (const cls of comp) {
+      const rc = this.rclass(cls) || this.rclass('assault'); if (cls !== 'assault') lead = cls;
       const a = Math.random() * 6.283, rr = 40 + Math.random() * 120;
       const x = Math.max(20, Math.min(this.AW - 20, f.x + Math.cos(a) * rr)), y = Math.max(20, Math.min(this.AH - 20, f.y + Math.sin(a) * rr));
-      const hp = (55 + f.str * 12) * (1 + thr * 0.06) * this.dmul;
-      S.zombies.push({ id: S.nextId++, x, y, hp, maxhp: hp, spd: 38 + f.str * 1.5, dmg: (9 + f.str * 1.4) * (1 + thr * 0.1) * this.dmul, reward: 6 + f.str, cd: Math.random() * 0.7, wob: Math.random() * 6.28, st: 2, herd: -1, hd: 0, scanT: 0, raider: true, fac: f.id, col: def.col });
+      const hp = (55 + f.str * 12) * rc.hpX * (1 + thr * 0.06) * this.dmul;
+      S.zombies.push({ id: S.nextId++, x, y, hp, maxhp: hp, spd: (38 + f.str * 1.5) * rc.spdX, dmg: (9 + f.str * 1.4) * rc.dmgX * (1 + thr * 0.1) * this.dmul, dr: rc.dr, reward: 6 + f.str, cd: Math.random() * 0.7, wob: Math.random() * 6.28, st: 2, herd: -1, hd: 0, scanT: 0, raider: true, rclass: cls, rtgt: rc.tgt, fac: f.id, col: def.col });
     }
-    this.milestone('⚔ ' + def.name + ' RAID — ' + n + ' HOSTILES MARCH ON THE WALL'); this.ping(f.x, f.y, '#ff5d6c'); if (this.sndRadio) this.sndRadio('alert');
+    this.milestone('⚔ ' + def.name + ' RAID — ' + comp.length + ' ' + (this.rclass(lead) || { desc: 'HOSTILES' }).desc + ' INBOUND'); this.ping(f.x, f.y, '#ff5d6c'); if (this.sndRadio) this.sndRadio('alert');
     f.raidCd = 110 + Math.random() * 120 + f.str * 8;   // next wave — the long march across the map IS the cooldown
   }
   updateRaider(z, spd, dt) {
+    if (z.rtgt === 'home') { this.raiderHome(z, spd, dt); return; }   // sated guerrillas hauling loot back to base
+    if (z.rtgt === 'econ') { this.raiderEcon(z, spd, dt); return; }   // GUERRILLA doctrine: hunt gatherers/nodes in the open field, never the wall
+    // COLUMN COHESION (beta: 42 vs 32 px/s strung IRONCLAD out by minutes of arrival split): escorts pace their armor while it lives
+    if (z.rclass === 'assault') {
+      z._cohT = (z._cohT || 0) - dt;
+      if (z._cohT <= 0) { z._cohT = 0.7; z._coh = 0; for (const r of this.S.zombies) { if (r !== z && r.raider && r.fac === z.fac && r.rclass === 'breaker' && r.hp > 0 && !r._despawn && Math.hypot(r.x - z.x, r.y - z.y) < 700) { z._coh = (r.down > 0 || (r._stagT || 0) > 0) ? 9 : r.spd * (r.slowT > 0 ? 0.45 : 1) * 1.06; break; } } }   // pace the armor's EFFECTIVE speed: cryo-slowed ×0.45, downed/staggered → the column holds
+      if (z._coh) spd = Math.min(spd, z._coh);
+    }
     const hq = this.hq, dHQ = Math.hypot(hq.x - z.x, hq.y - z.y);
-    if (dHQ <= hq.r + 24) { z.cd -= dt; if (z.cd <= 0) { z.cd = 0.7; hq.hp -= z.dmg; } z.wob += dt * 3; return; }   // at the HQ: assault it
+    if (dHQ <= hq.r + 24) { z.cd -= dt; if (z.cd <= 0) { z.cd = 0.7; hq.hp -= z.dmg; } z.wob += dt * 3; return; }   // at the HQ: assault it (BREAKERS grind gates/walls en route via zNav + high dmg)
     let dx = hq.x - z.x, dy = hq.y - z.y;
     const dir = this.flowHQ ? this.dirField(this.flowHQ, z.x, z.y) : null; if (dir) { dx = dir.x; dy = dir.y; }
     z.wob += dt * 3; const lurch = 1 + 0.1 * Math.sin(z.wob * 4);
     this.zNav(z, dx, dy, spd * lurch, dt, true);   // claw through gates/barricades on the way in
+  }
+  raiderEcon(z, spd, dt) {   // MECH's mirror image: raid the FIELD economy (gatherers + salvage nodes), not the wall
+    const S = this.S;
+    z.scanT = (z.scanT || 0) - dt;
+    if (z.scanT <= 0 || z._etk == null) {
+      z.scanT = 0.8; z._et = null; z._etk = null; let bd = 2400 * 2400;   // FACTION LAW: hunt only what the sweep can plausibly SEE (2.4k intel bubble), never map-wide
+      for (const u of S.units) { if (u.dead || u.hid || (u.role !== 'gatherer' && u.role !== 'runner')) continue; const d = (u.x - z.x) ** 2 + (u.y - z.y) ** 2; if (d < bd) { bd = d; z._et = u.id; z._etk = 'unit'; } }
+      if (z._etk == null && this.resNodes && this.resNodes.length) {   // no prey in sight → nearest WORKED route (an operation's smoke is visible for miles); idle nodes hold nothing (beta: S.resNodes was dead code)
+        let bn = null; bd = 1e18;
+        for (let i = 0; i < this.resNodes.length; i++) { const nd = this.resNodes[i]; let wk = false; for (const u of S.units) { if (!u.dead && u.role === 'gatherer' && u.nodeIdx === i) { wk = true; break; } } if (!wk) continue; const d = (nd.x - z.x) ** 2 + (nd.y - z.y) ** 2; if (d < bd) { bd = d; bn = nd; } }
+        if (bn) { z._etx = bn.x; z._ety = bn.y; z._etk = 'node'; }
+      }
+    }
+    let tx = null, ty = null, tobj = null;
+    if (z._etk === 'unit') { tobj = S.units.find(u => u.id === z._et && !u.dead && !u.hid); if (tobj) { tx = tobj.x; ty = tobj.y; } else { z._etk = null; z.scanT = 0; } }   // a crew that goes to ground breaks the track (lockdown is the counter)
+    if (z._etk === 'node') { tx = z._etx; ty = z._ety; }
+    if (tx == null) { tx = this.hq.x; ty = this.hq.y; }   // nothing to pillage — drift toward the perimeter (still a threat)
+    const d = Math.hypot(tx - z.x, ty - z.y);
+    if (d <= 28) {
+      z.cd -= dt; if (z.cd <= 0) { z.cd = 0.5;
+        if (tobj) { const udr = Math.min(0.8, (this.stat(tobj) || {}).dr || 0); tobj.hp = (tobj.hp != null ? tobj.hp : 40) - z.dmg * 1.5 * (1 - udr); this.ping(z.x, z.y, '#ff5d6c'); if (tobj.hp <= 0) { tobj.dead = true; tobj.reviveT = tobj.squad ? 4 : 8; S.floats.push({ x: tobj.x, y: tobj.y - 16, text: tobj.role === 'runner' ? '✖ RUNNER DOWN' : '✖ GATHERER DOWN', color: '#ff8a93', life: 1.6, t: 0 }); this.raidLoot(z, 10); z._etk = null; z.scanT = 0; } }
+        else if (z._etk === 'node') { S.scrap = Math.max(0, S.scrap - 3); S.raw = Math.max(0, (S.raw || 0) - 3); S.floats.push({ x: z.x, y: z.y - 16, text: '⚠ NODE PILLAGED', color: '#ff8a93', life: 1.4, t: 0 }); this.raidLoot(z, 1); }
+      }
+      z.wob += dt * 3; return;
+    }
+    z.wob += dt * 3; this.zNav(z, tx - z.x, ty - z.y, spd, dt, false);   // stay in the open field (no wall-clawing)
+  }
+  raidLoot(z, n) {   // smash-and-grab ledger (beta: an ignored raid must not bleed the colony forever) — a sated raid withdraws
+    const S = this.S, f = (S.factions || []).find(q => q.id === z.fac); if (!f) return;
+    f._loot = (f._loot || 0) + n;
+    let alive = 0; for (const r of S.zombies) if (r.raider && r.fac === z.fac && r.rtgt === 'econ' && r.hp > 0) alive++;   // corpses don't inflate the sate threshold (red-team 0.4.3)
+    if (f._loot >= 8 * Math.max(3, alive)) {
+      f._loot = 0; let any = false;
+      for (const r of S.zombies) if (r.raider && r.fac === z.fac && r.rtgt === 'econ' && r.hp > 0) { r.rtgt = 'home'; any = true; }
+      if (any) { this.milestone('⌖ ' + this.facDef(f).name + ' WITHDRAWS — SATED'); this.ping(z.x, z.y, '#ffb454'); }
+    }
+  }
+  raiderHome(z, spd, dt) {   // loot secured: back to base at a jog, gone when it gets there
+    const f = (this.S.factions || []).find(q => q.id === z.fac);
+    if (!f || f.alive === false || Math.hypot(f.x - z.x, f.y - z.y) <= 160) { z._despawn = true; return; }
+    z.wob += dt * 3; this.zNav(z, f.x - z.x, f.y - z.y, spd * 1.1, dt, false);
   }
   updateFactions(dt) {
     const S = this.S; if (!S.factions || !S.factions.length) return;
@@ -3719,7 +3783,7 @@ class Component extends DCLogic {
   };
   // ---- game version: baked payload tag; a STAGED auto-update payload (payload-vX.Y.Z.html) reports its
   // release tag instead, so the top-left always tells the truth about what's actually running.
-  GAME_VER = '0.4.1';
+  GAME_VER = '0.4.4';
   gameVer() {
     if (this._gv) return this._gv;
     let v = this.GAME_VER;
@@ -3863,8 +3927,8 @@ class Component extends DCLogic {
   }
   hostileCol() { return this.setP().cb ? '#ffb454' : '#ff5d6c'; }   // M7.1 high-vis palette — CVD-safe hostile reads
   zombCol() { return this.setP().cb ? '#d9c15a' : '#8fcf5a'; }
-  hurtZombie(z, dmg, fx, fy, owner, veh) {
-    z.hp -= dmg;
+  hurtZombie(z, dmg, fx, fy, owner, veh, raw) {
+    z.hp -= dmg * (raw ? 1 : (1 - (z.dr || 0)));   // dr shrugs BALLISTICS only — raw = mechanism kills (crush/fling/overpressure) no plate stops
     if (z.hp > 0) this.zAgitate(z);
     if (z.hp <= 0 && !z._dead) { z._dead = true;
       if (owner != null) { const ku = this.S.units.find(u => u.id === owner && !u.dead); if (ku && ku.role !== 'gatherer') { ku.kills = (ku.kills || 0) + 1; const rk0 = this.rankOf(ku); ku.vet = (ku.vet || 0) + 8; if (this.rankOf(ku) !== rk0) { ku._stF = -1; this.S.floats.push({ x: ku.x, y: ku.y - 16, text: '★ ' + this.rankOf(ku), color: '#ffd56b', life: 1.8, t: 0 }); this.ping(ku.x, ku.y, '#ffd56b'); this.milestone('★ ' + (ku.role === 'mech' ? 'MK-' : ku.role === 'runner' ? 'RN-' : 'OP-') + String(ku.id).padStart(2, '0') + ' PROMOTED — ' + this.rankOf(ku)); } } } const mult = 1 + Math.min(3, this.S.focus * this.focusCoef()); const rw = Math.ceil(z.reward * mult * this.incomeMult()); this.S.scrap += rw; this.S.totalEarned += rw; this.S.kills++; this.S.sectorKills = (this.S.sectorKills || 0) + 1; this.S.threatKills = (this.S.threatKills || 0) + 1; this.S.focus = Math.min(40, this.S.focus + 0.5); this.S.focusT = 2.6; this.S.floats.push({ x: z.x, y: z.y, text: '+' + rw, color: '#ffd56b', life: 0.9, t: 0 }); for (let i = 0; i < 4; i++) this.S.fx.push({ x: z.x, y: z.y, vx: (Math.random() - .5) * 90, vy: (Math.random() - .5) * 90, life: 0.4, t: 0, kind: 'gib' });
@@ -5066,6 +5130,7 @@ class Component extends DCLogic {
     if (this.resNodes) { ctx.fillStyle = '#aecadb'; for (const n of this.resNodes) ctx.fillRect(mmX + n.x * sx - 2, mmY + n.y * sy - 2, 4, 4); }
     ctx.fillStyle = '#36e0cf'; ctx.fillRect(mmX + this.hq.x * sx - 3, mmY + this.hq.y * sy - 3, 6, 6);
     if (this.S.factions) { for (const f of this.S.factions) { const fx2 = mmX + f.x * sx, fy2 = mmY + f.y * sy; const st = this.facState(f); if (st === 'gone') { ctx.fillStyle = 'rgba(107,122,128,.55)'; ctx.fillRect(fx2 - 2, fy2 - 2, 4, 4); continue; } ctx.fillStyle = this.facDef(f).col; ctx.fillRect(fx2 - 3, fy2 - 3, 6, 6); ctx.fillStyle = this.facStateCol(f); ctx.fillRect(fx2 - 1.5, fy2 - 1.5, 3, 3); } }   // FACTIONS: always-visible base markers (palette square + state-colored core)
+    for (const z of this.S.zombies) { if (z.raider) { ctx.fillStyle = '#ff5d6c'; ctx.fillRect(mmX + z.x * sx - 1.5, mmY + z.y * sy - 1.5, 3, 3); } }   // FACTION RAIDERS always tracked (telegraphed threat — no comms needed)
     if (this.hasBld('comms')) { ctx.fillStyle = this.hostileCol(); for (const z of this.S.zombies) ctx.fillRect(mmX + z.x * sx - 1, mmY + z.y * sy - 1, 2, 2); }
     if (this.hasBld('comms')) { ctx.fillStyle = '#ffd56b'; for (const c of this.caches || []) if (c.state === 1) ctx.fillRect(mmX + c.x * sx - 1, mmY + c.y * sy - 1, 2, 2); }   // stocked containers — comms intel
     else { const vbz = this.viewBounds(0); ctx.fillStyle = this.hostileCol(); for (const z of this.S.zombies) { if (z.x < vbz.l || z.x > vbz.r || z.y < vbz.t || z.y > vbz.b) continue; ctx.fillRect(mmX + z.x * sx - 1, mmY + z.y * sy - 1, 2, 2); } ctx.fillStyle = 'rgba(255,93,108,.6)'; ctx.font = "7px 'IBM Plex Mono'"; ctx.textAlign = 'right'; ctx.fillText('NO FEED · BUILD COMMS', mmX + mmW, mmY - 5); ctx.textAlign = 'left'; }
@@ -5111,8 +5176,8 @@ class Component extends DCLogic {
   // ---------------------------------------------------------------- update
   update(dt) {
     const S = this.S; S.tick += dt; S.ramp += dt; S.dayT = (S.dayT || 0) + dt;
-    this._frame = (this._frame || 0) + 1; this.buildZGrid();
-    // hard population caps (performance budget + runaway safety)
+    this._frame = (this._frame || 0) + 1;
+    // hard population caps FIRST — so the spatial grid (built below) reflects the FINAL array; no 1-frame stale refs (Codex v0.4.2)
     { const cap = this.zCap();
       if (S.zombies.length > cap) {
         if (!S.zombies.some(z => z.raider)) { S.zombies.splice(cap); }   // fast path: pure horde — tail trim is fine
@@ -5127,6 +5192,7 @@ class Component extends DCLogic {
         }
       }
     }
+    this.buildZGrid();   // grid built AFTER the cap trim so a removed live zombie can't linger in the grid (zNear) for a frame (Codex v0.4.2)
     if (S.bullets.length > 360) S.bullets.splice(0, S.bullets.length - 360);
     if (S.fx.length > 280) S.fx.splice(0, S.fx.length - 280);
     if (S.floats.length > 120) S.floats.splice(0, S.floats.length - 120);
@@ -5212,6 +5278,7 @@ class Component extends DCLogic {
     for (const t of S.turrets) this.updateTurret(t, dt);
     // zombies
     for (const z of S.zombies) this.updateZombie(z, dt);
+    for (let i = S.zombies.length - 1; i >= 0; i--) if (S.zombies[i]._despawn) S.zombies.splice(i, 1);   // escaped raiders swept BEFORE the grid rebuild — never a hittable ghost bucket (red-team 0.4.3)
     this.buildZGrid();   // re-bucket AFTER the zombies moved — bullet hit-tests query true positions, not last-move ones (red-team: the actual stale-grid fix)
     this.physPass(dt);   // REAL PHYSICS — ram outcomes at every zoom; fidelity (jostle/shake) view-gated
     this.updateScav(dt);   // SCAVENGING — hero-mode loot stocking, committed searches, anti-camp recycle
@@ -5545,7 +5612,7 @@ class Component extends DCLogic {
       const dd2 = (z.x - b.x) * (z.x - b.x) + (z.y - b.y) * (z.y - b.y);
       if (b.api && dd2 > hitR * hitR) {   // OVERPRESSURE near-miss: percussion alone finishes the weak, rocks the rest
         b.hit.add(z.id);
-        if (z.hp < z.maxhp * 0.45) { this.hurtZombie(z, z.hp + 1, b.x, b.y, b.own); this.S.floats.push({ x: z.x, y: z.y - 8, text: '◉ PRESSURE', color: '#ffb454', life: 0.8, t: 0 }); }
+        if (z.hp < z.maxhp * 0.45) { this.hurtZombie(z, z.hp + 1, b.x, b.y, b.own, undefined, true); this.S.floats.push({ x: z.x, y: z.y - 8, text: '◉ PRESSURE', color: '#ffb454', life: 0.8, t: 0 }); }
         else { z._stagT = Math.max(z._stagT || 0, 0.5); }
         continue;
       }
@@ -5703,7 +5770,7 @@ class Component extends DCLogic {
         if (d >= rr) return;
         const nx = dx / d, ny = dy / d;
         if (z.down > 0) {   // CRUSH — rolled over while down: the wheels/tracks finish it at any real speed
-          if (spM > 0.5) { this.hurtZombie(z, z.hp + 1, R.x, R.y, R.id, { cvx: vx, cvy: vy, dv: Math.max(0.8, spM * 0.4), crush: true }); if (this.inView(z.x, z.y, 60)) this.addShake(0.7); }
+          if (spM > 0.5) { this.hurtZombie(z, z.hp + 1, R.x, R.y, R.id, { cvx: vx, cvy: vy, dv: Math.max(0.8, spM * 0.4), crush: true }, true); if (this.inView(z.x, z.y, 60)) this.addShake(0.7); }
           return;
         }
         contacts++;
@@ -5714,7 +5781,7 @@ class Component extends DCLogic {
         const px2 = R.x + nx * rr, py2 = R.y + ny * rr;
         if (!this.isWallPx(px2, py2)) { z.x = px2; z.y = py2; }   // de-penetrate (never into a wall)
         if (dv >= P.kill) {
-          this.hurtZombie(z, z.hp + 1, R.x, R.y, R.id, { cvx: vx, cvy: vy, dv });
+          this.hurtZombie(z, z.hp + 1, R.x, R.y, R.id, { cvx: vx, cvy: vy, dv }, true);
           if (this.inView(z.x, z.y, 60)) this.addShake(1 + Math.min(1.2, (dv - P.kill) * 0.15));
         } else if (dv >= P.down || topple) {
           const dmg = (0.5 * MZ * dv * dv / P.keRef) * z.maxhp;   // KE trauma vs the lethal reference
@@ -5770,6 +5837,7 @@ class Component extends DCLogic {
     }
   }
   updateZombie(z, dt) {
+    if (z.hp <= 0 || z._despawn) return;   // red-team 0.4.3: corpses killed earlier this frame (and escaped homers) act ZERO more times
     const S = this.S; let spd = z.spd * (z.slowT > 0 ? 0.45 : 1); if (z.slowT > 0) z.slowT -= dt;
     // REAL PHYSICS — knocked down: skid with ground friction, struggle, rise staggered. No senses, no claws, no bite.
     if (z.down > 0) {
