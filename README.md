@@ -35,11 +35,11 @@ starts — you only re-download the exe when a release says the wrapper changed.
 ### Chromebook / ChromeOS Preview
 
 **→ [Download the ChromeOS Browser Edition](../../releases/tag/v0.4.5-browser-preview)** and
-choose `Systemic Survival (Browser Edition).html`. Chromebooks cannot run the Windows `.exe`;
+choose `Systemic-Survival-Browser-Edition.html`. Chromebooks cannot run the Windows `.exe`;
 this single HTML file contains the game, runtime, fonts, and other resources needed to play.
 
 1. Open the ChromeOS **Files** app and go to **Downloads**.
-2. Double-click `Systemic Survival (Browser Edition).html` to open it in Chrome.
+2. Double-click `Systemic-Survival-Browser-Edition.html` to open it in Chrome.
 3. Keep the file on the Chromebook. Use **Export Save** in the pause menu before replacing
    it with a newer Browser Edition.
 
