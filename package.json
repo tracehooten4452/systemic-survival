@@ -1,6 +1,6 @@
 {
   "name": "systemic-survival",
-  "version": "0.4.4",
+  "version": "0.5.1",
   "description": "Offline Windows package for Systemic Survival.",
   "author": "Trace",
   "main": "electron/main.js",

@@ -11,6 +11,8 @@
 <x-dc>
 <helmet>
 <link rel="stylesheet" href="./vendor/fonts/fonts.css">
+
+
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;background:#070b0c;overflow:hidden}
@@ -724,6 +726,20 @@
           <sc-if value="{{ diploActive }}" hint-placeholder-val="{{ false }}">
             <div style="padding:7px 14px;background:rgba(255,213,107,.08);border-bottom:1px solid rgba(255,213,107,.22);font-family:'IBM Plex Mono',monospace;font-size:9px;color:#ffd56b">⌘ {{ diploStatus }}</div>
           </sc-if>
+          <div style="padding:8px 14px;border-bottom:1px solid rgba(54,224,207,.14);background:rgba(0,0,0,.25)">
+            <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:1.5px;color:#ffd56b">◉ THE WORLD LEARNS YOU</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#6f817c">read off {{ dosRaids }} raids · survives every colony · run {{ dosRuns }}</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+              <sc-for list="{{ dosChips }}" as="dc" hint-placeholder-count="6">
+                <div style="display:flex;gap:5px;align-items:baseline;padding:3px 8px;border:1px solid rgba(143,179,201,.18);background:rgba(0,0,0,.3)">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:1px;color:#6f817c">{{ dc.k }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:.5px;color:{{ dc.col }}">{{ dc.v }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
           <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
             <sc-for list="{{ factionRows }}" as="fr" hint-placeholder-count="8">
               <div style="{{ fr.rowStyle }}">
@@ -737,6 +753,18 @@
                     </div>
                     <div style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:#8fb3c9;margin-top:2px">{{ fr.blurb }}</div>
                     <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:{{ fr.offerCol }};margin-top:2px">{{ fr.detail }}</div>
+                    <sc-if value="{{ fr.intel }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#ffd56b;margin-top:2px">◉ IT REMEMBERS: {{ fr.intel }}</div>
+                    </sc-if>
+                    <sc-if value="{{ fr.nextMove }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#ff8a93;margin-top:2px">⌁ NEXT MOVE: {{ fr.nextMove }}</div>
+                    </sc-if>
+                    <sc-if value="{{ fr.cmdr }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#8a9aa0;margin-top:2px">⌖ CMDR — {{ fr.cmdr }}</div>
+                    </sc-if>
+                    <sc-if value="{{ fr.geo }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:#9aa8c0;margin-top:2px">⚑ {{ fr.geo }}</div>
+                    </sc-if>
                   </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
@@ -752,6 +780,7 @@
                   <button onClick="{{ fr.ally }}" style="{{ fr.allyStyle }}">⌘ ALLIANCE</button>
                   <button onClick="{{ fr.peace }}" style="{{ fr.peaceStyle }}">⌘ PEACE</button>
                   <button onClick="{{ fr.demand }}" style="{{ fr.demandStyle }}">⌘ DEMAND</button>
+                  <button onClick="{{ fr.assault }}" title="explicit siege order — only ordered assaults damage a base; parley visits never do" style="{{ fr.assaultStyle }}">{{ fr.assaultLabel }}</button>
                 </div>
               </div>
             </sc-for>
@@ -1009,7 +1038,7 @@
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{},&quot;difficulty&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Calm&quot;,&quot;Standard&quot;,&quot;Brutal&quot;],&quot;default&quot;:&quot;Standard&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Simulation&quot;},&quot;scanlines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Look&quot;},&quot;physStability&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.8,&quot;min&quot;:0.6,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;m/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;physFatality&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:11,&quot;min&quot;:4,&quot;max&quot;:20,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;m/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;physLethality&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:900,&quot;min&quot;:300,&quot;max&quot;:3000,&quot;step&quot;:50,&quot;unit&quot;:&quot;J&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;feelHitstop&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Combat Feel&quot;},&quot;feelKillTicks&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Combat Feel&quot;},&quot;feelShake&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Combat Feel&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{},&quot;difficulty&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Calm&quot;,&quot;Standard&quot;,&quot;Brutal&quot;],&quot;default&quot;:&quot;Standard&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Simulation&quot;},&quot;scanlines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Look&quot;},&quot;physStability&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.8,&quot;min&quot;:0.6,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;m/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;physFatality&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:10,&quot;min&quot;:4,&quot;max&quot;:20,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;m/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;physLethality&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:900,&quot;min&quot;:300,&quot;max&quot;:3000,&quot;step&quot;:50,&quot;unit&quot;:&quot;J&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Real Physics&quot;},&quot;feelHitstop&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Combat Feel&quot;},&quot;feelKillTicks&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Combat Feel&quot;},&quot;feelShake&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Combat Feel&quot;}}">
 class Component extends DCLogic {
   // ---------------------------------------------------------------- lifecycle
   componentDidMount() {
@@ -1047,8 +1076,10 @@ class Component extends DCLogic {
     window.addEventListener('keydown', this._audioWake, true);
     window.addEventListener('keydown', this._key);
     window.addEventListener('keyup', this._keyUp);
+    this._storEv = (ev) => { if (ev && ev.key === this.DOS_KEY) this._dos = null; };   // R5: another session wrote the dossier — drop the cache; next touch re-reads then merges its own EWMA on top (read-merge-write)
+    window.addEventListener('storage', this._storEv);
   }
-  componentWillUnmount() { this._dead = true; clearInterval(this._timer); clearInterval(this._hud); clearInterval(this._save); if (this.S && !this.S.gameOver) this.save(); if (this._ro) this._ro.disconnect(); window.removeEventListener('keydown', this._key); window.removeEventListener('keyup', this._keyUp); window.removeEventListener('mouseup', this.onUpWin); if (this._audioWake) { window.removeEventListener('pointerdown', this._audioWake, true); window.removeEventListener('keydown', this._audioWake, true); } if (this._ac) { try { this._ac.close(); } catch (e) {} this._ac = null; } }
+  componentWillUnmount() { this._dead = true; clearInterval(this._timer); clearInterval(this._hud); clearInterval(this._save); if (this._storEv) window.removeEventListener('storage', this._storEv); if (this.S && !this.S.gameOver && !this._restoring) this.save(); if (this._ro) this._ro.disconnect(); window.removeEventListener('keydown', this._key); window.removeEventListener('keyup', this._keyUp); window.removeEventListener('mouseup', this.onUpWin); if (this._audioWake) { window.removeEventListener('pointerdown', this._audioWake, true); window.removeEventListener('keydown', this._audioWake, true); } if (this._ac) { try { this._ac.close(); } catch (e) {} this._ac = null; } }
   componentDidUpdate(prev) { if (prev && prev.difficulty !== this.props.difficulty) this.init(); }
 
   ensureEls() {
@@ -1199,14 +1230,14 @@ class Component extends DCLogic {
     // Each rings the outer map (fx/fy = fraction of AW/AH); corners ≈8-9min on foot, N/S edges ≈4.5min (the close neighbors).
     // col = base palette · str = military weight · aggr = raid appetite · offer = what an ALLY satellite feeds you.
     this.FACTIONS = [
-      { key: 'nuclear', name: 'ATOM COVENANT', icon: '☢', col: '#b6e34a', col2: '#eef4b0', fx: 0.05, fy: 0.06, pop: 14, str: 8, aggr: 0.70, offer: 'alloy', blurb: 'Reactor zealots who irradiate the earth and worship the glow.', raid: 'irradiated heavies + dirty bombs' },
-      { key: 'meridian', name: 'MERIDIAN GRID', icon: '◈', col: '#4fd8e8', col2: '#e0f7fb', fx: 0.95, fy: 0.06, pop: 11, str: 7, aggr: 0.40, offer: 'tech', blurb: 'Solar technocrats — lasers, drones, and cold logic.', raid: 'laser infantry + drones' },
-      { key: 'ash', name: 'ASH COLUMN', icon: '▲', col: '#8a9a52', col2: '#cad49c', fx: 0.50, fy: 0.05, pop: 9, str: 5, aggr: 0.55, offer: 'intel', blurb: 'Guerrillas in the treeline; they see you first.', raid: 'hit-and-run ambushers' },
-      { key: 'ironclad', name: 'IRONCLAD LEGION', icon: '⬢', col: '#d0904e', col2: '#f2c790', fx: 0.96, fy: 0.50, pop: 10, str: 9, aggr: 0.60, offer: 'military', blurb: 'Exosuit foundry — cyborgs and walking steel.', raid: 'exosuits + cyborg heavies' },
-      { key: 'changed', name: 'THE CHANGED', icon: '✷', col: '#c05a9a', col2: '#f0a8d0', fx: 0.95, fy: 0.94, pop: 18, str: 6, aggr: 0.75, offer: 'pop', blurb: 'Mutants who embraced the plague — they breed and they hunger.', raid: 'mutant swarms' },
-      { key: 'bulwark', name: 'IRON BULWARK', icon: '♜', col: '#bd9552', col2: '#e8ce8c', fx: 0.50, fy: 0.95, pop: 13, str: 6, aggr: 0.35, offer: 'food', blurb: 'Medieval holdouts — stone walls, steel, and honor.', raid: 'men-at-arms + siege engines' },
-      { key: 'deluge', name: 'THE DELUGE', icon: '≈', col: '#4a90d8', col2: '#aed2f2', fx: 0.05, fy: 0.94, pop: 10, str: 6, aggr: 0.45, offer: 'trade', blurb: 'Hydro-engineers — pressure cannons and deep moats.', raid: 'water-cannon technicals' },
-      { key: 'rust', name: 'RUST KINGS', icon: '⚙', col: '#c87a3a', col2: '#f0b070', fx: 0.04, fy: 0.50, pop: 12, str: 5, aggr: 0.65, offer: 'scrap', blurb: 'Scrapyard warlords — anything is a weapon thrown hard enough.', raid: 'improvised bombs + technicals' },
+      { key: 'nuclear', name: 'ATOM COVENANT', cmdr: 'WARDEN SIEVERT', icon: '☢', col: '#b6e34a', col2: '#eef4b0', fx: 0.05, fy: 0.06, pop: 14, str: 8, aggr: 0.70, offer: 'alloy', blurb: 'Reactor zealots who irradiate the earth and worship the glow.', raid: 'irradiated heavies + dirty bombs' },
+      { key: 'meridian', name: 'MERIDIAN GRID', cmdr: 'DIRECTOR SOL', icon: '◈', col: '#4fd8e8', col2: '#e0f7fb', fx: 0.95, fy: 0.06, pop: 11, str: 7, aggr: 0.40, offer: 'tech', blurb: 'Solar technocrats — lasers, drones, and cold logic.', raid: 'laser infantry + drones' },
+      { key: 'ash', name: 'ASH COLUMN', cmdr: 'THE COLLECTOR', icon: '▲', col: '#8a9a52', col2: '#cad49c', fx: 0.50, fy: 0.05, pop: 9, str: 5, aggr: 0.55, offer: 'intel', blurb: 'Guerrillas in the treeline; they see you first.', raid: 'hit-and-run ambushers' },
+      { key: 'ironclad', name: 'IRONCLAD LEGION', cmdr: 'SIEGEMASTER BRANT', icon: '⬢', col: '#d0904e', col2: '#f2c790', fx: 0.96, fy: 0.50, pop: 10, str: 9, aggr: 0.60, offer: 'military', blurb: 'Exosuit foundry — cyborgs and walking steel.', raid: 'exosuits + cyborg heavies' },
+      { key: 'changed', name: 'THE CHANGED', cmdr: 'THE CHORUS', icon: '✷', col: '#c05a9a', col2: '#f0a8d0', fx: 0.95, fy: 0.94, pop: 18, str: 6, aggr: 0.75, offer: 'pop', blurb: 'Mutants who embraced the plague — they breed and they hunger.', raid: 'mutant swarms' },
+      { key: 'bulwark', name: 'IRON BULWARK', cmdr: 'CASTELLAN ROOK', icon: '♜', col: '#bd9552', col2: '#e8ce8c', fx: 0.50, fy: 0.95, pop: 13, str: 6, aggr: 0.35, offer: 'food', blurb: 'Medieval holdouts — stone walls, steel, and honor.', raid: 'men-at-arms + siege engines' },
+      { key: 'deluge', name: 'THE DELUGE', cmdr: 'TIDEMARSHAL OKON', icon: '≈', col: '#4a90d8', col2: '#aed2f2', fx: 0.05, fy: 0.94, pop: 10, str: 6, aggr: 0.45, offer: 'trade', blurb: 'Hydro-engineers — pressure cannons and deep moats.', raid: 'water-cannon technicals' },
+      { key: 'rust', name: 'RUST KINGS', cmdr: 'SCRAP-KING DOZER', icon: '⚙', col: '#c87a3a', col2: '#f0b070', fx: 0.04, fy: 0.50, pop: 12, str: 5, aggr: 0.65, offer: 'scrap', blurb: 'Scrapyard warlords — anything is a weapon thrown hard enough.', raid: 'improvised bombs + technicals' },
     ];
     this.REPHOSTILE = -30; this.REPALLIED = 55;   // relationship thresholds (blend: emergent rep + explicit offers)
     const diff = this.props.difficulty || 'Standard';
@@ -1318,15 +1349,9 @@ class Component extends DCLogic {
     this.resize();
   }
 
-  save() {
-    try {
-      // SESSION-OWNER LOCK: the newest booted session owns the save. A stale tab/iframe (suspended
-      // timers, old code) may still be autosaving — without this it silently clobbers newer-schema
-      // saves (found live: a background instance stripped new fields every 4s). Ownership is stamped
-      // at boot + reclaimed on any user gesture in this tab.
-      if (this._bootId) { const own = localStorage.getItem(this.SAVE + '_owner'); if (own && own !== this._bootId) return; }   // null owner (storage denied at boot) never blocks — only a verifiably different session does
-      const S = this.S;
-      const data = {
+  serializeCurrentState() {   // R2 (merge-gate): ONE serializer for autosave, slot saves, and export — always live state, never a re-read of the main key
+    const S = this.S;
+    return {
         v: 1, t: Date.now(), scrap: S.scrap, materials: S.materials, alloy: S.alloy || 0, kills: S.kills, totalEarned: S.totalEarned, totalMat: S.totalMat || 0,
         threat: S.threat, ramp: S.ramp, spawnGap: S.spawnGap, dayT: S.dayT || 0, research: S.research,
         squadUnlocked: S.squadUnlocked, squadFormed: S.squadFormed, formTier: S.formTier, specUnlocked: S.specUnlocked, turretUnlocked: S.turretUnlocked, turretTier: S.turretTier,
@@ -1341,19 +1366,65 @@ class Component extends DCLogic {
         groups: S.groups || {}, heat: !!S.heat, dashFilter: S.dashFilter || 'all', dashOpen: S.dashOpen !== false, panels: S.panels || { barracks: true, research: true, perimeter: true }, attackSquad: S.attackSquad || { ids: [], mode: 'idle' }, zoom: this.zoom || 0.82, padTiers: S.padTiers || {}, effBest: S.effBest || null, lockdown: !!S.lockdown, lockAuto: S.lockAuto !== false,
         exped: S.exped ? { state: S.exped.state, ids: S.exped.ids, crates: S.exped.crates, tier: S.exped.tier, name: S.exped.name, wagon: S.exped.wagon ? { x: Math.round(S.exped.wagon.x), y: Math.round(S.exped.wagon.y), hp: Math.round(S.exped.wagon.hp) } : null } : null,
         prez: S.prez ? { on: !!S.prez.on, floor: S.prez.floor || 0, bud: S.prez.bud || { defense: 2, economy: 2, hiring: 1 } } : null,
-        factions: (S.factions || []).map(f => ({ id: f.id, key: f.key, x: Math.round(f.x), y: Math.round(f.y), hp: Math.round(f.hp), maxhp: f.maxhp, rep: Math.round(f.rep), pop: Math.round(f.pop), str: f.str, alive: f.alive !== false, pact: f.pact || null, claims: (f.claims || []).slice(0, 12), raidCd: Math.max(0, Math.round(f.raidCd || 0)) })),
+        factions: (S.factions || []).map(f => ({ id: f.id, key: f.key, x: Math.round(f.x), y: Math.round(f.y), hp: Math.round(f.hp), maxhp: f.maxhp, rep: Math.round(f.rep), pop: Math.round(f.pop), str: f.str, alive: f.alive !== false, pact: f.pact || null, siege: !!f.siege, egress: f.egress === true, grudge: Math.round((f.grudge || 0) * 100) / 100, claims: (f.claims || []).slice(0, 12), raidCd: Math.max(0, Math.round(f.raidCd || 0)), obs: f.obs || null })),
+        facRel: S.facRel || null,
         diplo: S.diplo ? { id: S.diplo.id, intent: S.diplo.intent } : null,
         vol: S.vol ? { m: +S.vol.m || 0 } : null,
         set: S.set || null,
         tut: S.tut ? { i: S.tut.i | 0, done: !!S.tut.done } : null,
       };
-      localStorage.setItem(this.SAVE, JSON.stringify(data));
-    } catch (e) {}
   }
-  loadSave() {
+  save() {   // R2: returns true only when the payload verifiably hit storage
     try {
-      const raw = localStorage.getItem(this.SAVE); if (!raw) return false;
-      const d = JSON.parse(raw); const S = this.S;
+      if (this._restoring) return false;   // restore barrier: a pending slot-load/import owns the key
+      // SESSION-OWNER LOCK: the newest booted session owns the save. A stale tab/iframe (suspended
+      // timers, old code) may still be autosaving — without this it silently clobbers newer-schema
+      // saves (found live: a background instance stripped new fields every 4s). Ownership is stamped
+      // at boot + reclaimed on any user gesture in this tab.
+      if (this._bootId) { const own = localStorage.getItem(this.SAVE + '_owner'); if (own && own !== this._bootId) return false; }   // null owner (storage denied at boot) never blocks — only a verifiably different session does
+      localStorage.setItem(this.SAVE, JSON.stringify(this.serializeCurrentState()));
+      return true;
+    } catch (e) { return false; }
+  }
+  validateSave(d) {   // R4: ONE transactional gate for main-key loads, slot loads, and imports.
+    // Deep-validates + normalizes into a TEMP copy (the apply phase consumes only that copy — live
+    // state is untouched until validation passed). Rejects arrays, incompatible versions, malformed
+    // nested units/factions rows, and non-finite core numbers (JSON round-trip nulls the rest; the
+    // apply phase coerces nulls through its per-field defaults).
+    try {
+      if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
+      if (d.v !== 1) return null;   // incompatible/unknown save version
+      const fin = (v) => typeof v === 'number' && isFinite(v);
+      for (const k of ['kills', 'threat', 'hqLevel', 'sector', 'expand', 'scrap', 'materials']) if (!fin(d[k])) return null;   // P1: core fields are REQUIRED — incomplete saves are rejected, not defaulted
+      if (!Array.isArray(d.units)) return null;
+      const okRow = (u) => u && typeof u === 'object' && !Array.isArray(u) && (u.x == null || fin(u.x)) && (u.y == null || fin(u.y));
+      if (!d.units.every(okRow)) return null;   // P1 STRICT: one malformed row rejects the whole save — filtering built hybrid colonies
+      const bnd = (v, lo, hi) => v == null || (fin(v) && v >= lo && v <= hi);   // R4 (0.5.1): bounded-or-absent
+      const ROLES = ['operator', 'gatherer', 'technician', 'runner', 'mech', 'tank'];
+      for (const u of d.units) {   // R4: roles + bounded nested fields — a poisoned up{} or hp can no longer install
+        if (!ROLES.includes(u.role)) return null;
+        if (!bnd(u.id, 0, 1e9) || !bnd(u.hp, -1, 1e6) || !bnd(u.vet, 0, 1e6) || !bnd(u.kills, 0, 1e6)) return null;
+        if (u.up != null) { if (typeof u.up !== 'object' || Array.isArray(u.up)) return null; for (const kk of ['hp', 'spd', 'dmg', 'rof', 'cap']) if (!bnd(u.up[kk], 0, 99)) return null; }
+      }
+      for (const key of ['factions', 'turrets', 'barricades', 'medbays', 'warehouses', 'homes', 'blds', 'sites', 'gates']) if (d[key] != null && (!Array.isArray(d[key]) || !d[key].every(okRow))) return null;
+      const MX = this.AW || 48000, MY = this.AH || 27000;
+      if (d.factions != null) for (const f of d.factions) { if (!fin(f.x) || !fin(f.y) || f.x < 0 || f.y < 0 || f.x > MX || f.y > MY) return null; if (!bnd(f.str, 1, 24) || !bnd(f.pop, 0, 999) || !bnd(f.hp, 0, 1e5) || !bnd(f.grudge, 0, 9)) return null; }   // R3 0.5.1b: coords bounded by the REAL arena (AW×AH) — (90000,90000) rejects atomically
+      if (d.gates != null && !d.gates.every(g => fin(g.pad) && g.pad >= 0 && g.pad < 999 && fin(g.lvl) && g.lvl >= 0 && g.lvl <= 10 && bnd(g.hp, -1, 1e6) && bnd(g.maxhp, 1, 1e6))) return null;   // R4: structure-specific gate bounds
+      if (d.turrets != null) for (const t of d.turrets) if (!bnd(t.id, 0, 1e9) || !bnd(t.lvl, 0, 10) || !bnd(t.hp, -1, 1e6)) return null;
+      if (d.barricades != null) for (const b of d.barricades) if (b.o != null && b.o !== 'h' && b.o !== 'v') return null;
+      for (const key of ['hero', 'padTiers', 'research', 'cmd', 'branches', 'labor', 'groups', 'set', 'tut', 'prez', 'diplo', 'facRel']) if (d[key] != null && (typeof d[key] !== 'object' || Array.isArray(d[key]))) return null;
+      return JSON.parse(JSON.stringify(d));   // normalized temp copy — the apply phase consumes only this
+    } catch (e) { return null; }
+  }
+  loadSave(dataOpt) {
+    let snap = null;
+    try {
+      let d;
+      if (dataOpt) { d = this.validateSave(dataOpt); }
+      else { const raw = localStorage.getItem(this.SAVE); if (!raw) return false; d = this.validateSave(JSON.parse(raw)); }
+      if (!d) return false;   // R4: validate into temp state BEFORE any live mutation — invalid payloads leave the fresh colony intact
+      if (!this._rbSnap) snap = this.serializeCurrentState();   // P1 ATOMIC apply: pre-load snapshot — a throw mid-apply rolls the WHOLE state back (no hybrid colonies)
+      const S = this.S;
       S.scrap = d.scrap || 0; S.materials = d.materials || 0; S.alloy = d.alloy || 0; S.kills = d.kills || 0; S.totalEarned = d.totalEarned || 0; S.totalMat = d.totalMat || 0;
       S.threat = d.threat || 1; S.ramp = d.ramp || 0; S.spawnGap = d.spawnGap || 2.6; S.dayT = d.dayT || 0;
       if (d.research) S.research = Object.assign({ squad: false, spec: false, turret: false, mech: false, tank: false, refine: false, powers: false }, d.research);
@@ -1362,7 +1433,7 @@ class Component extends DCLogic {
       if (d.cmd) S.cmd = Object.assign(S.cmd, d.cmd); S.cores = d.cores || 0; S.sector = d.sector || 1; S.sectorKills = d.sectorKills || 0; this.rebuildNodes();
       S.threat = Math.max(this.sectorBaseThreat(S.sector), Math.min(S.threat, this.sectorBaseThreat(S.sector) + 2));
       if (d.nextId) S.nextId = d.nextId;
-      S.units = (d.units || []).map(u => ({ id: u.id, role: u.role, x: u.x, y: u.y, squad: !!u.squad, cls: u.cls || null, up: u.up || { hp: 0, spd: 0, dmg: 0, rof: 0 }, cd: 0, aim: -Math.PI / 2, muzzle: 0, vehicle: u.vehicle || null, heli: u.heli || null, dead: false, reviveT: 0, turretId: u.turretId || null, load: u.load || 0, gs: u.gs || 'toNode', node: null, hp: u.hp, vet: u.vet || 0, kills: u.kills || 0, chair: (u.chair == null ? null : u.chair), guard: (u.guard == null ? null : u.guard), vgear: (u.vgear && typeof u.vgear === 'object') ? u.vgear : null, wpn: (u.wpn && u.wpn.cart && this.CARTS[u.wpn.cart]) ? u.wpn : null, duty: u.duty === 'scav' ? 'scav' : null, sfinds: Array.isArray(u.sfinds) ? u.sfinds.filter(t => t >= 1 && t <= 3).slice(0, 3) : [] }));
+      S.units = (d.units || []).map(u => ({ id: u.id, role: u.role, x: u.x, y: u.y, squad: !!u.squad, cls: u.cls || null, up: Object.assign({ hp: 0, spd: 0, dmg: 0, rof: 0, cap: 0 }, (u.up && typeof u.up === 'object' && !Array.isArray(u.up)) ? u.up : {}), cd: 0, aim: -Math.PI / 2, muzzle: 0, vehicle: u.vehicle || null, heli: u.heli || null, dead: false, reviveT: 0, turretId: u.turretId || null, load: u.load || 0, gs: u.gs || 'toNode', node: null, hp: u.hp, vet: u.vet || 0, kills: u.kills || 0, chair: (u.chair == null ? null : u.chair), guard: (u.guard == null ? null : u.guard), vgear: (u.vgear && typeof u.vgear === 'object') ? u.vgear : null, wpn: (u.wpn && u.wpn.cart && this.CARTS[u.wpn.cart]) ? u.wpn : null, duty: u.duty === 'scav' ? 'scav' : null, sfinds: Array.isArray(u.sfinds) ? u.sfinds.filter(t => t >= 1 && t <= 3).slice(0, 3) : [] }));
       if (Array.isArray(d.council)) S.council = d.council.slice(0, 5); if (Array.isArray(d.councilOn)) S.councilOn = d.councilOn.slice(0, 5);
       if (d.vetModel !== 2) { for (const u of S.units) u.vet = 0; S.council = [null, null, null, null, null]; S.councilOn = [false, false, false, false, false]; }
       this.sanitizeCouncil();
@@ -1403,8 +1474,10 @@ class Component extends DCLogic {
         S.prez = { on: !!d.prez.on, floor: Math.max(0, Math.min(3000, Math.floor(+d.prez.floor) || 0)), bud: { defense: bv(db.defense, 2), economy: bv(db.economy, 2), hiring: bv(db.hiring, 1), support: bv(db.support, 2) }, orders: 0 };
         if (S.prez.on && S.hero) S.hero.patrol = true;   // the President always defends when hostiles close in
       }
-      S.factions = Array.isArray(d.factions) ? d.factions.filter(f => f && this.FACTIONS[f.id] && this.FACTIONS[f.id].key === f.key).map(f => ({ id: f.id | 0, key: f.key, x: +f.x || 0, y: +f.y || 0, hp: Math.max(0, +f.hp || 0), maxhp: +f.maxhp || (600 + this.FACTIONS[f.id].str * 60), rep: Math.max(-100, Math.min(100, +f.rep || 0)), pop: Math.max(0, Math.min(999, +f.pop || 0)), str: +f.str || this.FACTIONS[f.id].str, alive: f.alive !== false, pact: (f.pact === 'ally' || f.pact === 'war') ? f.pact : null, claims: Array.isArray(f.claims) ? f.claims.slice(0, 12) : [], raidCd: (f.raidCd != null && isFinite(f.raidCd)) ? Math.max(0, +f.raidCd) : 45 + Math.random() * 60 })) : null;
-      S.diplo = (d.diplo && typeof d.diplo === 'object' && this.FACTIONS[d.diplo.id] && ['gift', 'alliance', 'peace', 'demand'].includes(d.diplo.intent)) ? { id: d.diplo.id | 0, intent: d.diplo.intent } : null;   // invalid/corrupt intent → NULL the mission (Codex v0.4.2), never coerce to 'gift'
+      S.factions = Array.isArray(d.factions) ? d.factions.filter(f => f && this.FACTIONS[f.id] && this.FACTIONS[f.id].key === f.key).map(f => ({ id: f.id | 0, key: f.key, x: +f.x || 0, y: +f.y || 0, hp: Math.max(0, +f.hp || 0), maxhp: +f.maxhp || (600 + this.FACTIONS[f.id].str * 60), rep: Math.max(-100, Math.min(100, +f.rep || 0)), pop: Math.max(0, Math.min(999, +f.pop || 0)), str: +f.str || this.FACTIONS[f.id].str, alive: f.alive !== false, pact: (f.pact === 'ally' || f.pact === 'war') ? f.pact : null, siege: f.siege === true, egress: f.egress === true, grudge: (isFinite(+f.grudge) && f.grudge > 0) ? Math.min(9, +f.grudge) : 0, claims: Array.isArray(f.claims) ? f.claims.slice(0, 12) : [], raidCd: (f.raidCd != null && isFinite(f.raidCd)) ? Math.max(0, +f.raidCd) : 45 + Math.random() * 60, obs: this.validObs(f.obs) })) : null;
+      S.diplo = (d.diplo && typeof d.diplo === 'object' && !d.diplo.eg && this.FACTIONS[d.diplo.id] && ['gift', 'alliance', 'peace', 'demand'].includes(d.diplo.intent)) ? { id: d.diplo.id | 0, intent: d.diplo.intent } : null;   // invalid/corrupt intent → NULL; a saved EGRESS leg is dropped (f.egress persists the protection — the walk-out doesn't re-arm a parley)
+      S.facRel = {}; if (d.facRel && typeof d.facRel === 'object' && !Array.isArray(d.facRel)) for (let a2 = 0; a2 < this.FACTIONS.length; a2++) for (let b2 = a2 + 1; b2 < this.FACTIONS.length; b2++) { const k2 = this.relKey(a2, b2); if (isFinite(+d.facRel[k2])) S.facRel[k2] = Math.max(-100, Math.min(100, +d.facRel[k2])); }   // R9 (0.5.1): import ONLY the 28 canonical keys — junk floods discarded at the door
+      this.seedFacRel();
       S.exped = null;
       if (d.exped && Array.isArray(d.exped.ids) && d.exped.ids.length && d.exped.wagon) {
         S.exped = { state: 'return', si: -1, sx: null, sy: null, ids: d.exped.ids.slice(0, 24), crates: Array.isArray(d.exped.crates) ? d.exped.crates.slice(0, 40) : [], tier: [1, 2, 3].includes(d.exped.tier) ? d.exped.tier : 1, name: String(d.exped.name || 'THE SITE').slice(0, 28), wagon: { x: +d.exped.wagon.x || this.hq.x, y: +d.exped.wagon.y || this.hq.y, hp: Math.max(60, Math.min(420, +d.exped.wagon.hp || 420)), maxhp: 420 } };
@@ -1424,7 +1497,10 @@ class Component extends DCLogic {
         S.toast = `OFFLINE ${mins}m · +${os} SCR +${om} MAT`; S.toastT = 5.5;
       }
       return true;
-    } catch (e) { return false; }
+    } catch (e) {
+      if (snap && !this._rbSnap) { this._rbSnap = true; try { this.loadSave(snap); } catch (e2) { } finally { this._rbSnap = false; } }   // P1: failed apply → re-apply the pre-load snapshot (serializer output always applies cleanly) — zero net mutation
+      return false;
+    }
   }
 
   // ---------------------------------------------------------------- units
@@ -1432,7 +1508,7 @@ class Component extends DCLogic {
     const a = Math.random() * Math.PI * 2;
     const u = {
       id: this.S.nextId++, role, x: this.bunker.x + Math.cos(a) * 26, y: this.bunker.y + Math.sin(a) * 26,
-      squad: false, cls: null, up: { hp: 0, spd: 0, dmg: 0, rof: 0 }, cd: 0, aim: -Math.PI / 2, muzzle: 0,
+      squad: false, cls: null, up: { hp: 0, spd: 0, dmg: 0, rof: 0, cap: 0 }, cd: 0, aim: -Math.PI / 2, muzzle: 0,   // R2 0.5.1b: cap seeded — a fresh gatherer's carry is finite from birth
       dead: false, reviveT: 0, turretId: null, vet: 0, chair: null, vgear: null, wpn: null, duty: null, sfinds: [],
     };
     if (role === 'gatherer') { u.up = { hp: 0, spd: 0, cap: 0 }; u.load = 0; u.gs = 'toNode'; u.node = null; }
@@ -1535,12 +1611,12 @@ class Component extends DCLogic {
     const a = aim + (st.acc ? (Math.random() - 0.5) * 2 * st.acc * adsMul : 0);
     const cart = this.CARTS[hw ? hw.cart : gun.cart];
     const kbP = cart ? (cart.mg / 1000) * cart.v * 2 : 40;   // true momentum — bullets nudge, they don't throw
-    this.S.bullets.push({ x: h.x + Math.cos(a) * 14, y: h.y + Math.sin(a) * 14, a, spd: st.pspd, life: 0.5 + (st.range || 0.7) * (this._ads ? 1.25 : 1), dmg, rt: amm.rt, hs, api: amm.api ? 1 : 0, slow: 0, crit: false, splashR: 0, big: false, hero: true, kb: Math.min(3.2, kbP / 25), hit: new Set() });
+    this.S.bullets.push({ own: 'hero', x: h.x + Math.cos(a) * 14, y: h.y + Math.sin(a) * 14, a, spd: st.pspd, life: 0.5 + (st.range || 0.7) * (this._ads ? 1.25 : 1), dmg, rt: amm.rt, hs, api: amm.api ? 1 : 0, slow: 0, crit: false, splashR: 0, big: false, hero: true, kb: Math.min(3.2, kbP / 25), hit: new Set() });
   }
   heroMelee(target, st) {
     const h = this.S.hero; h.muzzle = 0.06; h.aim = Math.atan2(target.y - h.y, target.x - h.x);
     const dmg = st.dmg * 1.5;
-    for (const z of this.S.zombies) { if (Math.hypot(z.x - h.x, z.y - h.y) < 32) { this.hurtZombie(z, dmg, z.x, z.y); const a = Math.atan2(z.y - h.y, z.x - h.x); z.kx = (z.kx || 0) + Math.cos(a) * 150; z.ky = (z.ky || 0) + Math.sin(a) * 150; } }
+    for (const z of this.S.zombies) { if (Math.hypot(z.x - h.x, z.y - h.y) < 32) { this.hurtZombie(z, dmg, z.x, z.y, 'hero'); const a = Math.atan2(z.y - h.y, z.x - h.x); z.kx = (z.kx || 0) + Math.cos(a) * 150; z.ky = (z.ky || 0) + Math.sin(a) * 150; } }
     this.S.fx.push({ x: h.x + Math.cos(h.aim) * 18, y: h.y + Math.sin(h.aim) * 18, r: 5, mr: 26, life: 0.16, t: 0, kind: 'strike' });
   }
   updateHero(dt) {
@@ -1773,13 +1849,15 @@ class Component extends DCLogic {
   factionEncroach() {   // ADVANCE THE FRONT pushes into faction turf — the nearest bristle (aggressive ones most)
     const live = this.liveFactions().slice().sort((a, b) => Math.hypot(a.x - this.hq.x, a.y - this.hq.y) - Math.hypot(b.x - this.hq.x, b.y - this.hq.y));
     let any = false;
-    for (let i = 0; i < live.length; i++) { const f = live[i]; if (f.pact === 'ally') continue; const base = i < 2 ? 16 : i < 4 ? 8 : 3; if (this.factionRep(f.id, -base * this.facDef(f).aggr)) any = true; }
+    for (let i = 0; i < live.length; i++) { const f = live[i]; if (f.pact === 'ally') continue; const base = i < 2 ? 16 : i < 4 ? 8 : 3; if (this.factionRep(f.id, -base * this.facDef(f).aggr)) any = true; if (i < 2) f.grudge = Math.min(9, (f.grudge || 0) + 1); }   // step 6: pushing the front INTO a neighbor is an insult too (grudge clamped, R5)
     if (any) this.milestone('⚠ THE FRONT ADVANCES — NEIGHBORING FACTIONS TAKE NOTE');
   }
   // ---- FACTIONS diplomacy (Slice C2): the President physically travels to a base and parleys — the walk IS the timer ----
   setDiplo = (id, intent) => {
     const S = this.S; const f = (S.factions || []).find(x => x.id === id);
     if (!f || f.alive === false) return;
+    if (f.egress) { this.milestone('⌘ THE DELEGATION IS STILL WITHDRAWING — RE-OPEN CHANNELS AFTER IT CLEARS THE BASE'); this.forceUpdate(); return; }   // P0: EVERY parley is blocked until actual departure — no same-visit re-parley of any kind
+    if (intent === 'demand' && this.facState(f) === 'allied') { this.milestone('⌘ YOU DON’T EXTORT AN ALLY — BREAK THE PACT FIRST'); this.forceUpdate(); return; }   // R5 (0.5.1)
     if (!['gift', 'alliance', 'peace', 'demand'].includes(intent)) return;   // reject bad intents at the source (matches loadSave validation)
     if (S.diplo && S.diplo.id === id && S.diplo.intent === intent) { S.diplo = null; this.milestone('⌘ DIPLOMATIC MISSION RECALLED'); this.forceUpdate(); return; }
     const def = this.facDef(f);
@@ -1793,15 +1871,27 @@ class Component extends DCLogic {
   parleyCost(intent) { return intent === 'alliance' ? { s: 80, m: 60 } : intent === 'gift' ? { s: 40, m: 30 } : intent === 'peace' ? { s: 30, m: 20 } : { s: 0, m: 0 }; }
   resolveParley(f, intent) {
     const S = this.S, def = this.facDef(f), c = this.parleyCost(intent);
+    if (f.egress) { S.diplo = null; return; }   // P0 defense-in-depth: no resolution while a delegation is still withdrawing
     const say = (t, col) => { S.floats.push({ x: f.x, y: f.y - 22, text: t, color: col || '#e8f4f2', life: 2.2, t: 0 }); this.milestone(t); };
     if (intent === 'alliance' && f.rep < 30 && f.pact !== 'ally') { say('⌘ ' + def.name + ' REFUSES — EARN THEIR TRUST FIRST', '#ffb454'); }
     else if ((c.s && S.scrap < c.s) || (c.m && S.materials < c.m)) { say('⌘ NOT ENOUGH TO OFFER — NEED ' + c.s + ' SCR + ' + c.m + ' MAT', '#ffb454'); }
     else if (intent === 'gift') { S.scrap -= c.s; S.materials -= c.m; this.factionRep(f.id, 22); say('⌘ ' + def.name + ' ACCEPTS THE GIFT', '#7ef0a6'); }
-    else if (intent === 'alliance') { S.scrap -= c.s; S.materials -= c.m; f.pact = 'ally'; f.rep = Math.max(f.rep, this.REPALLIED); say('✦ ' + def.name + ' — ALLIANCE FORGED', '#7ef0a6'); }
-    else if (intent === 'peace') { S.scrap -= c.s; S.materials -= c.m; f.pact = null; if (f.rep < -8) f.rep = -8; this.factionRep(f.id, 14); say('◈ ' + def.name + ' — CEASEFIRE', '#ffd56b'); }
-    else if (intent === 'demand') { const gain = Math.round(50 + f.pop * 3); S.scrap += gain; S.totalEarned += gain; f.pact = null; this.factionRep(f.id, -26); say('⌘ EXTORTED ' + gain + ' SCRAP FROM ' + def.name, '#ff5d6c'); }
+    else if (intent === 'alliance') { S.scrap -= c.s; S.materials -= c.m; f.pact = 'ally'; f.rep = Math.max(f.rep, this.REPALLIED); this.dosSig('aggr', 0); say('✦ ' + def.name + ' — ALLIANCE FORGED', '#7ef0a6'); this.rippleRep(f.id, 8, -8, 'YOUR PACT WITH ' + def.name + ' RIPPLES — ITS FRIENDS WARM, ITS RIVALS BRISTLE'); }
+    else if (intent === 'peace') { S.scrap -= c.s; S.materials -= c.m; f.pact = null; if (f.rep < -8) f.rep = -8; this.factionRep(f.id, 14); this.dosSig('aggr', 0); say('◈ ' + def.name + ' — CEASEFIRE', '#ffd56b'); }
+    else if (intent === 'demand' && this.facState(f) === 'allied') { say('⌘ YOU DON’T EXTORT AN ALLY — BREAK THE PACT FIRST', '#ffb454'); }   // R5 defense-in-depth (setDiplo already refuses)
+    else if (intent === 'demand' && f.pop <= 2) { say('⌘ ' + def.name + ' IS BLED DRY — NOTHING LEFT TO TAKE', '#ffb454'); this.factionRep(f.id, -8); }   // R5: the protected floor PAYS NOTHING (still an insult to try)
+    else if (intent === 'demand') { const gain = Math.round(50 + f.pop * 3); S.scrap += gain; S.totalEarned += gain; f.pact = null; this.factionRep(f.id, -26); f.pop = Math.max(2, f.pop - 3); f.grudge = Math.min(9, (f.grudge || 0) + 3); this.dosSig('aggr', 1); say('⌘ EXTORTED ' + gain + ' SCRAP FROM ' + def.name, '#ff5d6c'); this.rippleRep(f.id, -6, 4, 'WORD OF THE EXTORTION SPREADS — ' + def.name + '’S FRIENDS TAKE NOTE'); }   // P0 depletion + step 6 grudge, clamped to the loadSave domain [0,9] (R5)
+    f.siege = false; f.egress = true;   // P0: a completed parley stands the army down + opens EGRESS — lifted ONLY by actual departure (>490px), never by time; persisted in save
     f._lastState = this.facState(f); this.ping(f.x, f.y, this.facStateCol(f));
   }
+  toggleAssault = (id) => {   // R1: the EXPLICIT order — the only path to faction damage
+    const S = this.S, f = (S.factions || []).find(x => x.id === id); if (!f || f.alive === false) return;
+    const def = this.facDef(f);
+    if (f.siege) { f.siege = false; this.milestone('✋ STAND DOWN — ' + def.name); this.forceUpdate(); return; }
+    if (this.facState(f) === 'allied') { this.milestone('⌘ ' + def.name + ' IS AN ALLY — NO ASSAULT WHILE THE PACT HOLDS'); this.forceUpdate(); return; }
+    if (f.egress) { this.milestone('⌘ THE DELEGATION IS STILL WITHDRAWING — HOLD'); this.forceUpdate(); return; }
+    f.siege = true; this.milestone('⚔ ASSAULT ORDERED — ' + def.name + ' (forces within 300px engage)'); this.ping(f.x, f.y, '#ff5d6c'); this.forceUpdate();
+  };
   updateDiplo(h, dt, st) {
     const S = this.S, dp = S.diplo; if (!dp) return false;
     const f = (S.factions || []).find(x => x.id === dp.id);
@@ -1814,7 +1904,14 @@ class Component extends DCLogic {
     if (breach) return false;   // defend home before diplomacy
     h.seated = false; h.hp = Math.min(h.maxhp, h.hp + dt * 10);
     const d = Math.hypot(f.x - h.x, f.y - h.y);
-    if (d <= 72) { this.resolveParley(f, dp.intent); S.diplo = null; this._diploField = null; this._dfTile = null; return true; }
+    if (dp.eg) {   // P0 EGRESS LEG: the delegation walks itself out — diplomacy re-opens only on ACTUAL departure, never a clock
+      if (d > 490) { S.diplo = null; f.egress = false; this.milestone('⌘ DELEGATION CLEAR OF ' + this.facDef(f).name + ' — CHANNELS OPEN'); return true; }
+      const a0 = Math.atan2(h.y - f.y, h.x - f.x), mspd2 = Math.max(56, 168 - (h._slowV || 0));
+      const step = (a) => { const px = h.x + Math.cos(a) * mspd2 * dt, py = h.y + Math.sin(a) * mspd2 * dt; if (!this.isBlockedPx(px, py, 7)) { h.x = px; h.y = py; return true; } return false; };
+      if (!step(a0)) { if (!step(a0 + 0.75)) step(a0 - 0.75); }
+      return true;
+    }
+    if (d <= 72) { this.resolveParley(f, dp.intent); S.diplo = { id: dp.id, intent: dp.intent, eg: true }; this._diploField = null; this._dfTile = null; return true; }
     const tc = this.tileOf(f.x, f.y);
     if (!this._diploField || !this._dfTile || this._dfTile.c !== tc.c || this._dfTile.r !== tc.r) { this._dfTile = tc; this._diploField = this.field(tc); }
     const ox = h.x, oy = h.y, mspd = Math.max(56, 168 - (h._slowV || 0)); this.fieldMove(h, this._diploField, mspd, dt, false, f.x, f.y);
@@ -1823,14 +1920,16 @@ class Component extends DCLogic {
   }
   // ---- FACTIONS conquest (Slice F): crush a base with an embodied army → annex survivors + spoils + free its territory ----
   conquerFaction(f) {
+    this.dosSig('aggr', 1);   // conquest is remembered across every run
     const S = this.S, def = this.facDef(f);
-    f.alive = false; f.hp = 0; f.pact = null; f._assaultT = 0; f._lastState = 'gone';
+    this.retireFaction(f);   // R1: one retirement path — raiders/pulse/plan/ledgers/diplomacy all cleared
     const migr = Math.min(Math.round(f.pop * 0.5), Math.max(0, (this.popCap() || 0) - S.civs.length));
     for (let i = 0; i < migr; i++) this.spawnCivilian();
     const spoil = Math.round(120 + f.str * 40 + f.pop * 6); S.scrap += spoil; S.totalEarned += spoil;
     const mat = Math.round(60 + f.str * 20); S.materials = Math.min(this.resCap('materials'), (S.materials || 0) + mat);
-    S.zombies = S.zombies.filter(z => !(z.raider && z.fac === f.id));   // their war dies with the base
     this.milestone('☠ ' + def.name + ' CONQUERED — +' + migr + ' SETTLERS · +' + spoil + ' SCRAP · +' + mat + ' MAT'); this.ping(f.x, f.y, '#ffd56b');
+    this.rippleRep(f.id, -25, 10, 'THE CONQUEST OF ' + def.name + ' ECHOES — ITS FRIENDS SEETHE, ITS RIVALS TOAST YOU');   // step 6: conquest is the loudest move on the board
+    for (const g of this.liveFactions()) if (this.facRel(f.id, g.id) >= 25) g.grudge = Math.min(9, (g.grudge || 0) + 2);   // R5: runtime grudge clamped to the loader domain
   }
   // ---- FACTIONS allied (Slice E): an allied town grows itself, then SENDS production resources + settlers to HQ (the road is the clock) ----
   allyGiveInterval(f) { return 45 + Math.hypot(f.x - this.hq.x, f.y - this.hq.y) / 120; }   // farther allies deliver less often — distance matters
@@ -1848,40 +1947,99 @@ class Component extends DCLogic {
   }
   // ---- FACTIONS hostile (Slice D): raid parties are faction-colored armed 'zombies' — they inherit bullets/turrets/physics/ragdoll ----
   rclass(k) { return ({
-    assault:    { hpX: 1.0,  spdX: 1.0,  dmgX: 1.0, dr: 0,    tgt: 'hq',   desc: 'HOSTILES' },
-    skirmisher: { hpX: 0.55, spdX: 1.5,  dmgX: 0.7, dr: 0,    tgt: 'econ', desc: 'SKIRMISHERS — YOUR FIELD IS THE TARGET' },
-    breaker:    { hpX: 2.4,  spdX: 0.68, dmgX: 1.5, dr: 0.45, tgt: 'hq',   desc: 'ARMORED BREAKERS' },
+    assault:    { hpX: 1.0,  spdX: 1.0,  dmgX: 1.0,  dr: 0,    tgt: 'hq',   desc: 'HOSTILES' },
+    skirmisher: { hpX: 0.55, spdX: 1.5,  dmgX: 0.7,  dr: 0,    tgt: 'econ', desc: 'SKIRMISHERS — YOUR FIELD IS THE TARGET' },
+    breaker:    { hpX: 2.4,  spdX: 0.68, dmgX: 1.5,  dr: 0.45, tgt: 'hq',   desc: 'ARMORED BREAKERS' },
+    zealot:     { hpX: 0.8,  spdX: 1.15, dmgX: 0.8,  dr: 0,    tgt: 'hq',   desc: 'IRRADIATED ZEALOTS' },      // step 6: death-burst pays only vs STRUCTURES; budget traded from hp/dmg
+    lance:      { hpX: 0.7,  spdX: 1.1,  dmgX: 1.15, dr: 0,    tgt: 'hq',   desc: 'LASER LANCES' },
+    swarm:      { hpX: 0.5,  spdX: 1.3,  dmgX: 0.6,  dr: 0,    tgt: 'hq',   desc: 'MUTANT SWARM' },
+    scav:       { hpX: 0.9,  spdX: 1.05, dmgX: 1.1,  dr: 0.1,  tgt: 'sal',  desc: 'SALVAGE RIGS' },
   })[k] || null; }
-  raidComp(f, n) {   // DOCTRINE lives HERE (beta-test proved comp was uniform). Prototypes: ash + ironclad; the other 6 stay uniform 'assault' until built.
+  raidComp(f, n) {   // DOCTRINE lives HERE — all 8 shipped (step 6). Wave SIZE formula untouched; classes trade hp/spd/dmg within budget.
     const k = this.facDef(f).key, out = [];
     if (k === 'ash') { for (let i = 0; i < n; i++) out.push('skirmisher'); }
-    else if (k === 'ironclad') { const nb = Math.max(1, Math.round(n * 0.45)); for (let i = 0; i < n; i++) out.push(i < nb ? 'breaker' : 'assault'); }
+    else if (k === 'ironclad') { const ra = (f._plan && isFinite(f._plan.ratio)) ? f._plan.ratio : 0.45; const nb = Math.max(1, Math.round(n * ra)); for (let i = 0; i < n; i++) out.push(i < nb ? 'breaker' : 'assault'); }   // director ratio dial ±15%
+    else if (k === 'nuclear') { for (let i = 0; i < n; i++) out.push(i % 3 === 2 ? 'assault' : 'zealot'); }              // processions: 2/3 zealots + wardens
+    else if (k === 'meridian') { for (let i = 0; i < n; i++) out.push('lance'); }
+    else if (k === 'changed') { for (let i = 0; i < n; i++) out.push('swarm'); }
+    else if (k === 'bulwark') { const nb = Math.max(1, Math.round(n * 0.6)); for (let i = 0; i < n; i++) out.push(i < nb ? 'breaker' : 'assault'); }   // retaliation column: shield-heavy
+    else if (k === 'deluge') { const ns = Math.round(n / 2); for (let i = 0; i < n; i++) out.push(i < ns ? 'skirmisher' : 'assault'); }               // the tide: field pincer + wall swell (split into 2 pulses)
+    else if (k === 'rust') { for (let i = 0; i < n; i++) out.push('scav'); }
     else { for (let i = 0; i < n; i++) out.push('assault'); }
     return out;
   }
   spawnRaid(f) {
     const S = this.S, def = this.facDef(f);
-    if (S.zombies.some(z => z.raider && z.fac === f.id && z.hp > 0 && z.rtgt !== 'home')) { f.raidCd = 40 + Math.random() * 40; return; }   // one wave out at a time (medium stakes): ANY live fighter afield blocks; withdrawn homers don't hold the war hostage
-    const comp = this.raidComp(f, 4 + Math.round(f.str * 0.6 + (S.sector || 1) * 0.4)), thr = S.threat || 1;
+    if (f.egress) { f.raidCd = Math.max(f.raidCd || 0, 0); return; }   // R1 0.5.1b defense-in-depth: NEVER muster mid-egress (stays due; updateFactions re-tries after clear)
+    if (f._pulse || S.zombies.some(z => z.raider && z.fac === f.id && z.hp > 0 && z.rtgt !== 'home')) { f.raidCd = 40 + Math.random() * 40; return; }   // one wave out at a time: live fighters OR a pending second swell block (R3: the tide's wave stays OPEN while f._pulse exists)
+    f._plan = this.dirPlan(f);   // ADAPTIVE DIRECTOR (step 4): tactics from what it observed — stats NEVER move
+    if (f._plan.stx != null) { f._plan._rg0 = this.S.dayT || 0; f._plan._wdT = this.S.dayT || 0; }   // P0: NO-PROGRESS watchdog arms at muster — a marching column never expires (a 20km base is 400s+ of legal travel); 60s of zero approach progress fails safe
+    f._wvSeq = (f._wvSeq | 0) + 1; f._wvDead = 0;   // P1: per-wave kill ledger — wipe detection counts THIS wave only, never stragglers/lifetime
+    if (def.key === 'ash' && !f._plan.hunt && !this.anyWorkedNode()) { f.raidCd = 45 + Math.random() * 30; return; }   // wave-timing dial: crews guarded + no operation running = nothing worth the march (board reads HOLDING)
+    if (def.key === 'bulwark' && f.pact !== 'war' && !(f.grudge > 0)) { f.raidCd = 70 + Math.random() * 50; return; }   // step 6 RETALIATION doctrine: the Bulwark answers INSULT (demand/assault/encroach), never appetite
+    if (def.key === 'meridian' && S.lockdown && f._plan.wait) { f.raidCd = 18 + Math.random() * 14; return; }           // step 6 timing dial: it knows your lockdown habit — audits dispatch when the shutters open
+    const comp = this.raidComp(f, 4 + Math.round(f.str * 0.6 + (S.sector || 1) * 0.4));
+    const thr = S.threat || 1;
+    let spawnNow = comp;
+    if (def.key === 'deluge' && comp.length >= 4) { const cut = Math.ceil(comp.length / 2); f._pulse = { comp: comp.slice(cut), t: f._plan.gap || 22 }; spawnNow = comp.slice(0, cut); }   // THE TIDE: same total, two swells — R3: _waveN counts the FULL budget at muster (comp stays whole)
     let lead = 'assault';
-    for (const cls of comp) {
-      const rc = this.rclass(cls) || this.rclass('assault'); if (cls !== 'assault') lead = cls;
-      const a = Math.random() * 6.283, rr = 40 + Math.random() * 120;
-      const x = Math.max(20, Math.min(this.AW - 20, f.x + Math.cos(a) * rr)), y = Math.max(20, Math.min(this.AH - 20, f.y + Math.sin(a) * rr));
-      const hp = (55 + f.str * 12) * rc.hpX * (1 + thr * 0.06) * this.dmul;
-      S.zombies.push({ id: S.nextId++, x, y, hp, maxhp: hp, spd: (38 + f.str * 1.5) * rc.spdX, dmg: (9 + f.str * 1.4) * rc.dmgX * (1 + thr * 0.1) * this.dmul, dr: rc.dr, reward: 6 + f.str, cd: Math.random() * 0.7, wob: Math.random() * 6.28, st: 2, herd: -1, hd: 0, scanT: 0, raider: true, rclass: cls, rtgt: rc.tgt, fac: f.id, col: def.col });
-    }
-    this.milestone('⚔ ' + def.name + ' RAID — ' + comp.length + ' ' + (this.rclass(lead) || { desc: 'HOSTILES' }).desc + ' INBOUND'); this.ping(f.x, f.y, '#ff5d6c'); if (this.sndRadio) this.sndRadio('alert');
+    for (const cls of spawnNow) { if (cls !== 'assault') lead = cls; this.spawnRaiderOne(f, cls, thr); }
+    const read = this.dirRead(f);   // the muster toast NAMES the read (Faction Law: no un-warned punish)
+    this.milestone('⚔ ' + def.name + ' RAID — ' + comp.length + ' ' + (this.rclass(lead) || { desc: 'HOSTILES' }).desc + ' INBOUND' + (read ? ' · ' + read : '')); this.ping(f.x, f.y, '#ff5d6c'); if (this.sndRadio) this.sndRadio('alert');
+    const fo = this.facObs(f.id); if (fo) fo.raids++;
+    f._waveN = comp.length;
+    const tnt = this.cmdrTaunt(f, 'muster'); if (tnt) this.milestone(tnt);
+    f._raidT0 = S.dayT; f._obsS = false; f._ldSeen = false;   // first-contact sampling armed for this wave
     f.raidCd = 110 + Math.random() * 120 + f.str * 8;   // next wave — the long march across the map IS the cooldown
+    // step 6 COALITION: a bonded hostile partner whose own wave is NEARLY DUE marches with this one (never pulls a distant raid forward — no free difficulty)
+    for (const p of S.factions) {
+      if (p === f) continue;
+      if (this.facRel(f.id, p.id) >= 35 && p.raidCd > 0 && p.raidCd <= 45 && this.raidEligible(p)) {   // R8: FULL eligibility (egress, meridian hold, bulwark provocation, pop, live-wave/pulse) — announce only what can genuinely march
+        p.raidCd = Math.min(p.raidCd, 8 + Math.random() * 8);
+        this.milestone('⚑ COALITION — ' + this.facDef(p).name + ' MARCHES WITH ' + def.name); break;
+      }
+    }
+  }
+  spawnRaiderOne(f, cls, thr) {   // ONE raider from the shared stat formula (spawnRaid + deluge second pulse)
+    const S = this.S, def = this.facDef(f), rc = this.rclass(cls) || this.rclass('assault');
+    const a = Math.random() * 6.283, rr = 40 + Math.random() * 120;
+    const x = Math.max(20, Math.min(this.AW - 20, f.x + Math.cos(a) * rr)), y = Math.max(20, Math.min(this.AH - 20, f.y + Math.sin(a) * rr));
+    const hp = (55 + f.str * 12) * rc.hpX * (1 + thr * 0.06) * this.dmul;
+    S.zombies.push({ id: S.nextId++, x, y, hp, maxhp: hp, spd: (38 + f.str * 1.5) * rc.spdX, dmg: (9 + f.str * 1.4) * rc.dmgX * (1 + thr * 0.1) * this.dmul, dr: rc.dr, reward: 6 + f.str, cd: Math.random() * 0.7, wob: Math.random() * 6.28, st: 2, herd: -1, hd: 0, scanT: 0, raider: true, wv: f._wvSeq, rclass: cls, rtgt: rc.tgt, fac: f.id, col: def.col });
   }
   updateRaider(z, spd, dt) {
     if (z.rtgt === 'home') { this.raiderHome(z, spd, dt); return; }   // sated guerrillas hauling loot back to base
     if (z.rtgt === 'econ') { this.raiderEcon(z, spd, dt); return; }   // GUERRILLA doctrine: hunt gatherers/nodes in the open field, never the wall
+    if (z.rtgt === 'sal') { this.raiderSalvage(z, spd, dt); return; } // RUST doctrine: strip the outworks, haul the take home
+    if (z.rclass === 'swarm') { z._agT2 = (z._agT2 || 0) - dt; if (z._agT2 <= 0) { z._agT2 = 1.2; this.zNear(z.x, z.y, 260, (o) => { if (!o.raider && o.hp > 0) this.zAgitate(o); }); } }   // THE CHORUS: shepherds stir every wild corpse they pass — the horde walks with them
     // COLUMN COHESION (beta: 42 vs 32 px/s strung IRONCLAD out by minutes of arrival split): escorts pace their armor while it lives
     if (z.rclass === 'assault') {
       z._cohT = (z._cohT || 0) - dt;
       if (z._cohT <= 0) { z._cohT = 0.7; z._coh = 0; for (const r of this.S.zombies) { if (r !== z && r.raider && r.fac === z.fac && r.rclass === 'breaker' && r.hp > 0 && !r._despawn && Math.hypot(r.x - z.x, r.y - z.y) < 700) { z._coh = (r.down > 0 || (r._stagT || 0) > 0) ? 9 : r.spd * (r.slowT > 0 ? 0.45 : 1) * 1.06; break; } } }   // pace the armor's EFFECTIVE speed: cryo-slowed ×0.45, downed/staggered → the column holds
       if (z._coh) spd = Math.min(spd, z._coh);
+    }
+    // DIRECTED APPROACH (step 4): the column flanks to its chosen octant first — the side it saw thin
+    const plf = (this.S.factions || []).find(q => q.id === z.fac), pl = plf && plf._plan;
+    if (pl && pl.stx != null && !pl._expired) {   // R3: an expired plan is BYPASSED by every survivor — straight to the normal grind
+      if (!z._staged) {
+        if (Math.hypot(pl.stx - z.x, pl.sty - z.y) > 320) { z.wob += dt * 3; this.zNav(z, pl.stx - z.x, pl.sty - z.y, spd * (1 + 0.1 * Math.sin(z.wob * 4)), dt, false); return; }   // R3: the flank walk never claws gates — clawing is the assault, not the approach
+        z._staged = true;
+      } else if (pl.regroup && !pl._go && Math.hypot(pl.stx - z.x, pl.sty - z.y) > 380) { z._staged = false; }   // P0: knocked/displaced off the point = NOT assembled — walk back before you count
+      if (pl.regroup && !pl._go) { z.wob += dt * 1.2; return; }   // ONE-FIST doctrine: hold at the staging point until the whole column is up (director releases)
+    }
+    if (pl && pl.hx != null && !z._herded) {   // step 6 CHANGED herd leg: walk THROUGH the densest wild cluster first — pick the dead up on the way
+      if (Math.hypot(pl.hx - z.x, pl.hy - z.y) > 300) { z.wob += dt * 3; this.zNav(z, pl.hx - z.x, pl.hy - z.y, spd, dt, false); return; }
+      z._herded = true;
+    }
+    if (z.rclass === 'zealot' && pl && pl.btgt === 'turret') {   // step 6 NUCLEAR target dial: the procession walks at the GUNS that burned it
+      z._ztT = (z._ztT || 0) - dt;
+      if (z._ztT <= 0 || z._zt == null) { z._ztT = 2.5; z._zt = null; let bd = 800 * 800; for (const t of this.S.turrets) { const d = (t.x - z.x) ** 2 + (t.y - z.y) ** 2; if (d < bd) { bd = d; z._zt = t.id; } } }
+      const t = z._zt != null ? this.S.turrets.find(q => q.id === z._zt) : null;
+      if (t) {
+        const d = Math.hypot(t.x - z.x, t.y - z.y);
+        if (d <= 30) { z.cd -= dt; if (z.cd <= 0) { z.cd = 0.6; t.hp -= z.dmg; const fo = this.facObs(z.fac); if (fo) fo.wallDmg += z.dmg; if (t.hp <= 0) { this.killTurret(t); z._zt = null; } } z.wob += dt * 3; return; }
+        z.wob += dt * 3; this.zNav(z, t.x - z.x, t.y - z.y, spd, dt, true); return;
+      }
     }
     const hq = this.hq, dHQ = Math.hypot(hq.x - z.x, hq.y - z.y);
     if (dHQ <= hq.r + 24) { z.cd -= dt; if (z.cd <= 0) { z.cd = 0.7; hq.hp -= z.dmg; } z.wob += dt * 3; return; }   // at the HQ: assault it (BREAKERS grind gates/walls en route via zNav + high dmg)
@@ -1894,11 +2052,14 @@ class Component extends DCLogic {
     const S = this.S;
     z.scanT = (z.scanT || 0) - dt;
     if (z.scanT <= 0 || z._etk == null) {
-      z.scanT = 0.8; z._et = null; z._etk = null; let bd = 2400 * 2400;   // FACTION LAW: hunt only what the sweep can plausibly SEE (2.4k intel bubble), never map-wide
+      const plf = (S.factions || []).find(q => q.id === z.fac), pl = plf && plf._plan;
+      const preyR = (pl && pl.hunt === false) ? 700 : 2400;   // remembered escort discipline (dossier): guarded crews aren't worth the sweep — rob routes, snap only at point-blank prey
+      z.scanT = 0.8; z._et = null; z._etk = null; let bd = preyR * preyR;   // FACTION LAW: hunt only what the sweep can plausibly SEE (2.4k intel bubble), never map-wide
       for (const u of S.units) { if (u.dead || u.hid || (u.role !== 'gatherer' && u.role !== 'runner')) continue; const d = (u.x - z.x) ** 2 + (u.y - z.y) ** 2; if (d < bd) { bd = d; z._et = u.id; z._etk = 'unit'; } }
-      if (z._etk == null && this.resNodes && this.resNodes.length) {   // no prey in sight → nearest WORKED route (an operation's smoke is visible for miles); idle nodes hold nothing (beta: S.resNodes was dead code)
-        let bn = null; bd = 1e18;
-        for (let i = 0; i < this.resNodes.length; i++) { const nd = this.resNodes[i]; let wk = false; for (const u of S.units) { if (!u.dead && u.role === 'gatherer' && u.nodeIdx === i) { wk = true; break; } } if (!wk) continue; const d = (nd.x - z.x) ** 2 + (nd.y - z.y) ** 2; if (d < bd) { bd = d; bn = nd; } }
+      if (z._etk == null && this.resNodes && this.resNodes.length) {   // no prey in sight → the WAVE'S committed route (R6: telegraph === execution); live nearest-worked scorer only as fallback
+        let bn = null;
+        if (pl && pl.ni != null) { const nd = this.resNodes[pl.ni]; if (nd && nd.x === pl.nx && S.units.some(u => !u.dead && u.role === 'gatherer' && u.nodeIdx === pl.ni)) bn = nd; }   // committed target still standing AND still worked
+        if (!bn) { bd = 1e18; for (let i = 0; i < this.resNodes.length; i++) { const nd = this.resNodes[i]; let wk = false; for (const u of S.units) { if (!u.dead && u.role === 'gatherer' && u.nodeIdx === i) { wk = true; break; } } if (!wk) continue; let d = (nd.x - z.x) ** 2 + (nd.y - z.y) ** 2; if (pl && pl.d8w) d *= 1 + 3 * pl.d8w[this.octOf(nd.x, nd.y)]; if (d < bd) { bd = d; bn = nd; } } }   // target dial: routes in octants where its raiders died cost extra distance
         if (bn) { z._etx = bn.x; z._ety = bn.y; z._etk = 'node'; }
       }
     }
@@ -1909,32 +2070,286 @@ class Component extends DCLogic {
     const d = Math.hypot(tx - z.x, ty - z.y);
     if (d <= 28) {
       z.cd -= dt; if (z.cd <= 0) { z.cd = 0.5;
-        if (tobj) { const udr = Math.min(0.8, (this.stat(tobj) || {}).dr || 0); tobj.hp = (tobj.hp != null ? tobj.hp : 40) - z.dmg * 1.5 * (1 - udr); this.ping(z.x, z.y, '#ff5d6c'); if (tobj.hp <= 0) { tobj.dead = true; tobj.reviveT = tobj.squad ? 4 : 8; S.floats.push({ x: tobj.x, y: tobj.y - 16, text: tobj.role === 'runner' ? '✖ RUNNER DOWN' : '✖ GATHERER DOWN', color: '#ff8a93', life: 1.6, t: 0 }); this.raidLoot(z, 10); z._etk = null; z.scanT = 0; } }
+        if (tobj) { const udr = Math.min(0.8, (this.stat(tobj) || {}).dr || 0); tobj.hp = (tobj.hp != null ? tobj.hp : 40) - z.dmg * 1.5 * (1 - udr); this.ping(z.x, z.y, '#ff5d6c'); if (tobj.hp <= 0) { tobj.dead = true; tobj.reviveT = tobj.squad ? 4 : 8; S.floats.push({ x: tobj.x, y: tobj.y - 16, text: tobj.role === 'runner' ? '✖ RUNNER DOWN' : '✖ GATHERER DOWN', color: '#ff8a93', life: 1.6, t: 0 }); this.raidLoot(z, 10); const fo = this.facObs(z.fac); if (fo) fo.gk++; z._etk = null; z.scanT = 0; } }
         else if (z._etk === 'node') { S.scrap = Math.max(0, S.scrap - 3); S.raw = Math.max(0, (S.raw || 0) - 3); S.floats.push({ x: z.x, y: z.y - 16, text: '⚠ NODE PILLAGED', color: '#ff8a93', life: 1.4, t: 0 }); this.raidLoot(z, 1); }
       }
       z.wob += dt * 3; return;
     }
     z.wob += dt * 3; this.zNav(z, tx - z.x, ty - z.y, spd, dt, false);   // stay in the open field (no wall-clawing)
   }
+  retireFaction(f) {   // R1 (0.5.1): CENTRALIZED retirement — every transient trace dies with the base (absorption + conquest share this)
+    const S = this.S;
+    f.alive = false; f.hp = 0; f.pact = null; f.siege = false; f.egress = false; f.grudge = 0;
+    f._pulse = null; f._plan = null; f._waveN = 0; f._wvDead = 0; f._raidT0 = null; f._loot = 0; f._giveT = null; f._assaultT = 0; f._lastState = 'gone';
+    S.zombies = S.zombies.filter(z => !(z.raider && z.fac === f.id));   // its war dies with it — live raiders AND unsated couriers
+    if (S.diplo && S.diplo.id === f.id) S.diplo = null;
+  }
+  raidEligible(f) {   // R8 (0.5.1): mirror of spawnRaid's gates — coalitions may only announce/pull a partner who could GENUINELY march
+    const S = this.S, def = this.facDef(f);
+    if (!f || f.alive === false || this.facState(f) !== 'hostile' || !(f.pop > 2)) return false;
+    if (f.egress) return false;
+    if (f._pulse || S.zombies.some(z => z.raider && z.fac === f.id && z.hp > 0 && z.rtgt !== 'home')) return false;
+    if (def.key === 'bulwark' && f.pact !== 'war' && !(f.grudge > 0)) return false;
+    if (def.key === 'meridian' && S.lockdown && this.dirPlan(f).wait) return false;
+    if (def.key === 'ash') { const pl = this.dirPlan(f); if (!pl.hunt && !this.anyWorkedNode()) return false; }
+    return true;
+  }
+  killTurret(t) {   // shared turret destruction: eject the crew, drop the mount
+    const S = this.S;
+    const tech = S.units.find(u => u.turretId === t.id); if (tech) { tech.turretId = null; if (tech.role === 'technician') tech.role = 'operator'; }
+    S.turrets = S.turrets.filter(q => q !== t);
+    S.floats.push({ x: t.x, y: t.y - 14, text: '✖ TURRET LOST', color: '#ff8a93', life: 1.8, t: 0 }); this.ping(t.x, t.y, '#ff5d6c');
+  }
+  raiderSalvage(z, spd, dt) {   // RUST KINGS: chew the outworks (barricades/warehouses), bank the strip as carried loot
+    const S = this.S;
+    z.scanT = (z.scanT || 0) - dt;
+    const plf = (S.factions || []).find(q => q.id === z.fac), pl = plf && plf._plan;
+    if (z.scanT <= 0 || z._sal == null) {
+      z.scanT = 2.5; z._sal = null; let bd = 1e18, fallback = null, fbd = 1e18;
+      const scan = (list, kind) => { for (const s of (list || [])) { if (s.hp == null || s.hp <= 0) continue; const d = (s.x - z.x) ** 2 + (s.y - z.y) ** 2; let guarded = false; if (pl && pl.avoidGuns) { for (const t of S.turrets) if ((t.x - s.x) ** 2 + (t.y - s.y) ** 2 < 280 * 280) { guarded = true; break; } } if (!guarded && d < bd) { bd = d; z._sal = { kind, id: s.id }; } if (d < fbd) { fbd = d; fallback = { kind, id: s.id }; } } };
+      scan(S.barricades, 'bar'); scan(S.warehouses, 'wh');
+      if (!z._sal) z._sal = fallback;   // everything guarded → nearest anyway (the dial only re-ROUTES, it never stands the raid down)
+    }
+    const s = z._sal ? (z._sal.kind === 'bar' ? S.barricades.find(b => b.id === z._sal.id) : S.warehouses.find(w => w.id === z._sal.id)) : null;
+    if (!s) { this.raiderEcon(z, spd, dt); return; }   // nothing left to strip → fall back to field-economy doctrine
+    const d = Math.hypot(s.x - z.x, s.y - z.y);
+    if (d <= 30) {
+      z.cd -= dt;
+      if (z.cd <= 0) { z.cd = 0.5; s.hp -= z.dmg * 1.2; const fo = this.facObs(z.fac); if (fo) fo.wallDmg += z.dmg; this.raidLoot(z, 1);
+        if (s.hp <= 0) { if (z._sal.kind === 'bar') S.barricades = S.barricades.filter(b => b !== s); else S.warehouses = S.warehouses.filter(w => w !== s); S.floats.push({ x: s.x, y: s.y - 14, text: '⚙ STRIPPED FOR PARTS', color: '#f0b070', life: 1.8, t: 0 }); this.raidLoot(z, z._sal.kind === 'wh' ? 8 : 4); z._sal = null; z.scanT = 0; } }
+      z.wob += dt * 3; return;
+    }
+    z.wob += dt * 3; this.zNav(z, s.x - z.x, s.y - z.y, spd, dt, false);
+  }
   raidLoot(z, n) {   // smash-and-grab ledger (beta: an ignored raid must not bleed the colony forever) — a sated raid withdraws
     const S = this.S, f = (S.factions || []).find(q => q.id === z.fac); if (!f) return;
     f._loot = (f._loot || 0) + n;
-    let alive = 0; for (const r of S.zombies) if (r.raider && r.fac === z.fac && r.rtgt === 'econ' && r.hp > 0) alive++;   // corpses don't inflate the sate threshold (red-team 0.4.3)
-    if (f._loot >= 8 * Math.max(3, alive)) {
-      f._loot = 0; let any = false;
-      for (const r of S.zombies) if (r.raider && r.fac === z.fac && r.rtgt === 'econ' && r.hp > 0) { r.rtgt = 'home'; any = true; }
-      if (any) { this.milestone('⌖ ' + this.facDef(f).name + ' WITHDRAWS — SATED'); this.ping(z.x, z.y, '#ffb454'); }
+    let alive = 0; for (const r of S.zombies) if (r.raider && r.fac === z.fac && (r.rtgt === 'econ' || r.rtgt === 'sal') && r.hp > 0) alive++;   // corpses don't inflate the sate threshold; R5 0.5.1b: SAL rigs are active looters too — 7 rigs hold until 8×7=56, never the 3-floor 24
+    const sm = (f._plan && isFinite(f._plan.sate)) ? f._plan.sate : 1;   // withdraw dial ±25%: burned raids grab less and go; clean escapes get greedy
+    if (f._loot >= 8 * sm * Math.max(3, alive)) {
+      const bank = Math.round(f._loot);
+      f._loot = 0; let any = false; const homers = [];
+      for (const r of S.zombies) if (r.raider && r.fac === z.fac && (r.rtgt === 'econ' || r.rtgt === 'sal') && r.hp > 0) { r.rtgt = 'home'; any = true; homers.push(r); }   // R2 (0.5.1): rust salvage rigs withdraw on the same sate ledger as ash skirmishers
+      for (const r of homers) r._carry = bank / homers.length;   // R6: loot is CARRIED, not pre-banked — obs credit lands only on confirmed return; a courier killed en route loses its share
+      if (any) { this.milestone('⌖ ' + this.facDef(f).name + ' WITHDRAWS — SATED'); this.ping(z.x, z.y, '#ffb454'); const tnt = this.cmdrTaunt(f, 'sated', bank); if (tnt) this.milestone(tnt); }
     }
   }
   raiderHome(z, spd, dt) {   // loot secured: back to base at a jog, gone when it gets there
     const f = (this.S.factions || []).find(q => q.id === z.fac);
-    if (!f || f.alive === false || Math.hypot(f.x - z.x, f.y - z.y) <= 160) { z._despawn = true; return; }
+    if (!f || f.alive === false || Math.hypot(f.x - z.x, f.y - z.y) <= 160) { if (z._carry && f && f.alive !== false) { const fo = this.facObs(z.fac); if (fo) fo.loot += z._carry; z._carry = 0; } z._despawn = true; return; }   // R6: CONFIRMED return — only now does the faction learn the take
     z.wob += dt * 3; this.zNav(z, f.x - z.x, f.y - z.y, spd * 1.1, dt, false);
+  }
+  // ---- THE WORLD LEARNS YOU (step 3): per-faction observation memory + the cross-session player DOSSIER ----
+  // FACTION LAW: record ONLY at moments a faction could plausibly OBSERVE (its raiders' experiences, your
+  // direct acts against it). Everything recorded is READABLE on the Factions board — the telegraph.
+  facObs(fid) {
+    const f = (this.S.factions || []).find(q => q.id === fid); if (!f) return null;
+    if (!f.obs) f.obs = { raids: 0, losses: 0, gk: 0, wallDmg: 0, loot: 0, kb: { unit: 0, turret: 0, hero: 0, ram: 0, other: 0 }, d8: [0, 0, 0, 0, 0, 0, 0, 0] };
+    return f.obs;
+  }
+  validObs(o) {   // load-time validation (additive v7 field)
+    if (!o || typeof o !== 'object') return null;
+    const n = (x) => Math.max(0, Math.min(1e9, +x || 0)); const kb = o.kb || {};
+    return { raids: n(o.raids), losses: n(o.losses), gk: n(o.gk), wallDmg: n(o.wallDmg), loot: n(o.loot),
+      kb: { unit: n(kb.unit), turret: n(kb.turret), hero: n(kb.hero), ram: n(kb.ram), other: n(kb.other) },
+      d8: (Array.isArray(o.d8) && o.d8.length === 8) ? o.d8.map(n) : [0, 0, 0, 0, 0, 0, 0, 0] };
+  }
+  DOS_KEY = 'ss_dossier_v1';
+  OCT_NAMES = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+  octOf(x, y) { return ((Math.round(Math.atan2(y - this.hq.y, x - this.hq.x) / 0.7854) % 8) + 8) % 8; }
+  dossier() {   // cross-session player profile — survives NEW COLONIES by design (own key, never inside the save)
+    if (this._dos) return this._dos;
+    let d = null; try { d = JSON.parse(localStorage.getItem(this.DOS_KEY) || 'null'); } catch (e) { d = null; }
+    const sig = (o) => ({ v: Math.max(0, Math.min(1, (o && isFinite(o.v)) ? +o.v : 0.5)), n: Math.max(0, (o && o.n) | 0) });
+    const s = (d && d.sig) || {};
+    this._dos = {
+      v: 1, runs: Math.max(0, (d && d.runs) | 0), raids: Math.max(0, (d && d.raids) | 0),
+      sig: { escort: sig(s.escort), lockdown: sig(s.lockdown), hoard: sig(s.hoard), comms: sig(s.comms), aggr: sig(s.aggr) },
+      wall8: (d && Array.isArray(d.wall8) && d.wall8.length === 8) ? d.wall8.map(x => (isFinite(+x) ? Math.max(0, Math.min(1e6, +x)) : 0)) : [0, 0, 0, 0, 0, 0, 0, 0],   // R6: reject/cap every non-finite value at the door (Infinity survived the old +x||0)
+      rev: Math.max(0, (d && d.rev) | 0),   // R5: write revision (dosSave bumps it; storage-event refresh re-reads)
+    };
+    return this._dos;
+  }
+  dosSig(k, sample) {   // EWMA α 0.25 — slow memory, clamped, written through (tiny JSON)
+    const d = this.dossier(), s = d.sig[k]; if (!s || !isFinite(sample)) return;
+    const x = Math.max(0, Math.min(1, sample));
+    s.v = s.n === 0 ? x : s.v + 0.25 * (x - s.v); s.n++;
+    this.dosSave();
+  }
+  dosSave() {   // R5/P2: session-owner gated + genuine READ-MERGE-WRITE — a concurrent writer's observations are folded in, not clobbered
+    try {
+      if (this._bootId) { const own = localStorage.getItem(this.SAVE + '_owner'); if (own && own !== this._bootId) return; }
+      if (!this._dos) return;
+      let st = null; try { st = JSON.parse(localStorage.getItem(this.DOS_KEY)); } catch (e) { st = null; }
+      if (st && typeof st === 'object' && (st.rev | 0) > (this._dos.rev | 0)) {   // someone wrote since we read — merge before writing
+        const m = this._dos;
+        if (Array.isArray(st.wall8) && st.wall8.length === 8) for (let i = 0; i < 8; i++) m.wall8[i] = Math.max(m.wall8[i] || 0, isFinite(+st.wall8[i]) ? Math.min(1e6, Math.max(0, +st.wall8[i])) : 0);
+        if (st.sig && m.sig) for (const k in m.sig) if (st.sig[k] && (st.sig[k].n | 0) > (m.sig[k].n | 0)) m.sig[k] = { v: isFinite(+st.sig[k].v) ? +st.sig[k].v : m.sig[k].v, n: st.sig[k].n | 0 };   // deeper-sampled EWMA wins
+        m.raids = Math.max(m.raids | 0, st.raids | 0);
+        m.rev = st.rev | 0;
+      }
+      this._dos.rev = (this._dos.rev | 0) + 1;
+      localStorage.setItem(this.DOS_KEY, JSON.stringify(this._dos));
+    } catch (e) { }
+  }
+  zealotBurst(z) {   // dirty detonation: STRUCTURES ONLY (gates/barricades/turrets ≤90px) — the class's damage budget lives here, never unit damage
+    const S = this.S; let best = null, bd = 90 * 90, kind = null;
+    for (const g of (S.gates || [])) { const d = (g.x - z.x) ** 2 + (g.y - z.y) ** 2; if (g.hp > 0 && d < bd) { bd = d; best = g; kind = 'gate'; } }
+    for (const b of S.barricades) { const d = (b.x - z.x) ** 2 + (b.y - z.y) ** 2; if (b.hp > 0 && d < bd) { bd = d; best = b; kind = 'bar'; } }
+    for (const t of S.turrets) { const d = (t.x - z.x) ** 2 + (t.y - z.y) ** 2; if (d < bd) { bd = d; best = t; kind = 'tur'; } }
+    S.fx.push({ x: z.x, y: z.y, r: 8, mr: 52, life: 0.5, t: 0, kind: 'strike' });
+    S.fx.push({ x: z.x, y: z.y, r: 26, mr: 26, life: 6.5, t: 0, kind: 'blood', col: 'rgba(182,227,74,.14)' });   // the stain of the glow
+    if (!best) return;
+    best.hp -= z.dmg * 2.5; const fo = this.facObs(z.fac); if (fo) fo.wallDmg += z.dmg * 2.5;
+    if (best.hp <= 0) { if (kind === 'gate') this.rebuildGates(); else if (kind === 'bar') S.barricades = S.barricades.filter(b => b !== best); else this.killTurret(best); }
+  }
+  lanceEmp(z) {   // capacitor scream: the NEAREST gun goes silent 2.5s (t.cd is the mechanism — no new fire path); 20s per-turret immunity
+    const S = this.S; let best = null, bd = 260 * 260;
+    for (const t of S.turrets) { if ((t._empCd || 0) > 0) continue; const d = (t.x - z.x) ** 2 + (t.y - z.y) ** 2; if (d < bd) { bd = d; best = t; } }
+    if (!best) return;
+    best.cd = Math.max(best.cd || 0, 2.5); best._empCd = 20;
+    S.floats.push({ x: best.x, y: best.y - 16, text: '◈ CAPACITOR SCREAM — GUN SILENCED', color: '#4fd8e8', life: 1.6, t: 0 });
+  }
+  obsRaiderDeath(z, owner, imp) {   // its faction saw what killed this one — and WHERE it fell (P1: explicit cause via impulse flags, never inferred from knockback)
+    const o = this.facObs(z.fac); if (!o) return;
+    o.losses++;
+    const pf = (this.S.factions || []).find(q => q.id === z.fac);
+    if (pf && z.wv != null && z.wv === pf._wvSeq) pf._wvDead = (pf._wvDead || 0) + 1;   // P1: per-wave ledger
+    const kb = (owner === 'turret' || owner === 'hero') ? owner : (imp && (imp.ram || imp.crush)) ? 'ram' : (typeof owner === 'number') ? 'unit' : 'other';   // P1 cause enum: weapon-owner attribution preserved; actual vehicle IMPACTS (ram/crush flags) → ram; explosions/unknown → other — knockback impulse alone never reads as a ram
+    o.kb[kb] = (o.kb[kb] || 0) + 1;
+    const oc = this.octOf(z.x, z.y); o.d8[oc]++;   // fall octant ALWAYS recorded (step 4): Ash dies in the field, the Legion at the wall — both are experience it may act on
+    if (Math.max(Math.abs(z.x - this.hq.x), Math.abs(z.y - this.hq.y)) <= (this.ringR || 4) * this.TS + 600) {
+      const d = this.dossier(); d.wall8[oc] = d.wall8[oc] * 0.97 + 1; this.dosSave();   // cross-run wall memory stays wall-adjacent (slow fade)
+    }
+  }
+  // ---- THE WORLD LEARNS YOU (step 4): the ADAPTIVE DIRECTOR — smarter, NEVER stronger ----
+  // Consumes ONLY f.obs (what its raiders lived through) + the dossier (what the world remembers of you)
+  // through the playbook dials: ASH target/withdraw/timing · IRONCLAD approach/ratio/regroup. Stats, dr
+  // and the wave-size formula NEVER move (player-gated difficulty law). Every read is TELEGRAPHED: the
+  // muster toast names it and the Factions board shows the standing intent while hostile (dirRead).
+  anyWorkedNode() { if (!this.resNodes) return false; for (let i = 0; i < this.resNodes.length; i++) for (const u of this.S.units) if (!u.dead && u.role === 'gatherer' && u.nodeIdx === i) return true; return false; }
+  dirPlan(f) {
+    const k = this.facDef(f).key, o = this.facObs(f.id) || { d8: [0, 0, 0, 0, 0, 0, 0, 0], kb: {}, raids: 0, losses: 0, loot: 0, wallDmg: 0 }, d = this.dossier(), pl = { k };
+    let tot = 0; const w8 = []; for (let i = 0; i < 8; i++) { const v = (o.d8[i] || 0) + 0.6 * (d.wall8[i] || 0); w8.push(v); tot += v; }
+    if (tot >= 3) {   // needs a few recorded falls before it trusts a read — unread = the old straight march
+      const smt = w8.map((v, i) => v + 0.5 * (w8[(i + 1) % 8] + w8[(i + 7) % 8]));   // adjacent octants share fire lanes
+      const mx = Math.max(...smt) || 1; pl.d8w = smt.map(v => v / mx);
+      const known = smt.filter(v => v > 0).length;   // R6: an UNSAMPLED octant is unknown, never 'soft' — claiming the thinnest wall needs broad coverage
+      if (known >= 6) { let bi = 0; for (let i = 1; i < 8; i++) if (smt[i] < smt[bi] - 1e-9) bi = i; pl.oct = bi; }
+    }
+    const gunK = (o.kb && o.kb.turret) || 0, manK = ((o.kb && o.kb.unit) || 0) + ((o.kb && o.kb.hero) || 0);
+    const burn = Math.min(1, o.losses / Math.max(1, o.raids * 5)), clean = Math.min(1, o.loot / Math.max(1, o.raids * 24));
+    if (k === 'ash') {
+      pl.hunt = !(d.sig.escort.n > 0 && d.sig.escort.v < 0.42);   // it REMEMBERS your escort habit across runs
+      pl.sate = Math.max(0.75, Math.min(1.25, 1 + 0.25 * clean - 0.25 * burn));
+      const nd = this.ashPickNode(f, pl); if (nd) { pl.ni = nd.i; pl.nx = nd.x; pl.ny = nd.y; }   // R6: ONE committed route target — execution (raiderEcon) and telegraph (dirRead/taunts) read the SAME choice
+    } else if (k === 'ironclad' || k === 'bulwark') {
+      pl.ratio = 0.45 + ((gunK + manK) >= 4 ? (gunK > manK * 1.3 ? 0.15 : manK > gunK * 1.3 ? -0.15 : 0) : 0);   // ironclad only (bulwark comp is fixed 0.6) — guns shredded it → more armor
+      pl.regroup = o.raids >= 2 && o.losses / Math.max(1, o.raids) >= (k === 'bulwark' ? 3 : 4) && o.wallDmg / Math.max(1, o.raids) < 260;   // dying before the wall breaks → arrive as one fist
+      if (pl.oct != null) {   // staging point on the chosen octant, slid outward to open ground (shared by both column doctrines)
+        const a = pl.oct * 0.7854, R0 = (this.ringR || 4) * this.TS + 560;
+        let sx = 0, sy = 0, ok = false;
+        for (let rr = 0; rr <= 600 && !ok; rr += 80) { sx = Math.max(30, Math.min(this.AW - 30, this.hq.x + Math.cos(a) * (R0 + rr))); sy = Math.max(30, Math.min(this.AH - 30, this.hq.y + Math.sin(a) * (R0 + rr))); ok = !this.isBlockedPx(sx, sy, 10); }
+        if (ok) { pl.stx = sx; pl.sty = sy; }   // R3: NEVER commit a blocked staging point
+        else { pl.oct = null; pl.regroup = false; }   // no open ground on that flank → honest straight march (telegraph matches the actual approach)
+      }
+    } else if (k === 'nuclear') {
+      pl.btgt = (gunK >= 3 && gunK > manK * 1.2) ? 'turret' : 'gate';   // the procession walks at what burned it — targeting, never stats
+    } else if (k === 'meridian') {
+      pl.wait = d.sig.lockdown.n > 0 && d.sig.lockdown.v > 0.6;   // it remembers you always go to ground — audits time themselves to your shutters
+    } else if (k === 'changed') {
+      const ht = this.herdTarget(4);   // R6 (0.5.1): WILD-ONLY scorer, min cluster 4 — another faction's raid column is not a herd
+      if (ht) { pl.hx = ht.x; pl.hy = ht.y; }
+    } else if (k === 'deluge') {
+      pl.gap = (d.sig.lockdown.n > 0 && d.sig.lockdown.v < 0.35) ? 34 : 18;   // you shutter FAST → wider swell spacing to outlast it; slow → tight one-two
+    } else if (k === 'rust') {
+      pl.avoidGuns = gunK >= 3;   // its rigs died to your guns → it strips what your gun lines don't cover
+      pl.sate = Math.max(0.75, Math.min(1.25, 1 + 0.25 * clean - 0.25 * burn));   // same carried-ledger doctrine as ash
+    }
+    return pl;
+  }
+  herdTarget(min) {   // R6: densest WILD cluster (coarse 400px cells) — raiders and corpses excluded
+    const cells = new Map(), CS = 400;
+    for (const z of this.S.zombies) { if (z.raider || z.hp <= 0) continue; const k = ((z.x / CS) | 0) * 4096 + ((z.y / CS) | 0); let c = cells.get(k); if (!c) { c = { n: 0, sx: 0, sy: 0 }; cells.set(k, c); } c.n++; c.sx += z.x; c.sy += z.y; }
+    let best = null; for (const c of cells.values()) if (c.n >= (min || 4) && (!best || c.n > best.n)) best = c;
+    return best ? { x: best.sx / best.n, y: best.sy / best.n, n: best.n } : null;
+  }
+  CMDR_KILLER = { unit: 'troops', turret: 'guns', hero: 'president', ram: 'armor', other: 'defense' };
+  ashEye(f, pl) {   // the route octant this faction's plan favors — the COMMITTED target first (R6), else a preview from the base
+    if (pl && pl.nx != null) return this.OCT_NAMES[this.octOf(pl.nx, pl.ny)];
+    const nd = this.ashPickNode(f, pl); return nd ? this.OCT_NAMES[this.octOf(nd.x, nd.y)] : null;
+  }
+  ashPickNode(f, pl) {   // the ONE shared scorer: nearest WORKED node from the base, death-octant weighted
+    if (!pl || !this.resNodes) return null;
+    let bs = 1e18, bn = null;
+    for (let i = 0; i < this.resNodes.length; i++) { const nd = this.resNodes[i]; let wk = false; for (const u of this.S.units) if (!u.dead && u.role === 'gatherer' && u.nodeIdx === i) { wk = true; break; } if (!wk) continue; let dd = (nd.x - f.x) ** 2 + (nd.y - f.y) ** 2; if (pl.d8w) dd *= 1 + 3 * pl.d8w[this.octOf(nd.x, nd.y)]; if (dd < bs) { bs = dd; bn = { i, x: nd.x, y: nd.y }; } }
+    return bn;
+  }
+  cmdrTaunt(f, ev, n) {   // step 5/6 NAMED COMMANDERS — all 8 voiced; every line built ONLY from real observations (Faction Law — never meta)
+    const def = this.facDef(f), k = def.key; if (!def.cmdr) return null;
+    const o = this.facObs(f.id), pl = f._plan || {};
+    const top = o ? Object.entries(o.kb || {}).sort((a, b) => b[1] - a[1])[0] : null;
+    const killer = (top && top[1]) ? this.CMDR_KILLER[top[0]] : 'defense';
+    const oc = pl.oct != null ? this.OCT_NAMES[pl.oct] : null;
+    let t = null;
+    if (k === 'ash') {
+      const eye = this.ashEye(f, pl);
+      if (ev === 'muster') t = (pl.sate || 1) >= 1.1 ? 'Last visit cost nothing. This one collects interest.'
+        : pl.hunt === false ? ('Walls keep men, not wealth.' + (eye ? ' The ' + eye + ' route pays your debt.' : ' Your routes pay your debt.'))
+        : ('Your crews' + (eye ? ' in the ' + eye + ' field' : '') + ' walk alone. Collection today.');
+      else if (ev === 'sated') t = 'The column carries ' + Math.round(n || 0) + '. What reaches home, counts.';   // P2: honest framing — the take isn't banked until the couriers arrive
+      else if (ev === 'wiped') t = (n || 0) + ' names in the book — your ' + killer + ' beside them.';
+    } else if (k === 'ironclad') {
+      if (ev === 'muster') t = (oc ? 'The ' + oc + ' wall is thinnest.' : 'Straight approach.') + ' The breach is scheduled.';
+      else if (ev === 'release') t = 'Column formed. Proceeding on schedule.';
+      else if (ev === 'wiped') t = (n || 0) + ' lances written off. Your ' + killer + (killer === 'troops' || killer === 'guns' ? ' join' : ' joins') + ' the schedule.';
+    } else if (k === 'nuclear') {
+      if (ev === 'muster') t = 'The glow walks. It seeks your ' + (pl.btgt === 'turret' ? 'guns' : 'gates') + '.';
+      else if (ev === 'wiped') t = (n || 0) + ' ascended. The isotope keeps their count.';
+    } else if (k === 'meridian') {
+      if (ev === 'muster') t = 'Audit dispatched. Your ' + killer + ' will be itemized.';
+      else if (ev === 'wiped') t = (n || 0) + ' units depreciated. The ledger self-corrects.';
+    } else if (k === 'changed') {
+      if (ev === 'muster') t = pl.hx != null ? 'We gather the family on the way.' : 'We bring the family.';
+      else if (ev === 'wiped') t = (n || 0) + ' rejoin the choir. It sings anyway.';
+    } else if (k === 'bulwark') {
+      if (ev === 'muster') t = 'You gave insult. The wall answers' + (oc ? ' at your ' + oc + ' flank' : '') + '.';
+      else if (ev === 'release') t = 'Shield wall formed. Forward.';
+      else if (ev === 'wiped') t = (n || 0) + ' banners lowered. Honor holds.';
+    } else if (k === 'deluge') {
+      if (ev === 'muster') t = 'First swell. The second follows in ' + Math.round(pl.gap || 22) + '.';
+      else if (ev === 'pulse2') t = 'Second swell. Hold your breath.';
+      else if (ev === 'wiped') t = (n || 0) + ' returned to the deep. The tide does not grieve.';
+    } else if (k === 'rust') {
+      if (ev === 'muster') t = 'Your fence is my inventory' + (pl.avoidGuns ? ' — we shop where your guns don’t look' : '') + '.';
+      else if (ev === 'sated') t = 'Hauling ' + Math.round(n || 0) + ' off your bones. Parts is parts.';
+      else if (ev === 'wiped') t = (n || 0) + ' rigs scrapped. We’ll grow more.';
+    }
+    return t ? ('⌁ ' + def.cmdr + ': “' + t + '”') : null;
+  }
+  dirRead(f) {   // the TELEGRAPH line: what this faction intends, in words the player can act on — all 8 doctrines (step 6)
+    const k = this.facDef(f).key; if (this.facState(f) !== 'hostile') return null;
+    const afield = this.S.zombies.some(z => z.raider && z.fac === f.id && z.hp > 0 && z.rtgt !== 'home');
+    const pl = (afield && f._plan) ? f._plan : this.dirPlan(f);   // live wave = the committed plan; between waves = its current thinking
+    if (k === 'ash') {
+      if (!pl.hunt && !this.anyWorkedNode()) return 'HOLDING — YOUR CREWS ARE GUARDED, NO ROUTE WORTH ROBBING';
+      const oc = this.ashEye(f, pl);
+      return (pl.hunt ? 'HUNTS EXPOSED CREWS' : 'ROBS ROUTES — YOUR CREWS ARE TOO GUARDED') + (oc ? ' · EYES ON YOUR ' + oc + ' FIELD' : '');
+    }
+    if (k === 'nuclear') return 'PROCESSION MARCHES — ZEALOTS DETONATE ON DEATH · THE GLOW SEEKS YOUR ' + (pl.btgt === 'turret' ? 'GUNS' : 'GATES');   // Faction Law: the first detonation may never be a surprise
+    if (k === 'meridian') return (this.S.lockdown && pl.wait) ? 'WAITING OUT YOUR LOCKDOWN — IT KNOWS YOUR HABIT' : 'AUDIT INBOUND — LANCES TO YOUR WALL';
+    if (k === 'changed') return 'THE CHORUS DRAGS THE WILD DEAD WITH IT' + (pl.hx != null ? ' · GATHERING THE HERD FIRST' : '');
+    if (k === 'bulwark') return (f.pact === 'war' || f.grudge > 0) ? ('ANSWERING INSULT — SHIELD WALL' + (pl.oct != null ? ' TO YOUR ' + this.OCT_NAMES[pl.oct] + ' FLANK' : '') + (pl.regroup ? ' AS ONE' : '')) : 'HOSTILE BUT UNPROVOKED — IT WAITS ON INSULT';
+    if (k === 'deluge') { const p2 = f._pulse ? ' · SECOND SWELL IN ' + Math.max(0, Math.round(f._pulse.t)) + 'S' : ''; return 'THE TIDE COMES IN TWO SWELLS — ' + Math.round(pl.gap || 22) + 'S APART' + p2; }
+    if (k === 'rust') return 'STRIPPING YOUR OUTWORKS' + (pl.avoidGuns ? ' — SHUNNING YOUR GUN LINES' : '');
+    const arm = pl.ratio > 0.5 ? ' · ARMOR-HEAVY' : pl.ratio < 0.4 ? ' · ESCORT-HEAVY' : '';
+    return (pl.oct != null ? 'MARCHING FOR YOUR ' + this.OCT_NAMES[pl.oct] + ' WALL' + (pl.regroup ? ' AS ONE COLUMN' : '') : 'MARCHING STRAIGHT FOR THE GATE') + arm;
   }
   updateFactions(dt) {
     const S = this.S; if (!S.factions || !S.factions.length) return;
     for (const f of S.factions) { if (f.alive === false) continue; if (f.hp < f.maxhp) f.hp = Math.min(f.maxhp, f.hp + dt * 2); }   // towns slowly repair
     this._facT = (this._facT || 0) + dt; if (this._facT < 1.5) return; this._facT = 0;
+    this._geoN = (this._geoN || 0) + 1; if (this._geoN >= 4) { this._geoN = 0; this.geoTick(); }   // step 6: geopolitics beat (every ~6s)
     for (const f of S.factions) {
       if (f.alive === false) continue;
       const def = this.facDef(f), st = this.facState(f);
@@ -1944,16 +2359,54 @@ class Component extends DCLogic {
       const growth = st === 'allied' ? 0.16 : 0.09;
       f.pop += (target - f.pop) * growth * 0.14 + (Math.random() - 0.53) * 0.14;
       f.pop = Math.max(0, Math.min(999, f.pop));
-      if (!f.pact && Math.abs(f.rep) > 0.4) f.rep += (f.rep > 0 ? -1 : 1) * 0.06;   // informal rep fades toward neutral; pacts don't
-      if (st === 'hostile' && f.pop > 2) { f.raidCd = (f.raidCd || 90) - 1.5; if (f.raidCd <= 0) this.spawnRaid(f); } else if ((f.raidCd || 0) < 40) f.raidCd = 60 + Math.random() * 40;   // hostile towns muster raids; the MARCH is the timer
+      if (!f.pact && !f.egress && Math.abs(f.rep) > 0.4) f.rep += (f.rep > 0 ? -1 : 1) * 0.06;   // informal rep fades toward neutral; pacts don't; fresh parley outcomes hold until the delegation clears (P0)
+      if (f.grudge > 0) f.grudge = Math.max(0, f.grudge - 0.005);   // insult fades (~5min/point) — the Bulwark forgives, slowly
+      if (f._pulse) { f._pulse.t -= 1.5; if (f._pulse.t <= 0) { const thr2 = S.threat || 1; for (const cls of f._pulse.comp) this.spawnRaiderOne(f, cls, thr2); f._pulse = null; this.milestone('≈ ' + this.facDef(f).name + ' — SECOND SWELL LANDS'); const tnt2 = this.cmdrTaunt(f, 'pulse2'); if (tnt2) this.milestone(tnt2); } }   // THE TIDE's second half — _waveN already counted the full budget at muster (R3)
+      if (st === 'hostile' && f.pop > 2) { f.raidCd = Math.max(0, (f.raidCd ?? 90) - 1.5); if (f.raidCd <= 0 && !f.egress) this.spawnRaid(f); } else if ((f.raidCd || 0) < 40) f.raidCd = 60 + Math.random() * 40;   // hostile towns muster raids; raidCd=0 stays DUE and HELD through egress (R1 0.5.1b: no dispatch while the delegation withdraws) — launches the tick after it clears
+      if (f._plan && f._plan.stx != null && !f._plan._expired) {   // R3/P0 staging resolution: NO-PROGRESS watchdog; tot=0 stays silent and inert
+        const pl = f._plan;
+        let tot = 0, stg = 0;
+        for (const r of S.zombies) if (r.raider && r.fac === f.id && r.hp > 0 && r.rtgt === 'hq') {
+          tot++;
+          if (r._staged && !(r.down > 0)) stg++;   // P0: a downed body at the point is not an assembled lance
+          else { const dd = Math.hypot(pl.stx - r.x, pl.sty - r.y); if (r._wdD == null || dd < r._wdD - 18) { r._wdD = dd; pl._wdT = S.dayT || 0; } }   // per-raider approach progress feeds the watchdog — a marching column NEVER times out
+        }
+        const late = pl._wdT != null && (S.dayT || 0) - pl._wdT > 60;   // 60s with zero progress from every unstaged survivor = genuinely stalled → fail safe
+        if (tot && pl.regroup && !pl._go && stg >= tot) { pl._go = true; this.milestone('⬢ ' + this.facDef(f).name + ' ADVANCES AS ONE'); if (this.sndRadio) this.sndRadio('alert'); const tnt = this.cmdrTaunt(f, 'release'); if (tnt) this.milestone(tnt); }
+        else if (tot && late) { pl._expired = true; pl._go = true; if (pl.regroup && stg > 0) { this.milestone('⬢ ' + this.facDef(f).name + ' ADVANCES — COLUMN INCOMPLETE'); if (this.sndRadio) this.sndRadio('alert'); } }   // timeout: every survivor bypasses staging; silent when nothing ever staged
+      }
+      // THE WORLD LEARNS YOU — first contact: when its wave first SEES the colony, it reads you (once per wave)
+      if (f._raidT0 != null) {
+        let nearest = 1e18, afield = false;
+        for (const r of S.zombies) { if (r.raider && r.fac === f.id && r.hp > 0) { afield = true; const dd = Math.max(Math.abs(r.x - this.hq.x), Math.abs(r.y - this.hq.y)); if (dd < nearest) nearest = dd; } }
+        const wallR = (this.ringR || 4) * this.TS;
+        if (!f._ldSeen && (S.lockdown || (this._standTo || 0) > 0)) { f._ldSeen = true; this.dosSig('lockdown', Math.min(1, (S.dayT - f._raidT0) / 120)); }
+        if (afield && !f._obsS && nearest <= wallR + 900) {
+          f._obsS = true;
+          const gs = S.units.filter(u => !u.dead && u.role === 'gatherer' && Math.max(Math.abs(u.x - this.hq.x), Math.abs(u.y - this.hq.y)) > wallR + 60);
+          if (gs.length) this.dosSig('escort', gs.filter(u => !u.vehicle && !S.units.some(r2 => !r2.dead && r2.role === 'runner' && r2.guard === u.id)).length / gs.length);
+          this.dosSig('hoard', Math.min(1, ((S.scrap || 0) / 2500 + (S.raw || 0) / Math.max(1, this.resCap('raw'))) / 2));
+          this.dosSig('comms', this.hasBld('comms') ? 0 : 1);
+          const dd = this.dossier(); dd.raids++; this.dosSave();
+        }
+        if (!afield && f._pulse) { /* R3: the wave is NOT over — the second swell is still inbound; resolution + wipe wait for it */ }
+        else if (!afield) { if (!f._ldSeen) this.dosSig('lockdown', 1); f._raidT0 = null;   // wave resolved; never went to ground = 1
+          const killed = f._wvDead || 0;   // P1: THIS wave's ledger only (wave-id counted at death) — never lifetime losses or old stragglers
+          if (f._waveN && killed >= f._waveN) { const tnt = this.cmdrTaunt(f, 'wiped', killed); if (tnt) this.milestone(tnt); }
+          f._waveN = 0;
+        }
+      }
       if (st === 'allied') { f._giveT = (f._giveT == null ? this.allyGiveInterval(f) : f._giveT) - 1.5; if (f._giveT <= 0) { this.allyDeliver(f); f._giveT = this.allyGiveInterval(f); } }   // allied town feeds the colony
-      // PLAYER ASSAULT (Slice F): an embodied army parked at a non-allied base sieges it; the base defends back
-      if (st !== 'allied' && f.alive !== false) {
+      // PLAYER ASSAULT (Slice F, R1 rework): SIEGE IS AN ORDER, never an inference. Proximity alone —
+      // the President parleying, an escort waiting at the gate — must NEVER read as an attack.
+      if (f.egress) { const hh = S.hero; if (!hh || Math.hypot(f.x - hh.x, f.y - hh.y) > 490) { f.egress = false; if (S.diplo && S.diplo.eg && S.diplo.id === f.id) S.diplo = null; } }   // P0: egress lifts on ACTUAL departure (AI egress leg or WASD) — never on a clock
+      if (st !== 'allied' && f.alive !== false && f.siege === true && !f.egress) {
         let fp = 0; const atk = [], h = S.hero;
         if (h && !h.down && Math.hypot(h.x - f.x, h.y - f.y) < 300) { const hs = this.heroStat(); fp += (hs.dmg || 10) * (hs.rof || 1.5); atk.push(h); }
         for (const u of S.units) { if (u.dead || u.role === 'gatherer' || u.role === 'runner' || u.role === 'technician') continue; if (Math.hypot(u.x - f.x, u.y - f.y) < 300) { const us = this.stat(u); fp += (us.dmg || 0) * (us.rof || 1); atk.push(u); } }
         if (fp > 0) {
           f.hp -= fp * 0.9; if (st === 'neutral') this.factionRep(f.id, -12);   // hitting a neutral base is an act of war
+          f.grudge = 3;   // step 6: an assault is the deepest insult — the Bulwark remembers
           const back = 6 + f.str * 2;
           for (const a of atk) { if (Math.random() < 0.45) { a.hp -= back; if (a.hp <= 0) { if (a === h) { h.down = true; h.reviveT = 5; } else { a.dead = true; a.reviveT = a.squad ? 4 : 7; } } } }
           if (f.hp <= 0) this.conquerFaction(f);
@@ -1966,7 +2419,49 @@ class Component extends DCLogic {
   }
   seedFactions() {
     const S = this.S;
+    try { const d = this.dossier(); d.runs++; this.dosSave(); } catch (e) { }   // a NEW world — the dossier survives it (user lock)
     S.factions = this.FACTIONS.map((f, i) => { const mh = 600 + f.str * 60; return { id: i, key: f.key, x: Math.round(this.AW * f.fx), y: Math.round(this.AH * f.fy), hp: mh, maxhp: mh, rep: 0, pop: f.pop, str: f.str, alive: true, claims: [], raidCd: 60 + Math.random() * 90 }; });
+    S.facRel = {}; this.seedFacRel();
+  }
+  // ---- step 6 GEOPOLITICS: the factions have politics with EACH OTHER — visible, persistent, consequential ----
+  FAC_AFF = { 'meridian|nuclear': -1, 'bulwark|rust': -1, 'changed|nuclear': -1, 'changed|deluge': -1, 'ash|meridian': -1, 'ash|rust': 1, 'bulwark|ironclad': 1, 'deluge|meridian': 1 };   // doctrinal affinity: zealots vs technocrats, holdouts vs looters, kin scavengers, soldiers' respect
+  relKey(a, b) { const ka = this.FACTIONS[a].key, kb = this.FACTIONS[b].key; return ka < kb ? ka + '|' + kb : kb + '|' + ka; }
+  facRel(a, b) { const S = this.S; return (S.facRel && isFinite(S.facRel[this.relKey(a, b)])) ? S.facRel[this.relKey(a, b)] : 0; }
+  seedFacRel() { const S = this.S; if (!S.facRel) S.facRel = {}; for (let a = 0; a < this.FACTIONS.length; a++) for (let b = a + 1; b < this.FACTIONS.length; b++) { const k = this.relKey(a, b); if (!isFinite(S.facRel[k])) S.facRel[k] = (this.FAC_AFF[k] || 0) * 35; } }
+  rippleRep(id, dAllies, dRivals, why) {   // YOUR move toward one faction ripples through ITS bonds — always telegraphed
+    let any = false;
+    for (const g of this.liveFactions()) { if (g.id === id) continue; const r = this.facRel(id, g.id); if (r >= 25 && dAllies) { this.factionRep(g.id, dAllies); any = true; } else if (r <= -25 && dRivals) { this.factionRep(g.id, dRivals); any = true; } }
+    if (any && why) this.milestone('⚑ ' + why);
+  }
+  geoTick() {   // every 6s: rel drift, off-screen wars, absorption snowball
+    const S = this.S; if (!S.facRel) this.seedFacRel();
+    const live = this.liveFactions();
+    S.facWars = [];
+    for (let i = 0; i < live.length; i++) for (let j = i + 1; j < live.length; j++) {
+      const a = live[i], b = live[j], k = this.relKey(a.id, b.id);
+      if (a.alive === false || b.alive === false) continue;   // R1 ATOMIC: a member may have been retired by an EARLIER pair this same tick — never touch a dead pair
+      const target = (this.FAC_AFF[k] || 0) * 35;
+      const stab = (a.pact === 'ally' || b.pact === 'ally') ? 1 : 0;   // step 6 PLAYER LEVER: your pact steadies a warring faction's region — ally with one side to cool its wars
+      S.facRel[k] = Math.max(-100, Math.min(100, (S.facRel[k] || 0) + (target - (S.facRel[k] || 0)) * 0.02 * (1 + 2 * stab)));
+      this._warWarn = this._warWarn || {};
+      if (S.facRel[k] > -45 && this._warWarn[k]) this._warWarn[k] = false;   // R4 0.5.1b: the warning re-arms OUTSIDE the war branch — a recovered-then-collapsed bond warns AGAIN
+      if (S.facRel[k] <= -45) {   // OFF-SCREEN WAR: both bleed; unchecked wars DEEPEN (escalation outruns drift) — the map consolidates unless someone brokers
+        S.facWars.push([a.id, b.id]);
+        a.pop = Math.max(0, a.pop - 0.05); b.pop = Math.max(0, b.pop - 0.05);
+        S.facRel[k] = Math.max(-100, S.facRel[k] - (stab ? 0.35 : 0.8));
+        const weak = a.pop < b.pop ? a : b, strong = weak === a ? b : a;
+        if (weak.pact === 'ally' && S.facRel[k] <= -60 && !this._warWarn[k]) { this._warWarn[k] = true; this.milestone('⚠ YOUR ALLY ' + this.facDef(weak).name + ' IS LOSING ITS WAR — BROKER OR WATCH IT FALL'); }   // R1 ally policy: WARNED, not immune (reset lives OUTSIDE the branch — R4 0.5.1b)
+        if (weak.pop < 4 && weak.pop < strong.pop * 0.5) {   // ABSORPTION: the snowball — loud, slow, and player-preventable (broker peace via a pact with either side)
+          const wasAlly = weak.pact === 'ally', wname = this.facDef(weak).name;
+          this.retireFaction(weak);   // R1: atomic, centralized — raiders/pulse/plan/diplomacy die with the base; each victim absorbed exactly once
+          strong.pop = Math.min(999, strong.pop + Math.round(weak.pop * 0.6) + 4);
+          const base = this.FACTIONS[strong.id].str; if (strong.str < base + 2) strong.str += 1;   // capped +2 over doctrine — absorbed strength is REAL but bounded
+          this.milestone('⬢ ' + this.facDef(strong).name + ' ABSORBS ' + wname + ' — THE MAP CONSOLIDATES'); this.ping(weak.x, weak.y, '#ffd56b');
+          if (wasAlly) { let ref = 0; for (let r2 = 0; r2 < 2 && S.civs.length < (this.popCap() || 0); r2++) { this.spawnCivilian(); ref++; } if (ref) this.milestone('⚑ REFUGEES FROM ' + wname + ' REACH THE HQ — +' + ref + ' SETTLERS'); }   // R1 ally policy: COMPENSATED — the fallen pact's people come to you
+          if (this.sndRadio) this.sndRadio('alert');
+        }
+      }
+    }
   }
 
   // ---------------------------------------------------------------- tower-defense map (random walls + flow-field paths)
@@ -2811,7 +3306,31 @@ class Component extends DCLogic {
         gift: (dead || !canAff('gift')) ? (() => { }) : () => this.setDiplo(f.id, 'gift'), giftStyle: (dead || !canAff('gift')) ? dis : btn('rgba(126,240,166,.06)', 'rgba(126,240,166,.35)', '#7ef0a6'),
         ally: (dead || !canAlly || !canAff('alliance')) ? (() => { }) : () => this.setDiplo(f.id, 'alliance'), allyStyle: (dead || !canAlly || !canAff('alliance')) ? dis : btn('rgba(126,240,166,.06)', 'rgba(126,240,166,.4)', '#9df0be'),
         peace: (dead || !canAff('peace')) ? (() => { }) : () => this.setDiplo(f.id, 'peace'), peaceStyle: (dead || !canAff('peace')) ? dis : btn('rgba(255,213,107,.06)', 'rgba(255,213,107,.35)', '#ffd56b'),
-        demand: dead ? (() => { }) : () => this.setDiplo(f.id, 'demand'), demandStyle: dead ? dis : btn('rgba(255,93,108,.06)', 'rgba(255,93,108,.35)', '#ff8a93'),
+        demand: (dead || st === 'allied') ? (() => { }) : () => this.setDiplo(f.id, 'demand'), demandStyle: (dead || st === 'allied') ? dis : btn('rgba(255,93,108,.06)', 'rgba(255,93,108,.35)', '#ff8a93'),   // R5: no extorting an ally — dead button, not a runtime refusal surprise
+        assault: dead ? (() => { }) : () => this.toggleAssault(f.id), assaultLabel: f.siege ? '✋ STAND DOWN' : '⚔ ASSAULT', assaultStyle: dead ? dis : (f.siege ? btn('rgba(255,93,108,.2)', 'rgba(255,93,108,.7)', '#ffc4ca') : btn('rgba(255,93,108,.06)', 'rgba(255,93,108,.35)', '#ff8a93')),   // R1: explicit siege order lives on the board
+        nextMove: st === 'hostile' ? this.dirRead(f) : null,   // step 4 TELEGRAPH: the standing intent — the player can ALWAYS read the next move
+        cmdr: dead ? null : def.cmdr || null,   // step 5: the named commander behind the doctrine
+        geo: dead ? null : (() => {   // step 6: its bonds — allies, rivals, and open wars, by name
+          const al = [], rv = []; let war = null;
+          for (const g of this.liveFactions()) { if (g.id === f.id) continue; const r = this.facRel(f.id, g.id); if (r >= 25) al.push(this.facDef(g).name); else if (r <= -25) rv.push(this.facDef(g).name); }
+          if (Array.isArray(S.facWars)) for (const w of S.facWars) if (w[0] === f.id || w[1] === f.id) { const oid = w[0] === f.id ? w[1] : w[0]; const of2 = S.factions.find(q => q.id === oid); if (of2 && of2.alive !== false) { war = this.facDef(of2).name; break; } }
+          const parts = [];
+          if (war) parts.push('⚔ AT WAR WITH ' + war);
+          if (al.length) parts.push('BONDS: ' + al.join(', '));
+          if (rv.length) parts.push('RIVALS: ' + rv.join(', '));
+          return parts.length ? parts.join(' · ') : null;
+        })(),
+        intel: (() => {   // THE TELEGRAPH: exactly what this faction has observed — nothing it acts on is hidden
+          const o = f.obs; if (!o || (!o.raids && !o.losses && !o.gk)) return null;
+          const parts = [];
+          if (o.raids) parts.push(o.raids + ' RAID' + (o.raids > 1 ? 'S' : '') + ' SENT');
+          if (o.losses) { const top = Object.entries(o.kb || {}).sort((a, b) => b[1] - a[1])[0]; parts.push('LOST ' + o.losses + (top && top[1] ? ' — MOSTLY TO ' + ({ unit: 'YOUR TROOPS', turret: 'YOUR GUNS', hero: 'THE PRESIDENT', ram: 'YOUR ARMOR', other: 'THE DEFENSE' })[top[0]] : '')); }
+          if (o.gk) parts.push(o.gk + ' CREWS TAKEN');
+          if (o.wallDmg >= 100) parts.push(Math.round(o.wallDmg) + ' WALL HP CHEWED');
+          if (o.loot >= 1) parts.push('ESCAPED W/ ' + Math.round(o.loot) + ' LOOT');   // P2: confirmed-return loot only (that's all o.loot holds now), displayed whole
+          const dmax = Math.max(...o.d8); if (dmax >= 3) parts.push('ITS DEAD LIE MOSTLY TO YOUR ' + this.OCT_NAMES[o.d8.indexOf(dmax)]);   // R6: d8 records ALL falls (field + wall) — describe the geography, don't invent a gun story
+          return parts.join(' · ');
+        })(),
       };
     });
     return {
@@ -2820,6 +3339,23 @@ class Component extends DCLogic {
       facBtnColor: nH ? '#ff8a93' : nA ? '#7ef0a6' : '#ffd56b',
       facBtnBorder: nH ? 'rgba(255,93,108,.4)' : nA ? 'rgba(126,240,166,.4)' : 'rgba(54,224,207,.3)',
       diploActive: !!dp, diploStatus: (dp && dpf) ? ('EN ROUTE TO ' + dpf.name + ' — ' + dp.intent.toUpperCase()) : '',
+      // ---- THE WORLD LEARNS YOU: the dossier is READABLE — the player always sees what the world knows ----
+      dosChips: (() => {
+        const d = this.dossier();
+        const lv = (s, hi, lo) => s.n === 0 ? 'UNREAD' : s.v >= 0.62 ? hi : s.v <= 0.38 ? lo : 'MIXED';
+        const wmax = Math.max(...d.wall8), covered = d.wall8.filter(v => v > 0).length;
+        const hard = this.OCT_NAMES[d.wall8.indexOf(wmax)], soft = covered >= 6 ? this.OCT_NAMES[d.wall8.indexOf(Math.min(...d.wall8))] : null;   // R6: unsampled octants are UNKNOWN, never 'soft'
+        const good = ['ESCORTED', 'DISCIPLINED', 'LEAN', 'WIRED', 'PEACEABLE', 'MIXED'];
+        return [
+          { k: 'FIELD CREWS', v: lv(d.sig.escort, 'EXPOSED', 'ESCORTED') },
+          { k: 'LOCKDOWN', v: lv(d.sig.lockdown, 'SLOW / NEVER', 'DISCIPLINED') },
+          { k: 'STOCKPILE', v: lv(d.sig.hoard, 'HOARDER', 'LEAN') },
+          { k: 'SENSORS', v: lv(d.sig.comms, 'BLIND', 'WIRED') },
+          { k: 'POSTURE', v: lv(d.sig.aggr, 'AGGRESSOR', 'PEACEABLE') },
+          { k: 'WALL READ', v: wmax >= 3 ? ('HARD ' + hard + (soft ? ' · SOFT ' + soft : ' · REST UNSAMPLED')) : 'UNREAD' },
+        ].map(c => ({ ...c, col: c.v === 'UNREAD' ? '#5a6a70' : good.includes(c.v) ? '#9be0d8' : '#ffb454' }));
+      })(),
+      dosRuns: Math.max(1, this.dossier().runs), dosRaids: this.dossier().raids,
     };
   }
   stopClick = (e) => e.stopPropagation();
@@ -3783,7 +4319,7 @@ class Component extends DCLogic {
   };
   // ---- game version: baked payload tag; a STAGED auto-update payload (payload-vX.Y.Z.html) reports its
   // release tag instead, so the top-left always tells the truth about what's actually running.
-  GAME_VER = '0.4.4';
+  GAME_VER = '0.5.1';
   gameVer() {
     if (this._gv) return this._gv;
     let v = this.GAME_VER;
@@ -3837,19 +4373,34 @@ class Component extends DCLogic {
     try { const d = JSON.parse(localStorage.getItem(this.slotKey(n))); if (!d) return null; return { t: d._slotT || 0, kills: d.kills || 0, pop: d.civPop || 0, ver: d._slotV || '?' }; } catch (e) { return null; }
   }
   slotSave(n) {
-    this.save();
-    try { const d = JSON.parse(localStorage.getItem(this.SAVE)); if (!d) return; d._slotT = Date.now(); d._slotV = this.GAME_VER; localStorage.setItem(this.slotKey(n), JSON.stringify(d)); } catch (e) { return; }
-    this.milestone('▤ SAVED → SLOT ' + n); this.forceUpdate();
+    const data = this.serializeCurrentState();   // R2: serialize CURRENT state — never copy a possibly-stale main-key value
+    data._slotT = Date.now(); data._slotV = this.GAME_VER;
+    let ok = false; try { localStorage.setItem(this.slotKey(n), JSON.stringify(data)); ok = true; } catch (e) { ok = false; }
+    const main = this.save();
+    this.milestone(ok ? ('▤ SAVED → SLOT ' + n + (main ? '' : ' · MAIN AUTOSAVE BLOCKED')) : '✕ SLOT SAVE FAILED — STORAGE FULL/DENIED'); this.forceUpdate();   // R2: no success toast unless the slot verifiably wrote
+  }
+  installSave(json) {   // R2/R4 shared installer: validate → restore barrier → install → reload
+    let d = null; try { d = this.validateSave(typeof json === 'string' ? JSON.parse(json) : json); } catch (e) { d = null; }
+    if (!d) { this.milestone('✕ NOT A COMPATIBLE SAVE'); this.forceUpdate(); return false; }
+    this._restoring = true; clearInterval(this._save);   // barrier: stop autosave; save()/unmount-save are suppressed while set
+    try {
+      if (this._bootId) localStorage.setItem(this.SAVE + '_owner', this._bootId);
+      localStorage.setItem(this.SAVE, JSON.stringify(d));
+    } catch (e) {
+      this._restoring = false; this._save = setInterval(() => { if (!this._dead && this.S && !this.S.gameOver) this.save(); }, 4000);   // install never landed — lift the barrier, resume autosave
+      this.milestone('✕ RESTORE FAILED — STORAGE'); this.forceUpdate(); return false;
+    }
+    location.reload(); return true;
   }
   slotLoad(n) {
-    const raw = localStorage.getItem(this.slotKey(n)); if (!raw) return;
+    let raw = null; try { raw = localStorage.getItem(this.slotKey(n)); } catch (e) { this.milestone('✕ SLOT READ FAILED — STORAGE DENIED'); this.forceUpdate(); return; }   // P1: denied reads fail loud, not thrown
+    if (!raw) return;
     if (!confirm('LOAD SLOT ' + n + '? Current progress is replaced by the snapshot.')) return;
-    try { if (this._bootId) localStorage.setItem(this.SAVE + '_owner', this._bootId); localStorage.setItem(this.SAVE, raw); } catch (e) { return; }
-    location.reload();
+    this.installSave(raw);
   }
   exportSave = () => {
+    const raw = JSON.stringify(this.serializeCurrentState());   // R2: export IS the live state
     this.save();
-    const raw = localStorage.getItem(this.SAVE) || '{}';
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([raw], { type: 'application/json' }));
     a.download = 'systemic-survival-save-' + this.gameVer() + '-' + new Date().toISOString().slice(0, 10) + '.json';
@@ -3861,12 +4412,9 @@ class Component extends DCLogic {
     rd.onload = () => {
       try {
         const d = JSON.parse(rd.result);
-        const okNum = v => typeof v === 'number' && isFinite(v);
-        if (!d || typeof d !== 'object' || Array.isArray(d) || !Array.isArray(d.units) || !okNum(d.kills) || !okNum(d.threat) || !okNum(d.hqLevel) || !okNum(d.sector) || !okNum(d.expand)) throw new Error('v7 schema');   // strict v7 shape (Codex v0.4.0) — was a loose kills||units[] check
+        if (!this.validateSave(d)) throw new Error('schema');   // R4: same shared gate as slots + main loads
         if (!confirm('IMPORT SAVE? Current progress is replaced.')) return;
-        if (this._bootId) localStorage.setItem(this.SAVE + '_owner', this._bootId);
-        localStorage.setItem(this.SAVE, JSON.stringify(d));
-        location.reload();
+        this.installSave(d);
       } catch (err) { this.milestone('✕ NOT A SYSTEMIC SURVIVAL SAVE'); this.forceUpdate(); }
     };
     rd.readAsText(f);
@@ -3903,7 +4451,11 @@ class Component extends DCLogic {
     console.log('[BALANCE HARNESS]', JSON.stringify(rep.ratesPerHour), 'end:', JSON.stringify(rep.endState));
     return rep;
   }
-  milestone(t) { this.S.toast = t; this.S.toastT = 3.2; this.sndRadio('toast'); }
+  milestone(t) {   // P1: single toast slot → QUEUE — operational warnings are never erased by flavor lines
+    const S = this.S;
+    if (S.toastT > 0.5 && S.toast && S.toast !== t) { this._msq = this._msq || []; if (this._msq.length < 4 && !this._msq.includes(t)) this._msq.push(t); return; }   // queued lines drain silently (one sound decision per event)
+    S.toast = t; S.toastT = 3.2; this.sndRadio('toast');
+  }
   resetGame(confirmFirst) {
     if (confirmFirst && typeof window !== 'undefined' && window.confirm && !window.confirm('Restart the game? All progress will be lost.')) return;
     if (this._bootId) { try { localStorage.setItem(this.SAVE + '_owner', this._bootId); } catch (e) {} }
@@ -3931,6 +4483,9 @@ class Component extends DCLogic {
     z.hp -= dmg * (raw ? 1 : (1 - (z.dr || 0)));   // dr shrugs BALLISTICS only — raw = mechanism kills (crush/fling/overpressure) no plate stops
     if (z.hp > 0) this.zAgitate(z);
     if (z.hp <= 0 && !z._dead) { z._dead = true;
+      if (z.raider) this.obsRaiderDeath(z, owner, veh);   // THE WORLD LEARNS YOU: attribution + fall octant
+      if (z.raider && z.rclass === 'zealot') this.zealotBurst(z);   // step 6: the glow goes off — structures only
+      if (z.raider && z.rclass === 'lance' && owner === 'turret') this.lanceEmp(z);   // step 6: capacitor scream vs the gun that fired
       if (owner != null) { const ku = this.S.units.find(u => u.id === owner && !u.dead); if (ku && ku.role !== 'gatherer') { ku.kills = (ku.kills || 0) + 1; const rk0 = this.rankOf(ku); ku.vet = (ku.vet || 0) + 8; if (this.rankOf(ku) !== rk0) { ku._stF = -1; this.S.floats.push({ x: ku.x, y: ku.y - 16, text: '★ ' + this.rankOf(ku), color: '#ffd56b', life: 1.8, t: 0 }); this.ping(ku.x, ku.y, '#ffd56b'); this.milestone('★ ' + (ku.role === 'mech' ? 'MK-' : ku.role === 'runner' ? 'RN-' : 'OP-') + String(ku.id).padStart(2, '0') + ' PROMOTED — ' + this.rankOf(ku)); } } } const mult = 1 + Math.min(3, this.S.focus * this.focusCoef()); const rw = Math.ceil(z.reward * mult * this.incomeMult()); this.S.scrap += rw; this.S.totalEarned += rw; this.S.kills++; this.S.sectorKills = (this.S.sectorKills || 0) + 1; this.S.threatKills = (this.S.threatKills || 0) + 1; this.S.focus = Math.min(40, this.S.focus + 0.5); this.S.focusT = 2.6; this.S.floats.push({ x: z.x, y: z.y, text: '+' + rw, color: '#ffd56b', life: 0.9, t: 0 }); for (let i = 0; i < 4; i++) this.S.fx.push({ x: z.x, y: z.y, vx: (Math.random() - .5) * 90, vy: (Math.random() - .5) * 90, life: 0.4, t: 0, kind: 'gib' });
       if (this.inView(z.x, z.y, 60)) {   // M6.2 — the big deaths land with WEIGHT (in-view only, gated, transient)
         const ovk = dmg / Math.max(1, z.maxhp);
@@ -5296,8 +5851,9 @@ class Component extends DCLogic {
     this.updateRags(dt);   // death physics
     // cleanup dead zombies
     S.zombies = S.zombies.filter(z => z.hp > 0);
-    if (S.toastT > 0) { S.toastT -= dt; if (S.toastT <= 0) S.toast = ''; }
-    if (this.hq.hp <= 0 && !S.gameOver) { this.hq.hp = 0; S.gameOver = true; try { localStorage.removeItem(this.SAVE); } catch (e) {} }
+    if (S.toastT > 0) { S.toastT -= dt; if (S.toastT <= 0) { const q = this._msq; if (q && q.length) { S.toast = q.shift(); S.toastT = 3.2; } else S.toast = ''; } }   // P1: drain the toast queue (no re-sound — the event already sounded)
+    for (const t of S.turrets) if ((t._empCd || 0) > 0) t._empCd = Math.max(0, t._empCd - dt);   // R7 (0.5.1): EMP immunity decays on UNCONDITIONAL frame time — never gated behind the ammo-run system
+    if (this.hq.hp <= 0 && !S.gameOver) { this.hq.hp = 0; S.gameOver = true; try { const own = localStorage.getItem(this.SAVE + '_owner'); if (!own || own === this._bootId) localStorage.removeItem(this.SAVE); } catch (e) {} }   // R5: a non-owner session's game-over may NEVER delete the active owner's save
   }
 
   updateUnit(u, dt) {
@@ -5561,6 +6117,7 @@ class Component extends DCLogic {
     const b = { x: t.x + Math.cos(t.aim) * 12, y: t.y + Math.sin(t.aim) * 12, a: t.aim, spd: st.shell ? 380 : 560, life: 0.9, dmg: st.dmg, rt: amm ? amm.rt : 0, hs: t.type === 'sniper' ? 0.30 : t.type === 'gun' ? 0.04 : 0, api: amm && amm.api ? 1 : 0, slow: st.slow, crit: false, splashR: 0, big: !!st.shell, chain: st.chain, ap: st.ap, overWall: true, hit: new Set() };
     if (st.shell) { const sh = this.SHELLS[st.shell]; b.shell = { W: sh.W * (1 + ((t.lvl || 1) - 1) * 0.08), n: sh.n, Ef: sh.Ef }; }   // heavier charges as the crew levels
     this.sndShot(t.x, t.y, { cart: st.cart, shell: !!st.shell });
+    if (b.own == null) b.own = 'turret';   // kill attribution for the observation layer (string ⇒ never vet credit)
     this.S.bullets.push(b);
   }
   updateTurret(t, dt) {
@@ -5634,7 +6191,7 @@ class Component extends DCLogic {
         // 45% per arc so a tesla lane is crowd CONTROL, not a permanent floor; downed targets also lose turret priority — self-balancing.
         if (z.hp > 0 && !(z.down > 0) && Math.random() < 0.45) { z.down = 0.9 + Math.random() * 0.5; z.dvx = 0; z.dvy = 0; z.tu = null; }
         let nx2 = null, nd = 90 * 90; this.zNear(z.x, z.y, 90, (z2) => { if (b.hit.has(z2.id)) return; const d2 = (z2.x - z.x) ** 2 + (z2.y - z.y) ** 2; if (d2 < nd) { nd = d2; nx2 = z2; } });
-        if (nx2) { this.S.bullets.push({ x: z.x, y: z.y, a: Math.atan2(nx2.y - z.y, nx2.x - z.x), spd: 620, life: 0.3, dmg: b.dmg * 0.8, rt: 0, hs: 0, slow: b.slow, crit: false, splashR: 0, chain: b.chain - 1, ap: 0, overWall: true, hit: new Set([...b.hit]) }); }
+        if (nx2) { this.S.bullets.push({ own: b.own, x: z.x, y: z.y, a: Math.atan2(nx2.y - z.y, nx2.x - z.x), spd: 620, life: 0.3, dmg: b.dmg * 0.8, rt: 0, hs: 0, slow: b.slow, crit: false, splashR: 0, chain: b.chain - 1, ap: 0, overWall: true, hit: new Set([...b.hit]) }); }
         b.life = 0; return;
       }
       if (b.splashR > 0) {   // legacy area path (non-shell)
@@ -5670,7 +6227,7 @@ class Component extends DCLogic {
       if (dmg >= z.maxhp * 4) z._ash = 1;                               // DISINTEGRATE — no body to ragdoll
       const nx = dx / d, ny = dy / d;
       const dv = 1.8 * Math.pow(Rd / d, 1.5);                           // throw Δv (m/s): stability limit at Rd
-      if (dmg > 0.5) this.hurtZombie(z, dmg, x, y, o.own, dmg >= z.maxhp ? { cvx: nx * dv * PXM * 0.5, cvy: ny * dv * PXM * 0.5, dv } : undefined);
+      if (dmg > 0.5) this.hurtZombie(z, dmg, x, y, o.own, dmg >= z.maxhp ? { cvx: nx * dv * PXM * 0.5, cvy: ny * dv * PXM * 0.5, dv, boom: true } : undefined);   // P1: blast kill carries the BOOM flag — overpressure knockback is not a vehicle ram
       if (z.hp > 0) {   // survivors: thrown / knocked flat / staggered by the pressure wave
         if (dv >= P.down) { z.down = Math.max(z.down || 0, 1.4 + Math.random()); z.dvx = nx * dv * PXM * 0.5; z.dvy = ny * dv * PXM * 0.5; z.tu = null; }
         else if (d < Rs) z._stagT = Math.max(z._stagT || 0, 0.5);
@@ -5713,16 +6270,16 @@ class Component extends DCLogic {
   lim(v, lo, hi, fb) { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : fb; }
   physClean(p) {
     if (!p || typeof p !== 'object') return null;
-    return { down: this.lim(p.down, 0.6, 4, 1.8), kill: this.lim(p.kill, 4, 20, 11), keRef: this.lim(p.keRef, 300, 3000, 900) };
+    return { down: this.lim(p.down, 0.6, 4, 1.8), kill: this.lim(p.kill, 4, 20, 10), keRef: this.lim(p.keRef, 300, 3000, 900) };   // P2: kill fallback aligned with the design seed (10) — one default everywhere
   }
   phys() {
     const s = this.setP();
     if (s.phys) return (s.phys = this.physClean(s.phys) || null) || this.phys();
     const p = this.props || {};
-    return { down: this.lim(p.physStability, 0.6, 4, 1.8), kill: this.lim(p.physFatality, 4, 20, 11), keRef: this.lim(p.physLethality, 300, 3000, 900) };
+    return { down: this.lim(p.physStability, 0.6, 4, 1.8), kill: this.lim(p.physFatality, 4, 20, 10), keRef: this.lim(p.physLethality, 300, 3000, 900) };   // fatality fallback 9→10: user re-seeded via tweaks (player-tuning doctrine; props default is the source of truth)
   }
   physSet(k, v) {
-    const R = { down: [0.6, 4, 1.8], kill: [4, 20, 11], keRef: [300, 3000, 900] }; if (!R[k]) return;
+    const R = { down: [0.6, 4, 1.8], kill: [4, 20, 10], keRef: [300, 3000, 900] }; if (!R[k]) return;   // P2: aligned with the design seed
     const s = this.setP(); const p = this.physClean(s.phys) || Object.assign({}, this.phys());
     p[k] = this.lim(v, R[k][0], R[k][1], R[k][2]); s.phys = p; this.forceUpdate();
   }
@@ -5781,11 +6338,11 @@ class Component extends DCLogic {
         const px2 = R.x + nx * rr, py2 = R.y + ny * rr;
         if (!this.isWallPx(px2, py2)) { z.x = px2; z.y = py2; }   // de-penetrate (never into a wall)
         if (dv >= P.kill) {
-          this.hurtZombie(z, z.hp + 1, R.x, R.y, R.id, { cvx: vx, cvy: vy, dv }, true);
+          this.hurtZombie(z, z.hp + 1, R.x, R.y, R.id, { cvx: vx, cvy: vy, dv, ram: true }, true);
           if (this.inView(z.x, z.y, 60)) this.addShake(1 + Math.min(1.2, (dv - P.kill) * 0.15));
         } else if (dv >= P.down || topple) {
           const dmg = (0.5 * MZ * dv * dv / P.keRef) * z.maxhp;   // KE trauma vs the lethal reference
-          if (dmg > 0.5) this.hurtZombie(z, dmg, R.x, R.y, R.id, { cvx: vx, cvy: vy, dv });
+          if (dmg > 0.5) this.hurtZombie(z, dmg, R.x, R.y, R.id, { cvx: vx, cvy: vy, dv, ram: true });
           if (z.hp > 0) { z.down = 1.6 + Math.random() * 1.2; z._pushT = 0; z.dvx = nx * dv * PXM * 0.45 + vx * 0.65; z.dvy = ny * dv * PXM * 0.45 + vy * 0.65; z.tu = null; if (this.inView(z.x, z.y, 60)) { this.addShake(0.8); S.fx.push({ x: z.x, y: z.y, r: 4, mr: 18, life: 0.28, t: 0, kind: 'strike' }); } }
         } else {
           z.kx = (z.kx || 0) + nx * Math.max(24, app * 0.6); z.ky = (z.ky || 0) + ny * Math.max(24, app * 0.6);   // shove — stagger, no harm
@@ -5867,8 +6424,8 @@ class Component extends DCLogic {
     const gate = this.gateAtPx(nx, ny);
     let bar = null;
     if (!gate) { for (const b of S.barricades) { if (this.barrierBlocks(b, nx, ny, 7)) { bar = b; break; } } }
-    if (gate) { if (claw) { z.cd -= dt; if (z.cd <= 0) { z.cd = 0.7; gate.hp -= z.dmg; if (gate.hp <= 0) this.rebuildGates(); } return 2; } return 0; }
-    if (bar) { if (claw) { z.cd -= dt; if (z.cd <= 0) { z.cd = 0.7; bar.hp -= z.dmg; if (bar.hp <= 0) S.barricades = S.barricades.filter(x => x !== bar); } return 2; } return 0; }
+    if (gate) { if (claw) { z.cd -= dt; if (z.cd <= 0) { z.cd = 0.7; gate.hp -= z.dmg; if (z.raider) { const fo = this.facObs(z.fac); if (fo) fo.wallDmg += z.dmg; } if (gate.hp <= 0) this.rebuildGates(); } return 2; } return 0; }
+    if (bar) { if (claw) { z.cd -= dt; if (z.cd <= 0) { z.cd = 0.7; bar.hp -= z.dmg; if (z.raider) { const fo = this.facObs(z.fac); if (fo) fo.wallDmg += z.dmg; } if (bar.hp <= 0) S.barricades = S.barricades.filter(x => x !== bar); } return 2; } return 0; }
     if (!this.isWallPx(nx, ny)) { z.x = nx; z.y = ny; return 1; }
     if (!this.isWallPx(nx, z.y)) { z.x = nx; return 1; }
     if (!this.isWallPx(z.x, ny)) { z.y = ny; return 1; }
